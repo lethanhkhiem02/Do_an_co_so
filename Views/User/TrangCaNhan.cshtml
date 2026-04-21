@@ -1,0 +1,98 @@
+﻿@model IEnumerable<Do_an_co_so.Models.PhongTro>
+
+@{
+    var chuTro = ViewBag.ChuTro as Do_an_co_so.Models.AppUser;
+    ViewData["Title"] = "Trang cá nhân của " + (chuTro?.HoTen ?? "Chủ trọ");
+}
+
+<div class="container mt-4 mb-5">
+    <div class="card card-custom p-4 shadow-sm border-0 bg-light mb-5">
+        <div class="d-flex align-items-center">
+
+            @if (chuTro != null && !string.IsNullOrEmpty(chuTro.Avatar))
+            {
+                <img src="~/images/avatars/@chuTro.Avatar" class="rounded-circle shadow me-4 border border-3 border-primary" style="width: 120px; height: 120px; object-fit: cover;" alt="Avatar" />
+            }
+            else
+            {
+                <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-4 fw-bold shadow" style="width: 120px; height: 120px; font-size: 45px;">
+                    @(string.IsNullOrEmpty(chuTro?.HoTen) ? "U" : chuTro.HoTen.Substring(0, 1).ToUpper())
+                </div>
+            }
+
+            <div>
+                <h2 class="text-primary fw-bold mb-2">@(chuTro?.HoTen ?? chuTro?.Email)</h2>
+
+                <p class="text-muted mb-1 fs-5">📧 <strong>Email:</strong> @chuTro?.Email</p>
+
+                @if (!string.IsNullOrEmpty(chuTro?.PhoneNumber))
+                {
+                    <p class="text-muted mb-1 fs-5">📞 <strong>Điện thoại:</strong> @chuTro.PhoneNumber</p>
+                }
+
+                @if (!string.IsNullOrEmpty(chuTro?.DiaChi))
+                {
+                    <p class="text-muted mb-1 fs-5">📍 <strong>Địa chỉ:</strong> @chuTro.DiaChi</p>
+                }
+
+                @if (chuTro?.NgaySinh != null)
+                {
+                    // Tự động tính tuổi từ Ngày sinh
+                    var age = DateTime.Now.Year - chuTro.NgaySinh.Value.Year;
+                    if (DateTime.Now.DayOfYear < chuTro.NgaySinh.Value.DayOfYear) age--;
+
+                    <p class="text-muted mb-3 fs-5">🎂 <strong>Độ tuổi:</strong> @age tuổi</p>
+                }
+                <a asp-controller="Chat" asp-action="Conversation" asp-route-receiverId="@chuTro?.Id" class="btn btn-success fw-bold shadow-sm">💬 Nhắn tin cho chủ trọ</a>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="text-primary fw-bold mb-4">🏠 Các phòng đang cho thuê (@Model.Count() phòng)</h3>
+
+    <div class="row">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var item in Model)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm card-custom p-0">
+                        @{
+                            string firstImage = "";
+                            if (!string.IsNullOrEmpty(item.HinhAnh))
+                            {
+                                firstImage = item.HinhAnh.Split(',')[0];
+                            }
+                        }
+
+                        @if (!string.IsNullOrEmpty(firstImage))
+                        {
+                            <img src="~/images/@firstImage" class="card-img-top" alt="Hình phòng trọ" style="height: 250px; object-fit: cover; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                        }
+                        else
+                        {
+                            <div class="bg-secondary text-white d-flex justify-content-center align-items-center" style="height: 250px; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                                <span>Chưa có hình ảnh</span>
+                            </div>
+                        }
+
+                        <div class="card-body">
+                            <h5 class="card-title text-danger fw-bold mb-2">@item.Gia.ToString("N0") VNĐ/Tháng</h5>
+                            <p class="card-text text-truncate" style="max-width: 100%;">@item.MoTa</p>
+                            <p class="card-text"><small class="text-muted">📍 @item.DiaChi</small></p>
+                        </div>
+                        <div class="card-footer bg-white border-top-0 pb-3">
+                            <a asp-controller="PhongTro" asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-primary w-100 fw-bold">Xem chi tiết</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center mt-4">
+                <h5 class="text-muted">Chủ trọ này hiện chưa đăng phòng nào.</h5>
+            </div>
+        }
+    </div>
+</div>

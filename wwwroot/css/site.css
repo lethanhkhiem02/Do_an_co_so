@@ -1,0 +1,98 @@
+﻿/* ==========================================
+   1. CẤU HÌNH MẶC ĐỊNH CỦA ASP.NET CORE
+   ========================================== */
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+  color: var(--bs-secondary-color);
+  text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+  text-align: start;
+}
+
+
+/* ==========================================
+   2. TÙY CHỈNH GIAO DIỆN WEB THUÊ PHÒNG TRỌ
+   ========================================== */
+
+:root {
+    --primary-blue: #4e73df; /* Xanh dương hiện đại */
+    --hover-blue: #2e59d9;
+    --bg-light: #f8f9fc; /* Nền xám nhạt dịu mắt */
+}
+
+/* Tùy chỉnh Body (Gộp cả margin mặc định và màu nền mới) */
+body {
+    margin-bottom: 60px;
+    background-color: var(--bg-light);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Tùy chỉnh thanh Menu (Navbar) */
+.navbar-custom {
+    background: linear-gradient(90deg, var(--primary-blue) 0%, #224abe 100%);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border: none;
+}
+
+.navbar-custom .navbar-brand,
+.navbar-custom .nav-link {
+    color: #ffffff !important;
+    font-weight: 500;
+    transition: 0.3s;
+}
+
+.navbar-custom .nav-link:hover {
+    color: #d1d3e2 !important;
+    transform: translateY(-1px);
+}
+
+/* Tùy chỉnh các nút bấm (Buttons) */
+.btn-primary {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--hover-blue);
+    border-color: var(--hover-blue);
+    box-shadow: 0 4px 8px rgba(78, 115, 223, 0.3);
+    transform: translateY(-2px);
+}
+
+/* Tùy chỉnh khung nhập liệu (Form/Card) */
+.card-custom {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    border: none;
+    padding: 20px;
+}
+
+/* Tùy chỉnh Footer */
+.footer {
+    background-color: #ffffff;
+    border-top: 1px solid #e3e6f0;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+}

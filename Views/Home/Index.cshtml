@@ -1,0 +1,74 @@
+﻿@model IEnumerable<Do_an_co_so.Models.PhongTro>
+
+@{
+    ViewData["Title"] = "Trang chủ";
+}
+
+<div class="container mt-4 mb-5">
+    <h2 class="text-primary fw-bold mb-4">🏠 Danh sách phòng trọ mới nhất</h2>
+
+    <div class="row">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var item in Model)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm card-custom p-0">
+                        @{
+                            string firstImage = "";
+                            if (!string.IsNullOrEmpty(item.HinhAnh))
+                            {
+                                firstImage = item.HinhAnh.Split(',')[0];
+                            }
+                        }
+
+                        @if (!string.IsNullOrEmpty(firstImage))
+                        {
+                            <img src="~/images/@firstImage" class="card-img-top" alt="Hình phòng trọ" style="height: 250px; object-fit: cover; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                        }
+                        else
+                        {
+                            <div class="bg-secondary text-white d-flex justify-content-center align-items-center" style="height: 250px; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                                <span>Chưa có hình ảnh</span>
+                            </div>
+                        }
+
+                        <div class="card-body">
+                            <h5 class="card-title text-danger fw-bold mb-1">@item.Gia.ToString("N0") VNĐ/Tháng</h5>
+
+                            @{
+                                var allReviews = ViewBag.AllDanhGias as IEnumerable<Do_an_co_so.Models.DanhGia>;
+                                var roomReviews = allReviews?.Where(d => d.PhongTroId == item.Id).ToList();
+                                int reviewCount = roomReviews?.Count ?? 0;
+                                double avgRating = reviewCount > 0 ? roomReviews.Average(d => d.Sao) : 0;
+                            }
+                            <div class="mb-2">
+                                @if (reviewCount > 0)
+                                {
+                                    <span class="text-warning fw-bold">⭐ @avgRating.ToString("0.0")</span>
+                                    <span class="text-muted" style="font-size: 0.85rem;">(@reviewCount đánh giá)</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted" style="font-size: 0.85rem;">Chưa có đánh giá</span>
+                                }
+                            </div>
+                            <p class="card-text text-truncate" style="max-width: 100%;">@item.MoTa</p>
+
+                            <p class="card-text"><small class="text-muted">📍 @item.DiaChi</small></p>
+                        </div>
+                        <div class="card-footer bg-white border-top-0 pb-3">
+                            <a asp-controller="PhongTro" asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-primary w-100 fw-bold">Xem chi tiết</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center mt-5">
+                <h5 class="text-muted">Hiện tại chưa có phòng trọ nào được đăng.</h5>
+            </div>
+        }
+    </div>
+</div>

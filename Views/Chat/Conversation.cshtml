@@ -1,0 +1,61 @@
+﻿@model IEnumerable<Do_an_co_so.Models.Message>
+
+@{
+    var receiver = ViewBag.Receiver as Do_an_co_so.Models.AppUser;
+    var currentUserId = ViewBag.CurrentUserId as string;
+    ViewData["Title"] = "Chat với " + (receiver?.HoTen ?? "Người dùng");
+}
+
+<div class="container mt-4 mb-5">
+    <div class="col-md-8 mx-auto">
+        <div class="card shadow card-custom overflow-hidden">
+            <div class="card-header bg-primary text-white d-flex align-items-center p-3">
+                <a asp-action="Index" class="text-white me-3 text-decoration-none fs-4" title="Quay lại hộp thư">⬅</a>
+                <div class="bg-white text-primary rounded-circle d-flex justify-content-center align-items-center me-2 fw-bold" style="width: 40px; height: 40px; font-size: 18px;">
+                    @(string.IsNullOrEmpty(receiver?.HoTen) ? "U" : receiver.HoTen.Substring(0, 1).ToUpper())
+                </div>
+                <h5 class="mb-0 fw-bold">@((receiver?.HoTen ?? receiver?.Email))</h5>
+            </div>
+
+            <div class="card-body bg-light p-4" style="height: 450px; overflow-y: auto;" id="chatBox">
+                @if (!Model.Any())
+                {
+                    <div class="text-center text-muted mt-5">
+                        <p class="fs-1 mb-0">👋</p>
+                        <p>Hãy gửi lời chào đầu tiên để bắt đầu trò chuyện!</p>
+                    </div>
+                }
+                else
+                {
+                    foreach (var msg in Model)
+                    {
+                        // Kiểm tra xem tin nhắn này là của mình gửi hay của người kia gửi để canh lề
+                        bool isMyMessage = msg.SenderId == currentUserId;
+
+                        <div class="d-flex mb-3 @(isMyMessage ? "justify-content-end" : "justify-content-start")">
+                            <div class="p-2 px-3 rounded text-white shadow-sm @(isMyMessage ? "bg-primary" : "bg-secondary")" style="max-width: 75%;">
+                                <span style="white-space: pre-line;">@msg.Content</span>
+                                <div style="font-size: 0.7rem; opacity: 0.7;" class="text-end mt-1">@msg.Timestamp.ToString("dd/MM HH:mm")</div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <div class="card-footer bg-white p-3 border-top-0">
+                <form asp-action="SendMessage" method="post" class="d-flex">
+                    <input type="hidden" name="receiverId" value="@receiver?.Id" />
+                    <input type="text" name="content" class="form-control rounded-pill me-2 bg-light border-0 px-4" placeholder="Nhập tin nhắn của bạn..." required autocomplete="off" />
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Gửi 🚀</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var chatBox = document.getElementById("chatBox");
+        chatBox.scrollTop = chatBox.scrollHeight;
+    </script>
+}

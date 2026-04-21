@@ -1,0 +1,71 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Hồ sơ cá nhân";
+}
+
+<h3 class="text-primary fw-bold mb-4">@ViewData["Title"]</h3>
+<partial name="_StatusMessage" for="StatusMessage" />
+
+<div class="row">
+    <div class="col-md-9">
+        <form id="profile-form" method="post" enctype="multipart/form-data" class="card card-custom p-4 shadow-sm border-0 bg-light">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+            <div class="text-center mb-5">
+                @if (!string.IsNullOrEmpty(Model.Input.AvatarUrl))
+                {
+                    <img src="~/images/avatars/@Model.Input.AvatarUrl" class="rounded-circle shadow border border-3 border-primary" style="width: 150px; height: 150px; object-fit: cover;" alt="Avatar" />
+                }
+                else
+                {
+                    <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center mx-auto shadow" style="width: 150px; height: 150px; font-size: 60px;">
+                        @(string.IsNullOrEmpty(Model.Input.HoTen) ? "U" : Model.Input.HoTen.Substring(0, 1).ToUpper())
+                    </div>
+                }
+                <div class="mt-3">
+                    <label class="form-label fw-bold text-muted">Thay ảnh đại diện</label>
+                    <input type="file" asp-for="Input.AvatarFile" class="form-control form-control-sm w-50 mx-auto" accept="image/*" />
+                </div>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Username" class="form-control text-muted" disabled />
+                <label asp-for="Username" class="form-label">📧 Email / Tài khoản</label>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.HoTen" class="form-control fw-bold" placeholder="Nhập họ và tên" />
+                <label asp-for="Input.HoTen" class="form-label">👤 Họ và tên</label>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input asp-for="Input.NgaySinh" class="form-control" />
+                        <label asp-for="Input.NgaySinh" class="form-label">🎂 Ngày sinh</label>
+                    </div>
+                    @if (Model.Input.NgaySinh.HasValue)
+                    {
+                        var age = DateTime.Now.Year - Model.Input.NgaySinh.Value.Year;
+                        if (DateTime.Now.DayOfYear < Model.Input.NgaySinh.Value.DayOfYear) age--;
+                        <small class="text-success fw-bold ms-2 mb-3 d-block">👉 Hiện tại bạn @age tuổi</small>
+                    }
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input asp-for="Input.PhoneNumber" class="form-control" placeholder="Số điện thoại" />
+                        <label asp-for="Input.PhoneNumber" class="form-label">📞 Số điện thoại</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-floating mb-4">
+                <input asp-for="Input.DiaChi" class="form-control" placeholder="Nhập địa chỉ" />
+                <label asp-for="Input.DiaChi" class="form-label">📍 Địa chỉ đang ở</label>
+            </div>
+
+            <button id="update-profile-button" type="submit" class="btn btn-lg btn-primary w-100 fw-bold shadow-sm">Lưu thay đổi hồ sơ</button>
+        </form>
+    </div>
+</div>

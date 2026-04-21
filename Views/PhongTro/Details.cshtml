@@ -1,0 +1,129 @@
+﻿@model Do_an_co_so.Models.PhongTro
+
+@{
+    ViewData["Title"] = "Chi tiết phòng trọ";
+}
+
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-md-7">
+            <div class="card card-custom p-2 shadow-sm border-0">
+                @if (!string.IsNullOrEmpty(Model.HinhAnh))
+                {
+                    var allImages = Model.HinhAnh.Split(',');
+                    <div id="roomCarousel" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            @for (int i = 0; i < allImages.Length; i++)
+                            {
+                                <div class="carousel-item @(i == 0 ? "active" : "")">
+                                    <img src="~/images/@allImages[i]" class="d-block w-100" style="height: 450px; object-fit: cover; border-radius: 8px;">
+                                </div>
+                            }
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#roomCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon bg-dark rounded-circle"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#roomCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon bg-dark rounded-circle"></span>
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card card-custom p-4 h-100 shadow-sm border-0">
+                <h3 class="text-danger fw-bold">@Model.Gia.ToString("N0") VNĐ/Tháng</h3>
+                <hr />
+                <p><strong>📍 Địa chỉ:</strong> @Model.DiaChi</p>
+
+                <p>
+                    <strong>👤 Người đăng:</strong>
+                    <a asp-controller="User" asp-action="TrangCaNhan" asp-route-id="@Model.ChuTroId" class="text-decoration-none fw-bold text-primary fs-5">
+                        @(Model.ChuTro?.HoTen ?? "Đang cập nhật")
+                    </a>
+                </p>
+
+                <p><strong>📧 Liên hệ:</strong> @Model.ChuTro?.Email</p>
+
+                <h5 class="mt-4 fw-bold">Mô tả chi tiết:</h5>
+                <p style="white-space: pre-line;" class="text-muted">@Model.MoTa</p>
+
+                <div class="mt-auto">
+                    <a asp-controller="Chat" asp-action="Conversation" asp-route-receiverId="@Model.ChuTroId" class="btn btn-success btn-lg w-100 mb-2 shadow-sm">💬 Nhắn tin</a>
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary w-100 fw-bold">Trở lại trang chủ</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="my-5 text-muted" />
+    <h4 class="text-primary fw-bold mb-4">⭐ Đánh giá từ người thuê</h4>
+
+    <div class="row">
+        <div class="col-md-5 mb-4">
+            <div class="card card-custom p-4 shadow-sm border-0 bg-light h-100">
+                <h5 class="fw-bold mb-3">Viết đánh giá của bạn</h5>
+                <form asp-controller="PhongTro" asp-action="AddReview" method="post">
+                    <input type="hidden" name="phongTroId" value="@Model.Id" />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Chọn mức độ hài lòng:</label>
+                        <select name="sao" class="form-select border-warning text-warning fw-bold shadow-sm" required>
+                            <option value="5">⭐⭐⭐⭐⭐ (5 Sao - Tuyệt vời)</option>
+                            <option value="4">⭐⭐⭐⭐ (4 Sao - Rất tốt)</option>
+                            <option value="3">⭐⭐⭐ (3 Sao - Bình thường)</option>
+                            <option value="2">⭐⭐ (2 Sao - Kém)</option>
+                            <option value="1">⭐ (1 Sao - Tệ)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Bình luận chi tiết:</label>
+                        <textarea name="noiDung" class="form-control shadow-sm" rows="3" placeholder="Chia sẻ trải nghiệm chân thực của bạn..." required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-warning w-100 fw-bold shadow-sm">Gửi Đánh Giá 🚀</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            @{
+                var danhGias = ViewBag.DanhGias as IEnumerable<Do_an_co_so.Models.DanhGia>;
+            }
+
+            @if (danhGias != null && danhGias.Any())
+            {
+                <div style="max-height: 400px; overflow-y: auto;" class="pe-2">
+                    @foreach (var dg in danhGias)
+                    {
+                        <div class="card mb-3 shadow-sm border-0">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="fw-bold text-primary mb-0">
+                                        👤 @(dg.User?.HoTen ?? dg.User?.Email ?? "Sinh viên")
+                                    </h6>
+                                    <small class="text-muted">@dg.NgayTao.ToString("dd/MM/yyyy HH:mm")</small>
+                                </div>
+                                <div class="text-warning mb-2 fs-5">
+                                    @for (int i = 0; i < dg.Sao; i++)
+                                    {
+                                        <span>⭐</span>
+                                    }
+                                </div>
+                                <p class="mb-0 text-dark" style="white-space: pre-line;">@dg.NoiDung</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center p-5 bg-white rounded shadow-sm border-0">
+                    <h5 class="text-muted mb-0">Chưa có đánh giá nào. Hãy là người đầu tiên bóc tem phòng trọ này! 🎉</h5>
+                </div>
+            }
+        </div>
+    </div>
+</div>

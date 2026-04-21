@@ -1,0 +1,49 @@
+﻿@model Do_an_co_so.Models.PhongTro
+
+@{
+    ViewData["Title"] = "Đăng phòng mới";
+}
+
+<div class="container mt-4 mb-5">
+    <h2 class="text-primary fw-bold mb-4">✨ Điền Thông Tin Phòng Trọ</h2>
+
+    <div class="card card-custom p-4 col-md-8 mx-auto">
+        <form asp-action="Create" enctype="multipart/form-data" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="mb-3">
+                <label asp-for="MoTa" class="form-label fw-bold"></label>
+                <textarea asp-for="MoTa" class="form-control" rows="4" placeholder="Ví dụ: Phòng trọ 25m2, có gác lửng, WC riêng, giờ giấc tự do..."></textarea>
+                <span asp-validation-for="MoTa" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Gia" class="form-label fw-bold"></label>
+                <input asp-for="Gia" type="number" class="form-control" placeholder="Ví dụ: 2500000" />
+                <span asp-validation-for="Gia" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="DiaChi" class="form-label fw-bold"></label>
+                <input asp-for="DiaChi" class="form-control" placeholder="Ví dụ: 123 Đường Tôn Đức Thắng, Phường..." />
+                <span asp-validation-for="DiaChi" class="text-danger"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="ImageUploads" class="form-label fw-bold text-success">📷 Thêm hình ảnh (Có thể chọn nhiều)</label>
+                <input asp-for="ImageUploads" type="file" class="form-control" accept="image/*" multiple />
+                <span asp-validation-for="ImageUploads" class="text-danger"></span>
+            </div>
+
+            <div class="mt-4 text-center">
+                <button type="submit" class="btn btn-primary btn-lg px-5">Đăng Lên Hệ Thống</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
