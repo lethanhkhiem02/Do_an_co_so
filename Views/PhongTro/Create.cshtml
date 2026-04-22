@@ -4,10 +4,12 @@
     ViewData["Title"] = "Đăng phòng mới";
 }
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
 <div class="container mt-4 mb-5">
     <h2 class="text-primary fw-bold mb-4">✨ Điền Thông Tin Phòng Trọ</h2>
 
-    <div class="card card-custom p-4 col-md-8 mx-auto">
+    <div class="card card-custom p-4 col-md-8 mx-auto shadow-sm rounded-4">
         <form asp-action="Create" enctype="multipart/form-data" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
@@ -30,13 +32,21 @@
             </div>
 
             <div class="mb-4">
+                <label class="form-label fw-bold text-primary">📍 Ghim vị trí trên bản đồ</label>
+                <div id="map" style="height: 350px; border-radius: 10px; border: 1px solid #ddd;"></div>
+                <small class="text-muted">Kéo dấu ghim màu xanh đến đúng vị trí phòng trọ để sinh viên dễ tìm kiếm theo khoảng cách.</small>
+
+                <input type="hidden" asp-for="Latitude" id="latInput" />
+                <input type="hidden" asp-for="Longitude" id="lngInput" />
+            </div>
+            <div class="mb-4">
                 <label asp-for="ImageUploads" class="form-label fw-bold text-success">📷 Thêm hình ảnh (Có thể chọn nhiều)</label>
                 <input asp-for="ImageUploads" type="file" class="form-control" accept="image/*" multiple />
                 <span asp-validation-for="ImageUploads" class="text-danger"></span>
             </div>
 
             <div class="mt-4 text-center">
-                <button type="submit" class="btn btn-primary btn-lg px-5">Đăng Lên Hệ Thống</button>
+                <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill fw-bold">Đăng Lên Hệ Thống</button>
             </div>
         </form>
     </div>
@@ -46,4 +56,38 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // 1. Khởi tạo bản đồ ở trung tâm TP.HCM (Quận Bình Thạnh)
+        var map = L.map('map').setView([10.8018, 106.7115], 14);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // 2. Tạo dấu ghim có thể kéo thả
+        var marker = L.marker([10.8018, 106.7115], { draggable: true }).addTo(map);
+
+        // 3. Hàm cập nhật tọa độ vào Input ẩn
+        function updateLatLng(lat, lng) {
+            document.getElementById('latInput').value = lat;
+            document.getElementById('lngInput').value = lng;
+        }
+
+        // Khởi tạo giá trị mặc định lúc load trang
+        updateLatLng(10.8018, 106.7115);
+
+        // Bắt sự kiện khi người dùng kéo thả ghim xong
+        marker.on('dragend', function (e) {
+            var coords = e.target.getLatLng();
+            updateLatLng(coords.lat, coords.lng);
+        });
+
+        // Click vào bản đồ để ghim nhảy tới đó nhanh
+        map.on('click', function(e) {
+            marker.setLatLng(e.latlng);
+            updateLatLng(e.latlng.lat, e.latlng.lng);
+        });
+    </script>
 }

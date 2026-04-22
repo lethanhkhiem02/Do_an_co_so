@@ -1,0 +1,181 @@
+﻿@model IEnumerable<Do_an_co_so.Models.PhongTroSearchResultViewModel>
+@using Do_an_co_so.Models
+
+@{
+    ViewData["Title"] = "Tìm trọ quanh trường";
+    var danhSachTruong = ViewBag.DanhSachTruong as List<TruongDaiHoc>;
+}
+
+<div class="container mt-4 mb-5">
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-body p-4 bg-light rounded-4">
+            <h4 class="mb-4 fw-bold text-primary">🏫 Tìm trọ thông minh theo trường</h4>
+
+            <form asp-action="TimKiem" method="get" class="row g-3">
+
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Hệ đào tạo</label>
+                    <select id="loaiTruongFilter" class="form-select rounded-pill">
+                        <option value="all">Tất cả hệ</option>
+                        <option value="Đại học">Đại học</option>
+                        <option value="Cao đẳng">Cao đẳng</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Trường của bạn</label>
+                    <select id="truongSelect" name="truongId" class="form-select rounded-pill">
+                        <option value="" data-type="all">-- Chọn trường --</option>
+                        @if (danhSachTruong != null)
+                        {
+                            var groupedTruong = danhSachTruong.GroupBy(t => t.Quan);
+                            foreach (var group in groupedTruong)
+                            {
+                                <optgroup label="Khu vực @group.Key">
+                                    @foreach (var truong in group)
+                                    {
+                                        <option value="@truong.Id" data-type="@truong.LoaiTruong" selected="@(ViewBag.TruongId == truong.Id)">
+                                            @truong.TenTruong
+                                        </option>
+                                    }
+                                </optgroup>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Bán kính</label>
+                    <select name="radius" class="form-select rounded-pill">
+                        <option value="">-- Khoảng cách --</option>
+                        <option value="1" selected="@(ViewBag.Radius?.ToString() == "1")">1 km</option>
+                        <option value="2" selected="@(ViewBag.Radius?.ToString() == "2")">2 km</option>
+                        <option value="5" selected="@(ViewBag.Radius?.ToString() == "5")">5 km</option>
+                        <option value="10" selected="@(ViewBag.Radius?.ToString() == "10")">10 km</option>
+                        <option value="20" selected="@(ViewBag.Radius?.ToString() == "20")">20 km</option>
+                        <option value="50" selected="@(ViewBag.Radius?.ToString() == "50")">50 km</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Khoảng giá (VNĐ)</label>
+                    <div class="input-group">
+                        <input type="number" name="minPrice" value="@ViewBag.MinPrice" class="form-control" placeholder="Từ..." step="500000" min="0">
+                        <span class="input-group-text">-</span>
+                        <input type="number" name="maxPrice" value="@ViewBag.MaxPrice" class="form-control" placeholder="Đến..." step="500000" min="0">
+                    </div>
+                </div>
+
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary rounded-pill w-100 fw-bold shadow-sm">
+                        Lọc kết quả
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Tìm thấy <span class="text-primary">@Model.Count()</span> phòng trọ phù hợp</h5>
+
+        <form asp-action="TimKiem" method="get" class="d-flex align-items-center">
+            <input type="hidden" name="truongId" value="@ViewBag.TruongId" />
+            <input type="hidden" name="radius" value="@ViewBag.Radius" />
+            <input type="hidden" name="minPrice" value="@ViewBag.MinPrice" />
+            <input type="hidden" name="maxPrice" value="@ViewBag.MaxPrice" />
+
+            <label class="me-2 text-muted fw-bold">Sắp xếp:</label>
+            <select name="sortBy" class="form-select form-select-sm rounded-pill w-auto" onchange="this.form.submit()">
+                <option value="distance_asc" selected="@(ViewBag.SortBy == "distance_asc")">Gần trường nhất</option>
+                <option value="price_asc" selected="@(ViewBag.SortBy == "price_asc")">Giá: Thấp đến cao</option>
+                <option value="price_desc" selected="@(ViewBag.SortBy == "price_desc")">Giá: Cao đến thấp</option>
+            </select>
+        </form>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-warning text-center rounded-4 shadow-sm" role="alert">
+            <span class="fs-4">😢</span> Không có phòng trọ nào khớp với tiêu chí của bạn.
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            @foreach (var item in Model)
+            {
+                <div class="col">
+                    <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden position-relative">
+
+                        @if (!string.IsNullOrEmpty(ViewBag.TruongId as string))
+                        {
+                            <div class="position-absolute top-0 start-0 m-2">
+                                <span class="badge bg-danger rounded-pill px-3 py-2 fs-6 shadow">
+                                    📍 Cách trường: @item.KhoangCach.ToString("0.0") km
+                                </span>
+                            </div>
+                        }
+
+                        @{
+                            string firstImage = "/images/no-image.jpg";
+                            if (!string.IsNullOrEmpty(item.PhongTro.HinhAnh))
+                            {
+                                firstImage = "/images/" + item.PhongTro.HinhAnh.Split(',')[0];
+                            }
+                        }
+                        <img src="@firstImage" class="card-img-top" alt="Hình phòng trọ" style="height: 220px; object-fit: cover;">
+
+                        <div class="card-body">
+                            <h4 class="card-title text-primary fw-bold mb-1">@item.PhongTro.Gia.ToString("N0") VNĐ</h4>
+                            <small class="text-muted d-block mb-3">📍 @item.PhongTro.DiaChi</small>
+                            <p class="card-text text-secondary" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                @item.PhongTro.MoTa
+                            </p>
+                        </div>
+                        <div class="card-footer bg-white border-top-0 pb-3 pt-0">
+                            <a asp-action="Details" asp-route-id="@item.PhongTro.Id" class="btn btn-outline-primary w-100 rounded-pill fw-bold">Xem chi tiết</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // JAVASCRIPT: Lọc danh sách trường dựa trên lựa chọn Đại học / Cao đẳng
+        document.addEventListener("DOMContentLoaded", function () {
+            var loaiTruongFilter = document.getElementById("loaiTruongFilter");
+            var truongSelect = document.getElementById("truongSelect");
+            var allOptions = Array.from(truongSelect.querySelectorAll("option[data-type]"));
+            var optGroups = truongSelect.querySelectorAll("optgroup");
+
+            loaiTruongFilter.addEventListener("change", function () {
+                var selectedType = this.value;
+
+                // 1. Ẩn/Hiện các Option (Tên trường)
+                allOptions.forEach(function (opt) {
+                    if (selectedType === "all" || opt.getAttribute("data-type") === selectedType || opt.value === "") {
+                        opt.style.display = ""; // Hiện
+                    } else {
+                        opt.style.display = "none"; // Ẩn
+                    }
+                });
+
+                // 2. Ẩn/Hiện các Optgroup (Quận) nếu bên trong không có trường nào hiện
+                optGroups.forEach(function (group) {
+                    var visibleOptions = Array.from(group.querySelectorAll("option")).filter(o => o.style.display !== "none");
+                    if (visibleOptions.length === 0) {
+                        group.style.display = "none";
+                    } else {
+                        group.style.display = "";
+                    }
+                });
+
+                // Reset trường đã chọn về mặc định khi đổi loại
+                truongSelect.value = "";
+            });
+        });
+    </script>
+}

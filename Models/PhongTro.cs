@@ -33,5 +33,10 @@ namespace Do_an_co_so.Models
         public string? ChuTroId { get; set; }
         [ForeignKey("ChuTroId")]
         public AppUser? ChuTro { get; set; }
+        [Display(Name = "Vĩ độ (Latitude)")]
+        public double? Latitude { get; set; }
+
+        [Display(Name = "Kinh độ (Longitude)")]
+        public double? Longitude { get; set; }
     }
 }
