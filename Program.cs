@@ -1,10 +1,11 @@
 using Do_an_co_so.Data;
+using Do_an_co_so.Hubs;
 using Do_an_co_so.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Services.AddSignalR();
 // ==========================================
 // 1. CẤU HÌNH DATABASE VÀ IDENTITY
 // ==========================================
@@ -108,5 +109,5 @@ using (var scope = app.Services.CreateScope())
     }
 }
 // ==========================================
-
+app.MapHub<ChatHub>("/chatHub");
 app.Run();
