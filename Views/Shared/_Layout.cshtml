@@ -20,28 +20,33 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Trang chủ</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="PhongTro" asp-action="TimKiem">🔍 Tìm kiếm phòng trọ</a>
+                        </li>
 
                         @if (User.Identity.IsAuthenticated)
                         {
-                            // 1. Nếu là Chủ Trọ -> Hiện thêm nút Đăng phòng
+                            <li class="nav-item">
+                                <a class="nav-link fw-bold text-light" asp-area="" asp-controller="Chat" asp-action="Index">💬 Tin nhắn</a>
+                            </li>
+
+                            // QUYỀN CHỦ TRỌ: Chỉ Chủ trọ mới thấy các nút này
                             @if (User.IsInRole("ChuTro"))
                             {
                                 <li class="nav-item">
                                     <a class="nav-link text-warning fw-bold" asp-area="" asp-controller="PhongTro" asp-action="Create">✨ Đăng phòng</a>
                                 </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-info fw-bold" asp-area="" asp-controller="PhongTro" asp-action="QuanLyPhong">📋 Quản lý phòng của tôi</a>
+                                </li>
                             }
-
-                            // 2. Bất kể là Sinh Viên hay Chủ Trọ -> Đều hiện nút Tin nhắn
-                            <li class="nav-item">
-                                <a class="nav-link fw-bold text-light" asp-area="" asp-controller="Chat" asp-action="Index">💬 Tin nhắn</a>
-                            </li>
                         }
                     </ul>
-
                     <partial name="_LoginPartial" />
 
                 </div>

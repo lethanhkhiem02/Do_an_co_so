@@ -39,12 +39,28 @@
                 <input type="hidden" asp-for="Latitude" id="latInput" />
                 <input type="hidden" asp-for="Longitude" id="lngInput" />
             </div>
+
             <div class="mb-4">
                 <label asp-for="ImageUploads" class="form-label fw-bold text-success">📷 Thêm hình ảnh (Có thể chọn nhiều)</label>
                 <input asp-for="ImageUploads" type="file" class="form-control" accept="image/*" multiple />
                 <span asp-validation-for="ImageUploads" class="text-danger"></span>
             </div>
 
+            <div class="mb-4 mt-4">
+                <div class="card border-warning shadow-sm" style="border-width: 2px;">
+                    <div class="card-body bg-warning bg-opacity-10 rounded">
+                        <div class="form-check form-switch fs-5">
+                            <input class="form-check-input border-warning" type="checkbox" asp-for="IsVip" id="vipSwitch">
+                            <label class="form-check-label fw-bold text-danger" for="vipSwitch" style="cursor: pointer;">
+                                ⭐ Đăng tin VIP (Phí: 50.000 VNĐ)
+                            </label>
+                        </div>
+                        <small class="text-muted mt-2 d-block">
+                            💡 Tin VIP sẽ được ghim lên đầu bảng kết quả tìm kiếm với thiết kế nổi bật, giúp phòng của bạn tiếp cận sinh viên và chốt khách nhanh gấp 3 lần!
+                        </small>
+                    </div>
+                </div>
+            </div>
             <div class="mt-4 text-center">
                 <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill fw-bold">Đăng Lên Hệ Thống</button>
             </div>

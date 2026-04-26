@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 
 namespace Do_an_co_so.Models
 {
@@ -11,5 +12,9 @@ namespace Do_an_co_so.Models
         public string? Avatar { get; set; }       // Lưu tên file ảnh đại diện
         public DateTime? NgaySinh { get; set; }   // Lưu ngày tháng năm sinh
         public string? DiaChi { get; set; }       // Lưu địa chỉ
+
+        // --- CÁC THUỘC TÍNH MỚI CHO TÍNH NĂNG VIP ---
+        [Display(Name = "Số dư ví")]
+        public decimal SoDu { get; set; } = 0; // Mặc định ví tạo ra có 0 đồng
     }
 }
