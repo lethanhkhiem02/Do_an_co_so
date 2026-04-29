@@ -54,12 +54,14 @@ body {
     border: none;
 }
 
-.navbar-custom .navbar-brand,
-.navbar-custom .nav-link {
-    color: #ffffff !important;
-    font-weight: 500;
-    transition: 0.3s;
-}
+    .navbar-custom .navbar-brand,
+    .navbar-custom .nav-link,
+    .navbar-custom .navbar-brand *,
+    .navbar-custom .navbar-brand span {
+        color: #ffffff !important;
+        font-weight: 500;
+        transition: 0.3s;
+    }
 
 .navbar-custom .nav-link:hover {
     color: #d1d3e2 !important;
@@ -95,4 +97,162 @@ body {
     background-color: #ffffff;
     border-top: 1px solid #e3e6f0;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+}
+/* ===== DARK / LIGHT MODE ===== */
+
+/* ===== DARK / LIGHT MODE ===== */
+
+:root {
+    --bg-color: #ffffff;
+    --text-color: #212529;
+    --card-bg: #ffffff;
+    --card-border: #dee2e6;
+    --navbar-bg: #3d5a99;
+    --footer-bg: #f8f9fa;
+    --footer-text: #6c757d;
+    --input-bg: #ffffff;
+    --input-text: #212529;
+    --input-border: #ced4da;
+    --muted-text: #6c757d;
+    --link-color: #0d6efd;
+}
+
+[data-theme="dark"] {
+    --bg-color: #121212;
+    --text-color: #f0f0f0;
+    --card-bg: #1e1e1e;
+    --card-border: #333333;
+    --navbar-bg: #1a1a1a;
+    --footer-bg: #1a1a1a;
+    --footer-text: #aaaaaa;
+    --input-bg: #2a2a2a;
+    --input-text: #f0f0f0;
+    --input-border: #444444;
+    --muted-text: #aaaaaa;
+    --link-color: #6ea8fe;
+}
+
+/* Toàn bộ trang */
+body {
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Mọi thẻ chữ thông thường */
+p, h1, h2, h3, h4, h5, h6, span, label, div, td, th, li {
+    color: var(--text-color) !important;
+}
+
+/* Link */
+a:not(.btn):not(.nav-link) {
+    color: var(--link-color) !important;
+}
+
+/* Chữ mờ (text-muted) */
+.text-muted {
+    color: var(--muted-text) !important;
+}
+
+/* Navbar */
+.navbar {
+    background-color: var(--navbar-bg) !important;
+    transition: background-color 0.3s ease;
+}
+
+    /* Giữ chữ trên navbar luôn trắng */
+    .navbar .nav-link,
+    .navbar .navbar-brand,
+    .navbar .fw-bold,
+    .navbar span,
+    .navbar a,
+    .navbar li,
+    .navbar div,
+    .navbar-custom .navbar-brand,
+    [data-theme="dark"] .navbar *,
+    [data-theme="dark"] .navbar-custom * {
+        color: #ffffff !important;
+    }
+
+/* Card */
+.card {
+    background-color: var(--card-bg) !important;
+    border-color: var(--card-border) !important;
+}
+
+    .card .card-title,
+    .card .card-text,
+    .card .card-body {
+        color: var(--text-color) !important;
+    }
+
+/* Input, select, textarea */
+input, select, textarea, .form-control, .form-select {
+    background-color: var(--input-bg) !important;
+    color: var(--input-text) !important;
+    border-color: var(--input-border) !important;
+}
+
+/* Placeholder chữ trong input */
+::placeholder {
+    color: var(--muted-text) !important;
+}
+
+/* Footer */
+footer {
+    background-color: var(--footer-bg) !important;
+    color: var(--footer-text) !important;
+    transition: background-color 0.3s ease;
+}
+
+/* Container/wrapper trắng */
+.container, .container-fluid {
+    background-color: transparent !important;
+}
+/* Khung trắng (card, alert, box) trong dark mode → màu tối như footer */
+[data-theme="dark"] .card,
+[data-theme="dark"] .alert,
+[data-theme="dark"] .alert-warning,
+[data-theme="dark"] .bg-white,
+[data-theme="dark"] [style*="background-color: white"],
+[data-theme="dark"] [style*="background: white"],
+[data-theme="dark"] .rounded,
+[data-theme="dark"] .shadow,
+[data-theme="dark"] .shadow-sm,
+[data-theme="dark"] .border {
+    background-color: #1a1a1a !important;
+    border-color: #333333 !important;
+    color: var(--text-color) !important;
+}
+
+/* Chữ trong khung vàng (alert) cũng phải sáng lên */
+[data-theme="dark"] .alert * {
+    color: var(--text-color) !important;
+}
+
+/* Khung tìm kiếm (bg-light) trong dark mode */
+[data-theme="dark"] .bg-light {
+    background-color: #1a1a1a !important;
+    color: var(--text-color) !important;
+}
+
+/* Card border-0 (khung phòng trọ và khung tìm kiếm) */
+[data-theme="dark"] .card.border-0 {
+    background-color: #1a1a1a !important;
+}
+
+/* Khung cảnh báo vàng (alert-warning) */
+[data-theme="dark"] .alert-warning {
+    background-color: #1a1a1a !important;
+    border-color: #333333 !important;
+    color: var(--text-color) !important;
+}
+
+/* Hộp thư (chat box) - khung trắng trong trang tin nhắn */
+[data-theme="dark"] .card-body {
+    background-color: #1a1a1a !important;
+}
+/* Nút theme-toggle */
+#theme-toggle {
+    transition: all 0.3s ease;
 }
