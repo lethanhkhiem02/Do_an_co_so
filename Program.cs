@@ -17,6 +17,8 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
+builder.Services.AddDefaultIdentity<AppUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<ApplicationDbContext>();
+
 // ĐÃ XÓA DÒNG CODE BỊ TRÙNG LẶP DO VISUAL STUDIO TỰ TẠO Ở ĐÂY
 
 // Đăng ký Identity để quản lý User, Role và Phân quyền (Giữ lại đoạn code chuẩn này)

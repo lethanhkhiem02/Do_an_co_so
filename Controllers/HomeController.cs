@@ -3,6 +3,7 @@ using Do_an_co_so.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Do_an_co_so.Controllers
@@ -20,10 +21,13 @@ namespace Do_an_co_so.Controllers
 
         public async Task<IActionResult> Index()
         {
-            // Lấy toàn bộ danh sách phòng trọ
-            var danhSachPhong = await _context.PhongTro.ToListAsync();
+            // TÍNH NĂNG MỚI: Ưu tiên đẩy tin VIP lên đầu, sau đó mới đến tin mới nhất
+            var danhSachPhong = await _context.PhongTro
+                .OrderByDescending(p => p.IsVip)
+                .ThenByDescending(p => p.Id)
+                .ToListAsync();
 
-            // TÍNH NĂNG MỚI: Lấy toàn bộ dữ liệu đánh giá truyền ra giao diện
+            // Lấy toàn bộ dữ liệu đánh giá truyền ra giao diện
             ViewBag.AllDanhGias = await _context.DanhGias.ToListAsync();
 
             return View(danhSachPhong);

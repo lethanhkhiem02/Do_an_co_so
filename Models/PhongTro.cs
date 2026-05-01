@@ -33,10 +33,15 @@ namespace Do_an_co_so.Models
         public string? ChuTroId { get; set; }
         [ForeignKey("ChuTroId")]
         public AppUser? ChuTro { get; set; }
+
         [Display(Name = "Vĩ độ (Latitude)")]
         public double? Latitude { get; set; }
 
         [Display(Name = "Kinh độ (Longitude)")]
         public double? Longitude { get; set; }
+
+        // --- CÁC THUỘC TÍNH MỚI CHO TÍNH NĂNG VIP ---
+        [Display(Name = "Tin VIP")]
+        public bool IsVip { get; set; } = false; // Mặc định đăng lên là tin thường
     }
 }

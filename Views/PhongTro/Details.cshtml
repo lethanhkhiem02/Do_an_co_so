@@ -1,4 +1,6 @@
 ﻿@model Do_an_co_so.Models.PhongTro
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<AppUser> UserManager
 
 @{
     ViewData["Title"] = "Chi tiết phòng trọ";
@@ -51,7 +53,17 @@
 
                 <div class="mt-auto">
                     <a asp-controller="Chat" asp-action="Conversation" asp-route-receiverId="@Model.ChuTroId" class="btn btn-success btn-lg w-100 mb-2 shadow-sm">💬 Nhắn tin</a>
-                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary w-100 fw-bold">Trở lại trang chủ</a>
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary w-100 fw-bold mb-2">Trở lại trang chủ</a>
+
+                    @if (User.Identity.IsAuthenticated && UserManager.GetUserId(User) == Model.ChuTroId)
+                    {
+                        <form asp-controller="PhongTro" asp-action="Delete" asp-route-id="@Model.Id" method="post"
+                              onsubmit="return confirm('⚠️ CẢNH BÁO: Bạn có chắc chắn muốn xóa bài đăng này không?\n\n(Lưu ý: Nếu đây là tin VIP, bạn sẽ KHÔNG được hoàn lại 50.000đ)');">
+                            <button type="submit" class="btn btn-danger w-100 fw-bold shadow-sm">
+                                🗑️ Xóa bài đăng này
+                            </button>
+                        </form>
+                    }
                 </div>
             </div>
         </div>

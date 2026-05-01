@@ -39,6 +39,31 @@ namespace Do_an_co_so.Controllers
         {
             if (ModelState.IsValid)
             {
+                // 1. Lấy thông tin tài khoản Chủ trọ đang đăng nhập
+                var user = await _userManager.GetUserAsync(User);
+                phongTro.ChuTroId = user.Id;
+
+                // ========================================================
+                // 2. LOGIC XỬ LÝ TIN VIP & TRỪ TIỀN 
+                // ========================================================
+                if (phongTro.IsVip)
+                {
+                    if (user.SoDu < 50000)
+                    {
+                        // Nếu ví không đủ 50.000đ -> Ép lỗi và đẩy về lại trang đăng bài
+                        ModelState.AddModelError(string.Empty, "❌ Số dư trong ví không đủ để đăng tin VIP. Vui lòng nạp thêm tiền!");
+                        return View(phongTro);
+                    }
+                    else
+                    {
+                        // Đủ tiền -> Trừ 50.000đ và cập nhật lại số dư vào Database
+                        user.SoDu -= 50000;
+                        await _userManager.UpdateAsync(user);
+                    }
+                }
+                // ========================================================
+
+                // 3. Xử lý Upload Hình ảnh
                 if (phongTro.ImageUploads != null && phongTro.ImageUploads.Count > 0)
                 {
                     string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images");
@@ -60,12 +85,11 @@ namespace Do_an_co_so.Controllers
                     phongTro.HinhAnh = string.Join(",", uploadedFileNames);
                 }
 
-                var user = await _userManager.GetUserAsync(User);
-                phongTro.ChuTroId = user.Id;
-
+                // 4. Lưu thông tin phòng trọ vào Database
                 _context.Add(phongTro);
                 await _context.SaveChangesAsync();
 
+                // Đăng xong thì quay về trang chủ
                 return RedirectToAction("Index", "Home");
             }
             return View(phongTro);
@@ -111,6 +135,50 @@ namespace Do_an_co_so.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction("Details", new { id = phongTroId });
+        }
+
+        // =====================================================================
+        // TRANG QUẢN LÝ PHÒNG RIÊNG CỦA CHỦ TRỌ
+        // =====================================================================
+        [Authorize(Roles = "ChuTro")]
+        public async Task<IActionResult> QuanLyPhong()
+        {
+            // 1. Xác định "Tôi là ai?"
+            var user = await _userManager.GetUserAsync(User);
+
+            // 2. Chỉ lấy những phòng của tôi, ưu tiên VIP lên đầu
+            var danhSachCuaToi = await _context.PhongTro
+                .Where(p => p.ChuTroId == user.Id)
+                .OrderByDescending(p => p.IsVip)
+                .ThenByDescending(p => p.Id)
+                .ToListAsync();
+
+            return View(danhSachCuaToi);
+        }
+
+        // =====================================================================
+        // CHỨC NĂNG XÓA BÀI ĐĂNG (BẢO MẬT: CHỈ CHỦ TRỌ MỚI ĐƯỢC XÓA BÀI CỦA MÌNH)
+        // =====================================================================
+        [HttpPost]
+        [Authorize(Roles = "ChuTro")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var phongTro = await _context.PhongTro.FindAsync(id);
+            if (phongTro == null) return NotFound();
+
+            var user = await _userManager.GetUserAsync(User);
+
+            // BẢO MẬT: Kiểm tra xem người đang đăng nhập có đúng là chủ của bài đăng này không?
+            if (phongTro.ChuTroId != user.Id)
+            {
+                return Forbid(); // Trả về lỗi 403 (Cấm truy cập) nếu cố ý xóa bài người khác
+            }
+
+            _context.PhongTro.Remove(phongTro);
+            await _context.SaveChangesAsync();
+
+            // Xóa xong thì đá về trang chủ
+            return RedirectToAction("Index", "Home");
         }
 
         // =====================================================================
@@ -198,29 +266,29 @@ namespace Do_an_co_so.Controllers
                 }
             }
 
-            // 4. Sắp xếp kết quả (Sorting)
+            // 4. Sắp xếp kết quả (Sorting) - LUÔN ƯU TIÊN TIN VIP LÊN ĐẦU
             if (!string.IsNullOrEmpty(sortBy))
             {
                 switch (sortBy)
                 {
                     case "distance_asc":
-                        ketQua = ketQua.OrderBy(k => k.KhoangCach).ToList();
+                        ketQua = ketQua.OrderByDescending(k => k.PhongTro.IsVip).ThenBy(k => k.KhoangCach).ToList();
                         break;
                     case "price_asc":
-                        ketQua = ketQua.OrderBy(k => k.PhongTro.Gia).ToList();
+                        ketQua = ketQua.OrderByDescending(k => k.PhongTro.IsVip).ThenBy(k => k.PhongTro.Gia).ToList();
                         break;
                     case "price_desc":
-                        ketQua = ketQua.OrderByDescending(k => k.PhongTro.Gia).ToList();
+                        ketQua = ketQua.OrderByDescending(k => k.PhongTro.IsVip).ThenByDescending(k => k.PhongTro.Gia).ToList();
                         break;
                 }
             }
             else
             {
-                // Mặc định: Nếu có mốc trường thì xếp từ gần đến xa, không thì xếp bài mới nhất lên đầu
+                // Mặc định: Luôn đẩy VIP lên trước. Sau đó ưu tiên khoảng cách (nếu có chọn trường) hoặc bài mới nhất.
                 if (truongDuocChon != null)
-                    ketQua = ketQua.OrderBy(k => k.KhoangCach).ToList();
+                    ketQua = ketQua.OrderByDescending(k => k.PhongTro.IsVip).ThenBy(k => k.KhoangCach).ToList();
                 else
-                    ketQua = ketQua.OrderByDescending(k => k.PhongTro.Id).ToList();
+                    ketQua = ketQua.OrderByDescending(k => k.PhongTro.IsVip).ThenByDescending(k => k.PhongTro.Id).ToList();
             }
 
             return View(ketQua);
