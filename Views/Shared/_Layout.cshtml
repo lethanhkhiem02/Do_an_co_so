@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@using Do_an_co_so.Models
+@inject UserManager<AppUser> UserManager
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -8,7 +11,6 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Do_an_co_so.styles.css" asp-append-version="true" />
-
 </head>
 <body>
     <header>
@@ -36,14 +38,36 @@
                                 <a class="nav-link fw-bold text-light" asp-area="" asp-controller="Chat" asp-action="Index">💬 Tin nhắn</a>
                             </li>
 
-                            // QUYỀN CHỦ TRỌ: Chỉ Chủ trọ mới thấy các nút này
+                            <li class="nav-item">
+                                <a class="nav-link fw-bold text-warning" asp-area="" asp-controller="Chat" asp-action="GlobalChat">🌍 Chat chung</a>
+                            </li>
+
+                            // QUYỀN CHỦ TRỌ
                             @if (User.IsInRole("ChuTro"))
                             {
+                                var currentUser = await UserManager.GetUserAsync(User);
+
+                                <li class="nav-item d-flex align-items-center ms-2 me-3">
+                                    <span class="badge bg-success fs-6 shadow-sm border border-light">
+                                        💰 Ví: @(currentUser?.SoDu.ToString("N0") ?? "0") đ
+                                    </span>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-success fw-bold" asp-area="" asp-controller="PhongTro" asp-action="NapTien">💳 Nạp tiền</a>
+                                </li>
                                 <li class="nav-item">
                                     <a class="nav-link text-warning fw-bold" asp-area="" asp-controller="PhongTro" asp-action="Create">✨ Đăng phòng</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link text-info fw-bold" asp-area="" asp-controller="PhongTro" asp-action="QuanLyPhong">📋 Quản lý phòng của tôi</a>
+                                </li>
+                            }
+
+                            // QUYỀN SINH VIÊN
+                            @if (User.IsInRole("SinhVien"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-success fw-bold" asp-area="" asp-controller="PhongTro" asp-action="PhongDaThue">🎒 Lịch sử thuê</a>
                                 </li>
                             }
                         }

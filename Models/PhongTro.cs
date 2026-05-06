@@ -43,5 +43,9 @@ namespace Do_an_co_so.Models
         // --- CÁC THUỘC TÍNH MỚI CHO TÍNH NĂNG VIP ---
         [Display(Name = "Tin VIP")]
         public bool IsVip { get; set; } = false; // Mặc định đăng lên là tin thường
+
+        // --- THUỘC TÍNH MỚI: KIỂM TRA PHÒNG ĐÃ THUÊ CHƯA ---
+        [Display(Name = "Trạng thái thuê")]
+        public bool DaChoThue { get; set; } = false; // false = Còn trống, true = Đã có người thuê
     }
 }

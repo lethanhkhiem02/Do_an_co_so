@@ -7,6 +7,22 @@
 }
 
 <div class="container mt-4 mb-5">
+    <!-- HIỂN THỊ THÔNG BÁO THÀNH CÔNG / THẤT BẠI KHI THANH TOÁN -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show fw-bold shadow-sm" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show fw-bold shadow-sm" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
     <div class="row">
         <div class="col-md-7">
             <div class="card card-custom p-2 shadow-sm border-0">
@@ -51,6 +67,38 @@
                 <h5 class="mt-4 fw-bold">Mô tả chi tiết:</h5>
                 <p style="white-space: pre-line;" class="text-muted">@Model.MoTa</p>
 
+                <!-- KHU VỰC NÚT BẤM THANH TOÁN VÀ THUÊ PHÒNG -->
+                <div class="mt-4 mb-3 p-3 border rounded bg-light">
+                    @if (Model.DaChoThue)
+                    {
+                        <div class="alert alert-danger fw-bold text-center mb-0 shadow-sm">
+                            ❌ PHÒNG NÀY ĐÃ ĐƯỢC CHO THUÊ
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-success fw-bold text-center mb-3 shadow-sm">
+                            ✅ PHÒNG ĐANG TRỐNG - CÓ THỂ THUÊ NGAY
+                        </div>
+
+                        @if (User.IsInRole("SinhVien"))
+                        {
+                            <form asp-action="ThanhToanThuePhong" asp-controller="PhongTro" asp-route-id="@Model.Id" method="post">
+                                <button type="submit" class="btn btn-primary btn-lg fw-bold w-100 shadow"
+                                        onclick="return confirm('Xác nhận thanh toán @Model.Gia.ToString("N0") VNĐ từ ví hệ thống để thuê phòng này?');">
+                                    💳 THANH TOÁN & THUÊ NGAY
+                                </button>
+                            </form>
+                        }
+                        else if (!User.Identity.IsAuthenticated)
+                        {
+                            <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-primary fw-bold w-100">
+                                Đăng nhập bằng tài khoản Sinh viên để thuê
+                            </a>
+                        }
+                    }
+                </div>
+
                 <div class="mt-auto">
                     <a asp-controller="Chat" asp-action="Conversation" asp-route-receiverId="@Model.ChuTroId" class="btn btn-success btn-lg w-100 mb-2 shadow-sm">💬 Nhắn tin</a>
                     <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary w-100 fw-bold mb-2">Trở lại trang chủ</a>
@@ -58,7 +106,7 @@
                     @if (User.Identity.IsAuthenticated && UserManager.GetUserId(User) == Model.ChuTroId)
                     {
                         <form asp-controller="PhongTro" asp-action="Delete" asp-route-id="@Model.Id" method="post"
-                              onsubmit="return confirm('⚠️ CẢNH BÁO: Bạn có chắc chắn muốn xóa bài đăng này không?\n\n(Lưu ý: Nếu đây là tin VIP, bạn sẽ KHÔNG được hoàn lại 50.000đ)');">
+                              onsubmit="return confirm('⚠️ CẢNH BÁO: Bạn có chắc chắn muốn xóa bài đăng này không?\n\n(Lưu ý: Nếu đây là tin VIP, bạn sẽ KHÔNG được hoàn lại tiền)');">
                             <button type="submit" class="btn btn-danger w-100 fw-bold shadow-sm">
                                 🗑️ Xóa bài đăng này
                             </button>

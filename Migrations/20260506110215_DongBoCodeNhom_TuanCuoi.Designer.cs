@@ -4,6 +4,7 @@ using Do_an_co_so.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Do_an_co_so.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260506110215_DongBoCodeNhom_TuanCuoi")]
+    partial class DongBoCodeNhom_TuanCuoi
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -136,42 +139,6 @@ namespace Do_an_co_so.Migrations
                     b.ToTable("DanhGias");
                 });
 
-            modelBuilder.Entity("Do_an_co_so.Models.HoaDon", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("NgayGiaoDich")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("NguoiThueId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("PhongTroId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("TienChuTroNhan")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("TienHoaHong")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("TongTien")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NguoiThueId");
-
-                    b.HasIndex("PhongTroId");
-
-                    b.ToTable("HoaDons");
-                });
-
             modelBuilder.Entity("Do_an_co_so.Models.Message", b =>
                 {
                     b.Property<int>("Id")
@@ -212,9 +179,6 @@ namespace Do_an_co_so.Migrations
 
                     b.Property<string>("ChuTroId")
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<bool>("DaChoThue")
-                        .HasColumnType("bit");
 
                     b.Property<string>("DiaChi")
                         .IsRequired()
@@ -326,10 +290,12 @@ namespace Do_an_co_so.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("ProviderKey")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("nvarchar(max)");
@@ -366,10 +332,12 @@ namespace Do_an_co_so.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Value")
                         .HasColumnType("nvarchar(max)");
@@ -394,25 +362,6 @@ namespace Do_an_co_so.Migrations
                     b.Navigation("PhongTro");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Do_an_co_so.Models.HoaDon", b =>
-                {
-                    b.HasOne("Do_an_co_so.Models.AppUser", "NguoiThue")
-                        .WithMany()
-                        .HasForeignKey("NguoiThueId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Do_an_co_so.Models.PhongTro", "PhongTro")
-                        .WithMany()
-                        .HasForeignKey("PhongTroId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("NguoiThue");
-
-                    b.Navigation("PhongTro");
                 });
 
             modelBuilder.Entity("Do_an_co_so.Models.Message", b =>

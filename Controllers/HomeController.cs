@@ -21,8 +21,9 @@ namespace Do_an_co_so.Controllers
 
         public async Task<IActionResult> Index()
         {
-            // TÍNH NĂNG MỚI: Ưu tiên đẩy tin VIP lên đầu, sau đó mới đến tin mới nhất
+            // TÍNH NĂNG MỚI: Chỉ lấy phòng CHƯA THUÊ, ưu tiên đẩy tin VIP lên đầu
             var danhSachPhong = await _context.PhongTro
+                .Where(p => p.DaChoThue == false) // 🔥 Ẩn ngay những phòng đã có người thuê
                 .OrderByDescending(p => p.IsVip)
                 .ThenByDescending(p => p.Id)
                 .ToListAsync();

@@ -9,15 +9,6 @@
     {
         var currentUser = await UserManager.GetUserAsync(User);
 
-        // HIỂN THỊ VÍ TIỀN NẾU LÀ CHỦ TRỌ
-        if (User.IsInRole("ChuTro") && currentUser != null)
-        {
-            <li class="nav-item me-3 d-flex align-items-center bg-light rounded-pill px-3 py-1 shadow-sm border border-warning">
-                <span class="text-success fw-bold me-2">💰 @currentUser.SoDu.ToString("N0") đ</span>
-                <a class="btn btn-sm btn-outline-warning fw-bold rounded-pill" href="#">Nạp tiền</a>
-            </li>
-        }
-
         <li class="nav-item">
             <a id="manage" class="nav-link text-white fw-bold" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
                 Hello @currentUser?.HoTen!
@@ -28,11 +19,11 @@
                 <button id="logout" type="submit" class="nav-link btn btn-link text-white border-0 fw-bold">Đăng xuất</button>
             </form>
         </li>
-       <li class="nav-item">
-    <button id="theme-toggle" class="btn btn-warning btn-sm ms-2" type="button" style="display: block !important;">
-        <i id="theme-icon" class="bi bi-sun-fill" style="color: black !important;"></i>
-        <span style="color: black; font-size: 12px; font-weight: bold;">MODE</span>
-    </button>
+        <li class="nav-item">
+            <button id="theme-toggle" class="btn btn-warning btn-sm ms-2" type="button" style="display: block !important;">
+                <i id="theme-icon" class="bi bi-sun-fill" style="color: black !important;"></i>
+                <span style="color: black; font-size: 12px; font-weight: bold;">MODE</span>
+            </button>
         </li>
     }
     else
