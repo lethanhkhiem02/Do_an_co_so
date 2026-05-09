@@ -1,0 +1,107 @@
+﻿@{
+    ViewData["Title"] = "Về chúng tôi - RoomFinder";
+}
+
+<style>
+    .about-hero {
+        background: linear-gradient(135deg, #0d6efd 0%, #00d2ff 100%);
+        color: white;
+        padding: 80px 0;
+        border-radius: 20px;
+        margin-top: 20px;
+    }
+
+    .step-box {
+        padding: 30px;
+        border-radius: 15px;
+        background: #fff;
+        border: 1px solid #eaeaea;
+        height: 100%;
+        transition: transform 0.3s;
+    }
+
+        .step-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+
+    .icon-wrapper {
+        width: 70px;
+        height: 70px;
+        background-color: #f4f6f9;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+
+        .icon-wrapper i {
+            font-size: 2rem;
+            color: #0d6efd;
+        }
+</style>
+
+<div class="container mb-5">
+    <div class="about-hero text-center shadow-lg">
+        <i class="bi bi-buildings-fill display-1 mb-3"></i>
+        <h1 class="fw-bold">RoomFinder</h1>
+        <p class="lead opacity-75 mx-auto px-3" style="max-width: 700px;">Nền tảng PropTech tiên phong giúp kết nối sinh viên và chủ trọ một cách nhanh chóng, minh bạch và an toàn tuyệt đối.</p>
+    </div>
+
+    <div class="mt-5 pt-4 text-center">
+        <h2 class="fw-bold text-primary mb-2">Dành cho Người thuê (Sinh viên)</h2>
+        <p class="text-muted mb-4">Hành trình tìm tổ ấm mới chỉ với 3 bước đơn giản</p>
+        <div class="row g-4 text-start">
+            <div class="col-md-4">
+                <div class="step-box text-center">
+                    <div class="icon-wrapper"><i class="bi bi-search"></i></div>
+                    <h5 class="fw-bold">1. Tìm kiếm thông minh</h5>
+                    <p class="text-muted small">Nhập tên trường ĐH hoặc chọn khu vực. Hệ thống sẽ tự động quét bán kính và thả ghim các phòng trọ phù hợp ngay trên bản đồ.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="step-box text-center">
+                    <div class="icon-wrapper"><i class="bi bi-chat-dots"></i></div>
+                    <h5 class="fw-bold">2. Kết nối trực tiếp</h5>
+                    <p class="text-muted small">Sử dụng tính năng Nhắn tin nội bộ để trao đổi ngay với chủ nhà, thương lượng giá cả và chốt lịch qua xem phòng thực tế.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="step-box text-center">
+                    <div class="icon-wrapper"><i class="bi bi-shield-check"></i></div>
+                    <h5 class="fw-bold">3. Giao dịch an toàn</h5>
+                    <p class="text-muted small">Chốt phòng và tiến hành thanh toán trực tuyến qua cổng VNPay được tích hợp sẵn. Lịch sử thuê được lưu trữ rõ ràng.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-5 pt-5 border-top text-center">
+        <h2 class="fw-bold text-success mb-2">Dành cho Chủ trọ</h2>
+        <p class="text-muted mb-4">Tiếp cận hàng ngàn sinh viên có nhu cầu thuê phòng mỗi ngày</p>
+        <div class="row g-4 text-start">
+            <div class="col-md-4">
+                <div class="step-box text-center" style="border-top: 4px solid #198754;">
+                    <div class="icon-wrapper" style="background-color: #d1e7dd;"><i class="bi bi-person-vcard text-success"></i></div>
+                    <h5 class="fw-bold">1. Tạo tài khoản Chủ trọ</h5>
+                    <p class="text-muted small">Đăng ký tài khoản với vai trò "Chủ trọ". Cập nhật đầy đủ thông tin liên hệ để sinh viên dễ dàng tiếp cận và tin tưởng.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="step-box text-center" style="border-top: 4px solid #198754;">
+                    <div class="icon-wrapper" style="background-color: #d1e7dd;"><i class="bi bi-wallet2 text-success"></i></div>
+                    <h5 class="fw-bold">2. Nạp tiền & Đăng tin</h5>
+                    <p class="text-muted small">Nạp tiền vào ví qua VNPay để đăng các tin VIP nổi bật. Điền thông tin phòng, giá cả, và upload hình ảnh thật sắc nét.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="step-box text-center" style="border-top: 4px solid #198754;">
+                    <div class="icon-wrapper" style="background-color: #d1e7dd;"><i class="bi bi-graph-up-arrow text-success"></i></div>
+                    <h5 class="fw-bold">3. Quản lý & Sinh lời</h5>
+                    <p class="text-muted small">Sử dụng bảng điều khiển (Dashboard) để theo dõi danh sách phòng, phản hồi tin nhắn của người thuê và nhận tiền doanh thu.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -2,6 +2,7 @@
 using Do_an_co_so.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -38,6 +39,20 @@ namespace Do_an_co_so.Controllers
         {
             return View();
         }
+
+        // ==========================================
+        // 2 HÀM MỚI DÀNH CHO FOOTER
+        // ==========================================
+        public IActionResult AboutUs()
+        {
+            return View();
+        }
+
+        public IActionResult Terms()
+        {
+            return View();
+        }
+        // ==========================================
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

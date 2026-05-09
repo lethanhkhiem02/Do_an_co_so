@@ -20,9 +20,6 @@ namespace Do_an_co_so.Controllers
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly UserManager<AppUser> _userManager;
 
-        // ========================================================
-        // KHAI BÁO MÃ VNPAY
-        // ========================================================
         private const string VNP_TMNCODE = "SO3O5OQU";
         private const string VNP_HASHSECRET = "DAATIHR3EIIV5ZRDRIHY8XA7WZ8SDZZI";
         private const string VNP_URL = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
@@ -34,9 +31,6 @@ namespace Do_an_co_so.Controllers
             _userManager = userManager;
         }
 
-        // ========================================================
-        // 1. ĐĂNG TIN PHÒNG TRỌ (VIP & UPLOAD ẢNH)
-        // ========================================================
         [Authorize(Roles = "ChuTro")]
         public IActionResult Create() => View();
 
@@ -87,9 +81,6 @@ namespace Do_an_co_so.Controllers
             return View(phongTro);
         }
 
-        // ========================================================
-        // 2. CHI TIẾT & ĐÁNH GIÁ
-        // ========================================================
         [AllowAnonymous]
         public async Task<IActionResult> Details(int? id)
         {
@@ -120,9 +111,6 @@ namespace Do_an_co_so.Controllers
             return RedirectToAction("Details", new { id = phongTroId });
         }
 
-        // ========================================================
-        // 3. XỬ LÝ THANH TOÁN VNPAY (THUÊ PHÒNG)
-        // ========================================================
         [HttpPost]
         [Authorize(Roles = "SinhVien")]
         public async Task<IActionResult> ThanhToanThuePhong(int id)
@@ -136,7 +124,6 @@ namespace Do_an_co_so.Controllers
             vnpay.AddRequestData("vnp_Version", "2.1.0");
             vnpay.AddRequestData("vnp_Command", "pay");
             vnpay.AddRequestData("vnp_TmnCode", VNP_TMNCODE);
-
             vnpay.AddRequestData("vnp_Amount", ((long)Math.Round(phong.Gia * 100)).ToString());
             vnpay.AddRequestData("vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss"));
             vnpay.AddRequestData("vnp_CurrCode", "VND");
@@ -204,9 +191,6 @@ namespace Do_an_co_so.Controllers
             return RedirectToAction("Details", new { id = phongId });
         }
 
-        // ========================================================
-        // 4. QUẢN LÝ & TÌM KIẾM
-        // ========================================================
         [Authorize(Roles = "ChuTro")]
         public async Task<IActionResult> QuanLyPhong()
         {
@@ -233,13 +217,32 @@ namespace Do_an_co_so.Controllers
             var dsTruong = GetDanhSachTruong();
             ViewBag.DanhSachTruong = dsTruong;
 
-            // Tìm kiếm chỉ lấy các phòng chưa cho thuê
-            var query = _context.PhongTro.Include(p => p.ChuTro).Where(p => p.DaChoThue == false).AsQueryable();
+            // LƯU LẠI VIEW BAG ĐỂ GIỮ FORM
+            ViewBag.TruongId = truongId;
+            ViewBag.Radius = radius;
+            ViewBag.MinPrice = minPrice;
+            ViewBag.MaxPrice = maxPrice;
+            ViewBag.SortBy = string.IsNullOrEmpty(sortBy) ? "distance_asc" : sortBy;
+
+            var query = _context.PhongTro
+                .Include(p => p.ChuTro)
+                .Where(p => p.DaChoThue == false)
+                .AsQueryable();
 
             if (minPrice.HasValue) query = query.Where(p => p.Gia >= minPrice.Value);
             if (maxPrice.HasValue) query = query.Where(p => p.Gia <= maxPrice.Value);
 
             var listPhong = await query.ToListAsync();
+
+            var phongIds = listPhong.Select(p => p.Id).ToList();
+            var saoDict = await _context.DanhGias
+                .Where(d => phongIds.Contains(d.PhongTroId))
+                .GroupBy(d => d.PhongTroId)
+                .Select(g => new { PhongTroId = g.Key, AvgSao = g.Average(d => d.Sao) })
+                .ToDictionaryAsync(x => x.PhongTroId, x => x.AvgSao);
+
+            ViewBag.SaoDict = saoDict;
+
             var ketQua = new List<PhongTroSearchResultViewModel>();
             var truong = dsTruong.FirstOrDefault(t => t.Id == truongId);
 
@@ -272,15 +275,52 @@ namespace Do_an_co_so.Controllers
         private List<TruongDaiHoc> GetDanhSachTruong()
         {
             return new List<TruongDaiHoc> {
-                new TruongDaiHoc { Id = "hutech_dbp", TenTruong = "HUTECH (Điện Biên Phủ)", Latitude = 10.8018, Longitude = 106.7115 },
-                new TruongDaiHoc { Id = "gtvt", TenTruong = "ĐH Giao thông Vận tải", Latitude = 10.8043, Longitude = 106.7190 },
-                new TruongDaiHoc { Id = "spkt", TenTruong = "ĐH Sư Phạm Kỹ Thuật", Latitude = 10.8505, Longitude = 106.7720 }
+                // ======= KHU VỰC BÌNH THẠNH =======
+                new TruongDaiHoc { Id = "hutech_dbp", TenTruong = "Đại học HUTECH", Latitude = 10.8018, Longitude = 106.7115, LoaiTruong = "Đại học", Quan = "Bình Thạnh" },
+                new TruongDaiHoc { Id = "gtvt", TenTruong = "ĐH Giao thông Vận tải", Latitude = 10.8043, Longitude = 106.7190, LoaiTruong = "Đại học", Quan = "Bình Thạnh" },
+                new TruongDaiHoc { Id = "vlu_bt", TenTruong = "Đại học Văn Lang", Latitude = 10.8222, Longitude = 106.6874, LoaiTruong = "Đại học", Quan = "Bình Thạnh" },
+                new TruongDaiHoc { Id = "ufm_bt", TenTruong = "ĐH Tài chính - Marketing", Latitude = 10.7961, Longitude = 106.6946, LoaiTruong = "Đại học", Quan = "Bình Thạnh" },
+                new TruongDaiHoc { Id = "ftu2", TenTruong = "ĐH Ngoại thương (CS2)", Latitude = 10.8048, Longitude = 106.7169, LoaiTruong = "Đại học", Quan = "Bình Thạnh" },
+                new TruongDaiHoc { Id = "uef", TenTruong = "ĐH Kinh tế - Tài chính (UEF)", Latitude = 10.7956, Longitude = 106.7001, LoaiTruong = "Đại học", Quan = "Bình Thạnh" },
+
+                // ======= KHU VỰC THỦ ĐỨC (LÀNG ĐH & LÂN CẬN) =======
+                new TruongDaiHoc { Id = "spkt", TenTruong = "ĐH Sư Phạm Kỹ Thuật", Latitude = 10.8505, Longitude = 106.7720, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
+                new TruongDaiHoc { Id = "nlu", TenTruong = "ĐH Nông Lâm", Latitude = 10.8697, Longitude = 106.7938, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
+                new TruongDaiHoc { Id = "uit", TenTruong = "ĐH Công nghệ Thông tin (UIT)", Latitude = 10.8700, Longitude = 106.8031, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
+                new TruongDaiHoc { Id = "hcmus_td", TenTruong = "ĐH Khoa học Tự nhiên", Latitude = 10.8761, Longitude = 106.7979, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
+                new TruongDaiHoc { Id = "buh", TenTruong = "ĐH Ngân hàng TP.HCM", Latitude = 10.8566, Longitude = 106.7621, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
+                new TruongDaiHoc { Id = "uel", TenTruong = "ĐH Kinh tế - Luật (UEL)", Latitude = 10.8719, Longitude = 106.7984, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
+                new TruongDaiHoc { Id = "hcmut_td", TenTruong = "ĐH Bách Khoa (Làng ĐH)", Latitude = 10.8804, Longitude = 106.8053, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
+                new TruongDaiHoc { Id = "hcmiu", TenTruong = "ĐH Quốc tế (IU)", Latitude = 10.8732, Longitude = 106.8023, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
+
+                // ======= KHU VỰC QUẬN 1 & QUẬN 3 =======
+                new TruongDaiHoc { Id = "ueh_q3", TenTruong = "ĐH Kinh tế TP.HCM (UEH)", Latitude = 10.7828, Longitude = 106.6925, LoaiTruong = "Đại học", Quan = "Quận 3" },
+                new TruongDaiHoc { Id = "ussh_q1", TenTruong = "ĐH KHXH & Nhân văn", Latitude = 10.7860, Longitude = 106.7011, LoaiTruong = "Đại học", Quan = "Quận 1" },
+                new TruongDaiHoc { Id = "caothang", TenTruong = "CĐ Kỹ thuật Cao Thắng", Latitude = 10.7724, Longitude = 106.7016, LoaiTruong = "Cao đẳng", Quan = "Quận 1" },
+                new TruongDaiHoc { Id = "sgu", TenTruong = "Đại học Sài Gòn (SGU)", Latitude = 10.7599, Longitude = 106.6822, LoaiTruong = "Đại học", Quan = "Quận 3" },
+                new TruongDaiHoc { Id = "uah", TenTruong = "ĐH Kiến trúc TP.HCM", Latitude = 10.7831, Longitude = 106.6946, LoaiTruong = "Đại học", Quan = "Quận 3" },
+                new TruongDaiHoc { Id = "ou", TenTruong = "Đại học Mở TP.HCM", Latitude = 10.7766, Longitude = 106.6917, LoaiTruong = "Đại học", Quan = "Quận 3" },
+
+                // ======= KHU VỰC QUẬN 5 & QUẬN 10 =======
+                new TruongDaiHoc { Id = "hcmut_q10", TenTruong = "ĐH Bách Khoa TP.HCM", Latitude = 10.7732, Longitude = 106.6597, LoaiTruong = "Đại học", Quan = "Quận 10" },
+                new TruongDaiHoc { Id = "huflit", TenTruong = "ĐH Ngoại ngữ - Tin học (HUFLIT)", Latitude = 10.7765, Longitude = 106.6669, LoaiTruong = "Đại học", Quan = "Quận 10" },
+                new TruongDaiHoc { Id = "hcmus_q5", TenTruong = "ĐH Khoa học Tự nhiên", Latitude = 10.7630, Longitude = 106.6821, LoaiTruong = "Đại học", Quan = "Quận 5" },
+                new TruongDaiHoc { Id = "hcmue", TenTruong = "ĐH Sư Phạm TP.HCM", Latitude = 10.7613, Longitude = 106.6822, LoaiTruong = "Đại học", Quan = "Quận 5" },
+                new TruongDaiHoc { Id = "ump", TenTruong = "ĐH Y Dược TP.HCM", Latitude = 10.7562, Longitude = 106.6661, LoaiTruong = "Đại học", Quan = "Quận 5" },
+                new TruongDaiHoc { Id = "pnt", TenTruong = "ĐH Y khoa Phạm Ngọc Thạch", Latitude = 10.7745, Longitude = 106.6668, LoaiTruong = "Đại học", Quan = "Quận 10" },
+
+                // ======= KHU VỰC QUẬN 7 =======
+                new TruongDaiHoc { Id = "tdt", TenTruong = "ĐH Tôn Đức Thắng", Latitude = 10.7325, Longitude = 106.6983, LoaiTruong = "Đại học", Quan = "Quận 7" },
+                new TruongDaiHoc { Id = "rmit", TenTruong = "ĐH RMIT Việt Nam", Latitude = 10.7293, Longitude = 106.6946, LoaiTruong = "Đại học", Quan = "Quận 7" },
+
+                // ======= CÁC QUẬN KHÁC (GÒ VẤP, TÂN BÌNH, QUẬN 12...) =======
+                new TruongDaiHoc { Id = "iuh", TenTruong = "ĐH Công nghiệp TP.HCM (IUH)", Latitude = 10.8222, Longitude = 106.6875, LoaiTruong = "Đại học", Quan = "Gò Vấp" },
+                new TruongDaiHoc { Id = "fpt_poly", TenTruong = "CĐ FPT Polytechnic", Latitude = 10.8531, Longitude = 106.6263, LoaiTruong = "Cao đẳng", Quan = "Quận 12" },
+                new TruongDaiHoc { Id = "viendong", TenTruong = "CĐ Viễn Đông", Latitude = 10.8549, Longitude = 106.6277, LoaiTruong = "Cao đẳng", Quan = "Quận 12" },
+                new TruongDaiHoc { Id = "huit", TenTruong = "ĐH Công thương (HUIT)", Latitude = 10.8066, Longitude = 106.6288, LoaiTruong = "Đại học", Quan = "Tân Phú" }
             };
         }
 
-        // ========================================================
-        // 5. LỊCH SỬ THUÊ PHÒNG (DÀNH CHO SINH VIÊN)
-        // ========================================================
         [Authorize(Roles = "SinhVien")]
         public async Task<IActionResult> PhongDaThue()
         {
@@ -296,9 +336,6 @@ namespace Do_an_co_so.Controllers
             return View(danhSachThue);
         }
 
-        // ========================================================
-        // 6. NẠP TIỀN VÀO VÍ QUA VNPAY (DÀNH CHO CHỦ TRỌ)
-        // ========================================================
         [Authorize(Roles = "ChuTro")]
         [HttpGet]
         public IActionResult NapTien()
@@ -333,7 +370,6 @@ namespace Do_an_co_so.Controllers
             vnpay.AddRequestData("vnp_OrderType", "topup");
             vnpay.AddRequestData("vnp_ReturnUrl", vnp_Returnurl);
 
-            // Ép UserId vào TxnRef để biết ai nạp tiền
             vnpay.AddRequestData("vnp_TxnRef", user.Id + "_" + DateTime.Now.Ticks);
 
             string paymentUrl = vnpay.CreateRequestUrl(VNP_URL, VNP_HASHSECRET);
@@ -356,9 +392,7 @@ namespace Do_an_co_so.Controllers
             string vnp_SecureHash = Request.Query["vnp_SecureHash"];
             string txnRef = vnpayData["vnp_TxnRef"].ToString();
 
-            // Lấy ra UserId từ TxnRef
             string userId = txnRef.Split('_')[0];
-            // Lấy lại số tiền nạp
             decimal soTienNap = decimal.Parse(vnpayData["vnp_Amount"]) / 100;
 
             bool checkSignature = vnpay.ValidateSignature(vnp_SecureHash, VNP_HASHSECRET);

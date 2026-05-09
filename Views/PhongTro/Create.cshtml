@@ -27,14 +27,19 @@
 
             <div class="mb-3">
                 <label asp-for="DiaChi" class="form-label fw-bold"></label>
-                <input asp-for="DiaChi" class="form-control" placeholder="Ví dụ: 123 Đường Tôn Đức Thắng, Phường..." />
+                <div class="input-group">
+                    <input asp-for="DiaChi" id="diaChiInput" class="form-control" placeholder="Ví dụ: 475A Điện Biên Phủ, Phường 25, Bình Thạnh, Hồ Chí Minh" />
+                    <button class="btn btn-outline-primary fw-bold" type="button" id="btnTimViTri">
+                        📍 Tìm trên bản đồ
+                    </button>
+                </div>
                 <span asp-validation-for="DiaChi" class="text-danger"></span>
             </div>
 
             <div class="mb-4">
                 <label class="form-label fw-bold text-primary">📍 Ghim vị trí trên bản đồ</label>
                 <div id="map" style="height: 350px; border-radius: 10px; border: 1px solid #ddd;"></div>
-                <small class="text-muted">Kéo dấu ghim màu xanh đến đúng vị trí phòng trọ để sinh viên dễ tìm kiếm theo khoảng cách.</small>
+                <small class="text-muted">Bản đồ sẽ tự động di chuyển khi bạn bấm "Tìm trên bản đồ". Bạn cũng có thể kéo dấu ghim để chỉnh lại cho chính xác nhất.</small>
 
                 <input type="hidden" asp-for="Latitude" id="latInput" />
                 <input type="hidden" asp-for="Longitude" id="lngInput" />
@@ -61,6 +66,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="mt-4 text-center">
                 <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill fw-bold">Đăng Lên Hệ Thống</button>
             </div>
@@ -75,7 +81,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // 1. Khởi tạo bản đồ ở trung tâm TP.HCM (Quận Bình Thạnh)
+        // 1. Khởi tạo bản đồ mặc định
         var map = L.map('map').setView([10.8018, 106.7115], 14);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -104,6 +110,53 @@
         map.on('click', function(e) {
             marker.setLatLng(e.latlng);
             updateLatLng(e.latlng.lat, e.latlng.lng);
+        });
+
+        // ==========================================
+        // 4. TÍNH NĂNG GEOCODING (ĐỊA CHỈ -> TỌA ĐỘ)
+        // ==========================================
+        document.getElementById('btnTimViTri').addEventListener('click', function () {
+            var address = document.getElementById('diaChiInput').value;
+
+            if (!address) {
+                alert("Vui lòng nhập địa chỉ trước khi tìm kiếm!");
+                return;
+            }
+
+            // Gọi API miễn phí của Nominatim (OpenStreetMap)
+            var apiUrl = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(address);
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        var lat = data[0].lat;
+                        var lon = data[0].lon;
+
+                        // Di chuyển bản đồ mượt mà (flyTo) về vị trí mới với zoom level 16
+                        map.flyTo([lat, lon], 16);
+
+                        // Cắm lại ghim vào vị trí mới
+                        marker.setLatLng([lat, lon]);
+
+                        // Tự động điền tọa độ vào 2 ô input ẩn
+                        updateLatLng(lat, lon);
+                    } else {
+                        alert("Không tìm thấy tọa độ cho địa chỉ này. Bạn vui lòng nhập rõ hơn (Thêm Phường, Quận, Thành phố) hoặc tự ghim tay nhé!");
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi khi gọi Geocoding API:', error);
+                    alert("Có lỗi xảy ra khi tìm vị trí, vui lòng thử lại.");
+                });
+        });
+
+        // Tự động kích hoạt nút Tìm kiếm nếu người dùng gõ xong và bấm Enter trong ô địa chỉ
+        document.getElementById('diaChiInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Ngăn chặn form submit nhầm
+                document.getElementById('btnTimViTri').click();
+            }
         });
     </script>
 }
