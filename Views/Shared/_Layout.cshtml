@@ -15,77 +15,51 @@
 
     <style>
         body {
-            background-color: #f4f6f9 !important;
+            background-color: var(--bg-color);
             display: flex;
             flex-direction: column;
             min-height: 100vh;
         }
 
-        /* ÉP BUỘC HEADER MÀU TRẮNG SÁNG */
         .navbar-custom {
-            background-color: #ffffff !important;
-            border-bottom: 1px solid #eaeaea !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
-            padding: 0.8rem 0 !important;
+            background-color: #ffffff;
+            border-bottom: 1px solid #eaeaea;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            padding: 0.8rem 0;
         }
 
             .navbar-custom .navbar-brand {
-                font-size: 1.5rem !important;
-                color: #0d6efd !important;
-                letter-spacing: -0.5px !important;
+                font-size: 1.5rem;
+                color: #0d6efd;
+                font-weight: 700;
             }
 
-            .navbar-custom .nav-link {
-                font-weight: 600 !important;
-                color: #495057 !important;
-                padding: 0.5rem 1rem !important;
-                transition: all 0.2s !important;
-            }
-
-                .navbar-custom .nav-link:hover {
-                    color: #0d6efd !important;
-                    background-color: transparent !important;
-                }
-
-        /* ÉP BUỘC FOOTER MÀU ĐEN SANG TRỌNG */
         .footer-main {
-            background-color: #1a1d20 !important;
-            color: #a0aab2 !important;
-            padding: 4rem 0 2rem !important;
-            margin-top: auto !important;
-            border-top: none !important;
+            background-color: #1a1d20;
+            color: #a0aab2;
+            padding: 4rem 0 2rem;
+            margin-top: auto;
         }
 
-            .footer-main h5 {
-                color: #ffffff !important;
-                font-weight: 600 !important;
-                margin-bottom: 1.5rem !important;
-            }
-
         .footer-link {
-            color: #a0aab2 !important;
-            text-decoration: none !important;
-            display: block !important;
-            margin-bottom: 0.8rem !important;
-            transition: 0.2s !important;
+            color: #a0aab2;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 0.8rem;
+            transition: 0.2s;
         }
 
             .footer-link:hover {
-                color: #0d6efd !important;
-                padding-left: 5px !important;
+                color: #0d6efd;
+                padding-left: 5px;
             }
-
-        .main-container {
-            padding-top: 20px !important;
-            padding-bottom: 40px !important;
-        }
     </style>
 </head>
 <body>
     <header>
         <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
             <div class="container">
-                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
                     <i class="bi bi-house-heart-fill me-1"></i> RoomFinder
                 </a>
 
@@ -95,60 +69,42 @@
 
                 <div class="collapse navbar-collapse" id="navbarContent">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0 align-items-lg-center">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Trang chủ</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="PhongTro" asp-action="TimKiem">🔍 Tìm trọ</a>
-                        </li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="PhongTro" asp-action="TimKiem">🔍 Tìm trọ</a></li>
 
                         @if (User.Identity.IsAuthenticated)
                         {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="Chat" asp-action="Index">💬 Tin nhắn</a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link text-warning" style="color: #ffc107 !important;" asp-area="" asp-controller="Chat" asp-action="GlobalChat">🌍 Chat chung</a>
-                            </li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="Chat" asp-action="Index">💬 Tin nhắn</a></li>
+                            <li class="nav-item"><a class="nav-link text-warning" asp-controller="Chat" asp-action="GlobalChat">🌍 Chat chung</a></li>
 
                             @if (User.IsInRole("ChuTro"))
                             {
                                 var currentUser = await UserManager.GetUserAsync(User);
                                 <li class="nav-item ms-lg-2 d-flex align-items-center">
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2" style="color: #198754 !important; font-size: 0.85rem;">
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2">
                                         Ví: @(currentUser?.SoDu.ToString("N0") ?? "0")đ
                                     </span>
                                 </li>
                                 <li class="nav-item ms-2 d-flex align-items-center">
-                                    <a class="btn btn-sm btn-outline-success rounded-pill fw-bold px-3" asp-area="" asp-controller="PhongTro" asp-action="NapTien">
+                                    <a class="btn btn-sm btn-outline-success rounded-pill fw-bold px-3" asp-controller="PhongTro" asp-action="NapTien">
                                         <i class="bi bi-credit-card me-1"></i> Nạp tiền
                                     </a>
                                 </li>
-                                <li class="nav-item ms-2">
-                                    <a class="nav-link text-primary fw-bold" style="color: #0d6efd !important;" asp-area="" asp-controller="PhongTro" asp-action="Create">+ Đăng phòng</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-area="" asp-controller="PhongTro" asp-action="QuanLyPhong">Quản lý tin</a>
-                                </li>
-                            }
-
-                            @if (User.IsInRole("SinhVien"))
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link text-success" style="color: #198754 !important;" asp-area="" asp-controller="PhongTro" asp-action="PhongDaThue">Lịch sử thuê</a>
-                                </li>
+                                <li class="nav-item ms-2"><a class="nav-link text-primary fw-bold" asp-controller="PhongTro" asp-action="Create">+ Đăng phòng</a></li>
+                                <li class="nav-item"><a class="nav-link" asp-controller="PhongTro" asp-action="QuanLyPhong">Quản lý tin</a></li>
                             }
                         }
                     </ul>
 
-                    <partial name="_LoginPartial" />
+                    <div class="d-flex align-items-center">
+                        <partial name="_LoginPartial" />
+                    </div>
                 </div>
             </div>
         </nav>
     </header>
 
-    <div class="container main-container flex-grow-1">
+    <div class="container mt-4 flex-grow-1">
         <main role="main">
             @RenderBody()
         </main>
@@ -156,32 +112,30 @@
 
     <footer class="footer-main">
         <div class="container">
-            <div class="row g-4">
-                <div class="col-lg-4 col-md-6">
-                    <h5 style="color: #ffffff !important;"><i class="bi bi-house-heart-fill text-primary me-2"></i> RoomFinder</h5>
-                    <p style="color: #a0aab2 !important;">Giải pháp tìm kiếm phòng trọ hàng đầu dành cho sinh viên. Chúng tôi giúp việc tìm chỗ ở trở nên dễ dàng và an toàn hơn bao giờ hết.</p>
+            <div class="row g-4 text-start">
+                <div class="col-lg-4">
+                    <h5 class="text-white"><i class="bi bi-house-heart-fill text-primary me-2"></i> RoomFinder</h5>
+                    <p>Giải pháp tìm kiếm phòng trọ hàng đầu dành cho sinh viên.</p>
                 </div>
-                <div class="col-lg-2 col-md-6">
-                    <h5 style="color: #ffffff !important;">Menu</h5>
-                    <a href="/Home/Index" class="footer-link">Trang chủ</a>
+                <div class="col-lg-2">
+                    <h5 class="text-white">Menu</h5>
+                    <a href="/" class="footer-link">Trang chủ</a>
                     <a href="/PhongTro/TimKiem" class="footer-link">Tìm kiếm</a>
                     <a href="/Home/AboutUs" class="footer-link">Về chúng tôi</a>
                 </div>
-                <div class="col-lg-3 col-md-6">
-                    <h5 style="color: #ffffff !important;">Hỗ trợ</h5>
+                <div class="col-lg-3">
+                    <h5 class="text-white">Hỗ trợ</h5>
                     <a href="/Home/Terms" class="footer-link">Chính sách bảo mật</a>
-                    <a href="/Home/Terms" class="footer-link">Điều khoản sử dụng</a>
                     <a href="/Home/AboutUs" class="footer-link">Hướng dẫn đăng tin</a>
                 </div>
-                <div class="col-lg-3 col-md-6">
-                    <h5 style="color: #ffffff !important;">Liên hệ</h5>
-                    <p class="small mb-1" style="color: #a0aab2 !important;"><i class="bi bi-geo-alt text-primary me-2"></i> Quận Bình Thạnh, TP.HCM</p>
-                    <p class="small mb-1" style="color: #a0aab2 !important;"><i class="bi bi-envelope text-primary me-2"></i> hotro@roomfinder.com</p>
-                    <p class="small" style="color: #a0aab2 !important;"><i class="bi bi-phone text-primary me-2"></i> 0123 456 789</p>
+                <div class="col-lg-3">
+                    <h5 class="text-white">Liên hệ</h5>
+                    <p class="small mb-1"><i class="bi bi-geo-alt text-primary me-2"></i> Quận Bình Thạnh, TP.HCM</p>
+                    <p class="small"><i class="bi bi-envelope text-primary me-2"></i> hotro@roomfinder.com</p>
                 </div>
             </div>
-            <hr class="mt-4" style="border-color: #495057 !important;">
-            <div class="text-center small pb-2" style="color: #6c757d !important;">
+            <hr class="mt-4 border-secondary">
+            <div class="text-center small pb-2">
                 &copy; 2026 - Nền tảng hỗ trợ tìm trọ sinh viên
             </div>
         </div>

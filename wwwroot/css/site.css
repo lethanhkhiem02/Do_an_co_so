@@ -17,30 +17,12 @@ html {
     box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-    color: var(--bs-secondary-color);
-    text-align: end;
-}
-
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-    text-align: start;
-}
-
 /* ==========================================
-   2. TÙY CHỈNH GIAO DIỆN WEB THUÊ PHÒNG TRỌ
+   2. BIẾN MÀU SẮC (THEME VARIABLES)
    ========================================== */
-
 :root {
     --primary-blue: #0d6efd;
     --hover-blue: #0b5ed7;
-    --bg-light: #f4f6f9;
-}
-
-/* ==========================================
-   3. CẤU HÌNH DARK / LIGHT MODE 
-   ========================================== */
-
-:root {
     --bg-color: #f4f6f9;
     --text-color: #212529;
     --card-bg: #ffffff;
@@ -64,7 +46,9 @@ html {
     --link-color: #6ea8fe;
 }
 
-/* Toàn bộ trang */
+/* ==========================================
+   3. ÁP DỤNG DARK / LIGHT MODE 
+   ========================================== */
 body {
     background-color: var(--bg-color) !important;
     color: var(--text-color) !important;
@@ -72,84 +56,54 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* ĐÃ FIX: Không ép buộc màu cho div, span, p nữa để Footer hiển thị được */
-[data-theme="dark"] p,
+/* Giữ nguyên màu cho các trạng thái đặc biệt (Giá tiền, Sao) */
+[data-theme="dark"] p:not(.text-danger):not(.text-warning):not(.text-success),
 [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3,
 [data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] h6,
-[data-theme="dark"] li, [data-theme="dark"] label {
+[data-theme="dark"] li, [data-theme="dark"] label, [data-theme="dark"] span:not(.badge) {
     color: var(--text-color);
 }
 
-/* Link */
-a:not(.btn):not(.nav-link):not(.footer-link) {
-    color: var(--link-color);
-}
-
-/* Chữ mờ */
-.text-muted {
-    color: var(--muted-text) !important;
-}
-
-/* ĐÃ FIX: Bỏ ép màu navbar-bg. Màu navbar sẽ do class trong _Layout quyết định */
-[data-theme="dark"] .navbar-custom {
-    background-color: #1a1a1a !important;
-    border-bottom: 1px solid #333 !important;
-}
-
-    [data-theme="dark"] .navbar-custom .nav-link,
-    [data-theme="dark"] .navbar-custom .navbar-brand {
-        color: #f0f0f0 !important;
-    }
-
-/* Card */
-.card {
-    background-color: var(--card-bg) !important;
-    border-color: var(--card-border) !important;
-}
-
-[data-theme="dark"] .card-title,
-[data-theme="dark"] .card-text,
-[data-theme="dark"] .card-body {
+/* Fix lỗi mờ tên User (Chủ trọ nè cưng) */
+[data-theme="dark"] .text-dark,
+[data-theme="dark"] .navbar-custom .nav-link {
     color: var(--text-color) !important;
 }
 
-/* Input, select, textarea */
+/* Card & List Group (Hộp thư Chat) */
+.card, .list-group-item {
+    background-color: var(--card-bg) !important;
+    border-color: var(--card-border) !important;
+    color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .list-group-item:hover {
+    background-color: #2a2a2a !important;
+}
+
+/* Form Inputs */
 input, select, textarea, .form-control, .form-select {
     background-color: var(--input-bg) !important;
     color: var(--input-text) !important;
     border-color: var(--input-border) !important;
 }
 
-::placeholder {
+/* Navbar Dark */
+[data-theme="dark"] .navbar-custom {
+    background-color: #1a1a1a !important;
+    border-bottom: 1px solid #333 !important;
+}
+
+/* Fix màu mờ text-muted */
+[data-theme="dark"] .text-muted {
     color: var(--muted-text) !important;
 }
 
-/* Khung cảnh báo (alert) trong dark mode */
-[data-theme="dark"] .alert,
-[data-theme="dark"] .alert-warning,
-[data-theme="dark"] .bg-white,
-[data-theme="dark"] .bg-light,
-[data-theme="dark"] .card.border-0 {
-    background-color: #1e1e1e !important;
-    border-color: #333 !important;
-    color: var(--text-color) !important;
-}
-
-/* Nút theme-toggle */
+/* Theme Toggle Button Animation */
 #theme-toggle {
-    transition: all 0.3s ease;
+    transition: transform 0.2s;
 }
 
-/* Tùy chỉnh các nút bấm */
-.btn-primary {
-    background-color: var(--primary-blue);
-    border-color: var(--primary-blue);
-    transition: all 0.3s ease;
-}
-
-    .btn-primary:hover {
-        background-color: var(--hover-blue);
-        border-color: var(--hover-blue);
-        box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
-        transform: translateY(-2px);
+    #theme-toggle:active {
+        transform: scale(0.9);
     }
