@@ -1,202 +1,278 @@
 ﻿@model IEnumerable<Do_an_co_so.Models.PhongTroSearchResultViewModel>
 @using Do_an_co_so.Models
+@using System.Text.Json
 
 @{
     ViewData["Title"] = "Tìm trọ quanh trường";
     var danhSachTruong = ViewBag.DanhSachTruong as List<TruongDaiHoc>;
+    var saoDict = ViewBag.SaoDict as Dictionary<int, double> ?? new Dictionary<int, double>();
+
+    int radiusMeters = 0;
+    int r = 0;
+    if (ViewBag.Radius != null)
+    {
+        int.TryParse(ViewBag.Radius.ToString(), out r);
+        radiusMeters = r * 1000;
+    }
+
+    double tamLat = 10.8018; // Mặc định HUTECH
+    double tamLng = 106.7115;
+    string tenTruongTam = "Khu vực tìm kiếm";
+
+    string currentTruongId = ViewBag.TruongId as string;
+    if (!string.IsNullOrEmpty(currentTruongId) && danhSachTruong != null)
+    {
+        var selectedTruong = danhSachTruong.FirstOrDefault(t => t.Id == currentTruongId);
+        if (selectedTruong != null)
+        {
+            tamLat = selectedTruong.Latitude;
+            tamLng = selectedTruong.Longitude;
+            tenTruongTam = selectedTruong.TenTruong;
+        }
+    }
+
+    string listPhongJson = "[]";
+    bool hasData = Model.Any();
+    if (hasData)
+    {
+        listPhongJson = JsonSerializer.Serialize(Model.Select(p => new
+        {
+            lat = p.PhongTro.Latitude,
+            lng = p.PhongTro.Longitude,
+            gia = p.PhongTro.Gia.ToString("N0") + "đ",
+            id = p.PhongTro.Id,
+            anh = !string.IsNullOrEmpty(p.PhongTro.HinhAnh) ? p.PhongTro.HinhAnh.Split(',')[0] : "",
+            khoangCach = p.KhoangCach.ToString("0.0"),
+            isVip = p.PhongTro.IsVip,
+            sao = saoDict.ContainsKey(p.PhongTro.Id) ? saoDict[p.PhongTro.Id] : 0
+        }));
+    }
 }
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
 <style>
     .vip-card {
         border: 2px solid #ffc107 !important;
-        box-shadow: 0 0 15px rgba(255, 193, 7, 0.4) !important;
-        background-color: #fffdf5; /* Nền vàng cực nhạt */
+        box-shadow: 0 8px 20px rgba(255, 193, 7, 0.25) !important;
+        background-color: #fffcf0;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
+
+        .vip-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(255, 193, 7, 0.4) !important;
+        }
 
     .vip-badge {
         position: absolute;
-        top: 10px;
-        right: -30px;
-        background-color: #dc3545;
+        top: 25px;
+        right: -35px;
+        background: linear-gradient(45deg, #dc3545, #ff4757);
         color: white;
-        padding: 5px 30px;
+        padding: 5px 40px;
         font-weight: bold;
+        font-size: 0.85rem;
+        letter-spacing: 1px;
         transform: rotate(45deg);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         z-index: 10;
-        animation: blink 1.5s infinite; /* Hiệu ứng nhấp nháy */
+        animation: pulseVip 2s infinite;
     }
 
-    /* ĐÃ SỬA: Thêm 2 dấu @@ để Razor không báo lỗi */
-    @@keyframes blink {
+    @@keyframes pulseVip {
         0% {
-            opacity: 1;
+            filter: brightness(1);
         }
 
         50% {
-            opacity: 0.8;
-            background-color: #ffc107;
-            color: #000;
+            filter: brightness(1.2);
         }
 
         100% {
-            opacity: 1;
+            filter: brightness(1);
         }
     }
+
+    .search-bar-custom {
+        background: #ffffff;
+        border: 1px solid #e0e0e0;
+    }
+
+    .nav-pills .nav-link {
+        color: #6c757d;
+        font-weight: 600;
+        padding: 10px 25px;
+    }
+
+        .nav-pills .nav-link.active {
+            background-color: #0d6efd;
+            color: white;
+            box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3);
+        }
 </style>
 
 <div class="container mt-4 mb-5">
-    <div class="card shadow-sm border-0 rounded-4 mb-4">
-        <div class="card-body p-4 bg-light rounded-4">
-            <h4 class="mb-4 fw-bold text-primary">🏫 Tìm trọ thông minh theo trường</h4>
-
+    <div class="card shadow-sm search-bar-custom rounded-4 mb-4">
+        <div class="card-body p-4 rounded-4">
+            <h4 class="mb-4 fw-bold text-primary"><i class="bi bi-search me-2"></i>Tìm trọ thông minh theo trường</h4>
             <form asp-action="TimKiem" method="get" class="row g-3">
                 <div class="col-md-2">
-                    <label class="form-label fw-bold">Hệ đào tạo</label>
+                    <label class="form-label fw-bold text-secondary">Hệ đào tạo</label>
                     <select id="loaiTruongFilter" class="form-select rounded-pill">
                         <option value="all">Tất cả hệ</option>
                         <option value="Đại học">Đại học</option>
                         <option value="Cao đẳng">Cao đẳng</option>
                     </select>
                 </div>
-
                 <div class="col-md-3">
-                    <label class="form-label fw-bold">Trường của bạn</label>
+                    <label class="form-label fw-bold text-secondary">Trường của bạn</label>
                     <select id="truongSelect" name="truongId" class="form-select rounded-pill">
                         <option value="" data-type="all">-- Chọn trường --</option>
                         @if (danhSachTruong != null)
                         {
-                            var groupedTruong = danhSachTruong.GroupBy(t => t.Quan);
-                            foreach (var group in groupedTruong)
+                            foreach (var group in danhSachTruong.GroupBy(t => t.Quan))
                             {
                                 <optgroup label="Khu vực @group.Key">
                                     @foreach (var truong in group)
                                     {
-                                        <option value="@truong.Id" data-type="@truong.LoaiTruong" selected="@(ViewBag.TruongId == truong.Id)">
-                                            @truong.TenTruong
-                                        </option>
+                                        <option value="@truong.Id" data-type="@truong.LoaiTruong" selected="@(currentTruongId == truong.Id)">@truong.TenTruong</option>
                                     }
                                 </optgroup>
                             }
                         }
                     </select>
                 </div>
-
                 <div class="col-md-2">
-                    <label class="form-label fw-bold">Bán kính</label>
+                    <label class="form-label fw-bold text-secondary">Bán kính</label>
                     <select name="radius" class="form-select rounded-pill">
                         <option value="">-- Khoảng cách --</option>
                         <option value="1" selected="@(ViewBag.Radius?.ToString() == "1")">1 km</option>
                         <option value="2" selected="@(ViewBag.Radius?.ToString() == "2")">2 km</option>
                         <option value="5" selected="@(ViewBag.Radius?.ToString() == "5")">5 km</option>
                         <option value="10" selected="@(ViewBag.Radius?.ToString() == "10")">10 km</option>
+                        <option value="15" selected="@(ViewBag.Radius?.ToString() == "15")">15 km</option>
                         <option value="20" selected="@(ViewBag.Radius?.ToString() == "20")">20 km</option>
-                        <option value="50" selected="@(ViewBag.Radius?.ToString() == "50")">50 km</option>
+                        <option value="30" selected="@(ViewBag.Radius?.ToString() == "30")">30 km</option>
                     </select>
                 </div>
-
                 <div class="col-md-3">
-                    <label class="form-label fw-bold">Khoảng giá (VNĐ)</label>
+                    <label class="form-label fw-bold text-secondary">Khoảng giá (VNĐ)</label>
                     <div class="input-group">
-                        <input type="number" name="minPrice" value="@ViewBag.MinPrice" class="form-control" placeholder="Từ..." step="500000" min="0">
-                        <span class="input-group-text">-</span>
-                        <input type="number" name="maxPrice" value="@ViewBag.MaxPrice" class="form-control" placeholder="Đến..." step="500000" min="0">
+                        <input type="number" name="minPrice" value="@ViewBag.MinPrice" class="form-control" placeholder="Từ..." step="500000" min="0" style="border-top-left-radius: 50rem; border-bottom-left-radius: 50rem;">
+                        <span class="input-group-text bg-light border-start-0 border-end-0">-</span>
+                        <input type="number" name="maxPrice" value="@ViewBag.MaxPrice" class="form-control" placeholder="Đến..." step="500000" min="0" style="border-top-right-radius: 50rem; border-bottom-right-radius: 50rem;">
                     </div>
                 </div>
-
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary rounded-pill w-100 fw-bold shadow-sm">
-                        Lọc kết quả
-                    </button>
+                <div class="col-md-2 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary rounded-pill flex-grow-1 fw-bold shadow-sm py-2">Lọc</button>
+                    <a href="/PhongTro/TimKiem" class="btn btn-outline-secondary rounded-pill fw-bold shadow-sm py-2 px-3" title="Làm mới bộ lọc">🔄</a>
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="fw-bold mb-0">Tìm thấy <span class="text-primary">@Model.Count()</span> phòng trọ phù hợp</h5>
+    <div class="d-flex justify-content-between align-items-center mb-4 mt-5">
+        <h5 class="fw-bold mb-0">Tìm thấy <span class="text-primary fs-4">@Model.Count()</span> phòng trọ phù hợp</h5>
 
-        <form asp-action="TimKiem" method="get" class="d-flex align-items-center">
-            <input type="hidden" name="truongId" value="@ViewBag.TruongId" />
-            <input type="hidden" name="radius" value="@ViewBag.Radius" />
-            <input type="hidden" name="minPrice" value="@ViewBag.MinPrice" />
-            <input type="hidden" name="maxPrice" value="@ViewBag.MaxPrice" />
-
-            <label class="me-2 text-muted fw-bold">Sắp xếp:</label>
-            <select name="sortBy" class="form-select form-select-sm rounded-pill w-auto" onchange="this.form.submit()">
-                <option value="distance_asc" selected="@(ViewBag.SortBy == "distance_asc")">Gần trường nhất</option>
-                <option value="price_asc" selected="@(ViewBag.SortBy == "price_asc")">Giá: Thấp đến cao</option>
-                <option value="price_desc" selected="@(ViewBag.SortBy == "price_desc")">Giá: Cao đến thấp</option>
-            </select>
-        </form>
+        <ul class="nav nav-pills bg-light p-1 rounded-pill shadow-sm" id="viewTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active rounded-pill" id="list-tab" data-bs-toggle="pill" data-bs-target="#list-view" type="button" role="tab">📋 Danh sách</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-pill" id="map-tab" data-bs-toggle="pill" data-bs-target="#map-view" type="button" role="tab">🗺️ Bản đồ</button>
+            </li>
+        </ul>
     </div>
 
-    @if (!Model.Any())
-    {
-        <div class="alert alert-warning text-center rounded-4 shadow-sm" role="alert">
-            <span class="fs-4">😢</span> Không có phòng trọ nào khớp với tiêu chí của bạn.
-        </div>
-    }
-    else
-    {
-        <div class="row row-cols-1 row-cols-md-3 g-4 overflow-hidden">
-            @foreach (var item in Model)
+    <div class="tab-content" id="viewTabsContent">
+
+        <div class="tab-pane fade show active" id="list-view" role="tabpanel">
+            @if (!hasData)
             {
-                // KIỂM TRA XEM CÓ PHẢI TIN VIP KHÔNG ĐỂ GẮN CLASS CSS
-                string vipClass = item.PhongTro.IsVip ? "vip-card" : "";
+                <div class="alert alert-warning text-center rounded-4 shadow-sm py-4" role="alert">
+                    <span class="fs-1 d-block mb-2">😢</span>
+                    <strong class="fs-5">Không có phòng trọ nào khớp với tiêu chí của bạn.</strong>
+                    <p class="mb-0 mt-2 text-muted">Thử mở rộng bán kính hoặc điều chỉnh lại khoảng giá nhé!</p>
+                </div>
+            }
+            else
+            {
+                <div class="row row-cols-1 row-cols-md-3 g-4">
+                    @foreach (var item in Model)
+                    {
+                        string vipClass = item.PhongTro.IsVip ? "vip-card" : "";
+                        double saoTrungBinh = saoDict.ContainsKey(item.PhongTro.Id) ? saoDict[item.PhongTro.Id] : 0;
 
-                <div class="col">
-                    <div class="card h-100 shadow-sm border-0 rounded-4 position-relative @vipClass">
-
-                        @if (item.PhongTro.IsVip)
-                        {
-                            <div class="vip-badge">⭐ TIN VIP</div>
-                        }
-
-                        @if (!string.IsNullOrEmpty(ViewBag.TruongId as string))
-                        {
-                            <div class="position-absolute top-0 start-0 m-2" style="z-index: 5;">
-                                <span class="badge bg-danger rounded-pill px-3 py-2 fs-6 shadow">
-                                    📍 Cách trường: @item.KhoangCach.ToString("0.0") km
-                                </span>
-                            </div>
-                        }
-
-                        @{
-                            string firstImage = "/images/no-image.jpg";
-                            if (!string.IsNullOrEmpty(item.PhongTro.HinhAnh))
-                            {
-                                firstImage = "/images/" + item.PhongTro.HinhAnh.Split(',')[0];
-                            }
-                        }
-                        <img src="@firstImage" class="card-img-top" alt="Hình phòng trọ" style="height: 220px; object-fit: cover;">
-
-                        <div class="card-body">
-                            <h4 class="card-title text-primary fw-bold mb-1">
-                                @item.PhongTro.Gia.ToString("N0") VNĐ
+                        <div class="col">
+                            <div class="card h-100 shadow-sm border-0 rounded-4 position-relative overflow-hidden @vipClass">
                                 @if (item.PhongTro.IsVip)
                                 {
-                                    <span class="text-warning fs-5">⭐</span>
+                                    <div class="vip-badge">⭐ TIN VIP</div>
                                 }
-                            </h4>
-                            <small class="text-muted d-block mb-3">📍 @item.PhongTro.DiaChi</small>
-                            <p class="card-text text-secondary" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                                @item.PhongTro.MoTa
-                            </p>
+                                @if (!string.IsNullOrEmpty(currentTruongId))
+                                {
+                                    <div class="position-absolute top-0 start-0 m-2" style="z-index: 5;">
+                                        <span class="badge bg-danger bg-opacity-75 rounded-pill px-3 py-2 fs-6 shadow">📍 Cách: @item.KhoangCach.ToString("0.0") km</span>
+                                    </div>
+                                }
+
+                                @{
+                                    string firstImage = "https://placehold.co/600x400/eeeeee/999999?text=Chưa+có+ảnh";
+                                    if (!string.IsNullOrEmpty(item.PhongTro.HinhAnh)) { firstImage = "/images/" + item.PhongTro.HinhAnh.Split(',')[0]; }
+                                }
+                                <img src="@firstImage" onerror="this.onerror=null;this.src='https://placehold.co/600x400/eeeeee/999999?text=Lỗi+tải+ảnh';" class="card-img-top" style="height: 240px; object-fit: cover;">
+
+                                <div class="card-body d-flex flex-column">
+                                    <h4 class="card-title text-primary fw-bold mb-1">@item.PhongTro.Gia.ToString("N0") VNĐ</h4>
+
+                                    <div class="text-warning mb-3 fs-6">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= Math.Round(saoTrungBinh))
+                                            {
+                                                <span>★</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-secondary opacity-25">★</span>
+                                            }
+                                        }
+                                        <span class="text-muted ms-1 fs-6">(@saoTrungBinh.ToString("0.0"))</span>
+                                    </div>
+
+                                    <small class="text-muted d-block mb-3"><i class="bi bi-geo-alt-fill text-danger me-1"></i> @item.PhongTro.DiaChi</small>
+
+                                    <div class="mt-auto">
+                                        <a asp-action="Details" asp-route-id="@item.PhongTro.Id" class="btn btn-outline-primary w-100 rounded-pill fw-bold">Xem chi tiết</a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="card-footer bg-transparent border-top-0 pb-3 pt-0">
-                            <a asp-action="Details" asp-route-id="@item.PhongTro.Id" class="btn btn-outline-primary w-100 rounded-pill fw-bold">Xem chi tiết</a>
-                        </div>
-                    </div>
+                    }
                 </div>
             }
         </div>
-    }
+
+        <div class="tab-pane fade" id="map-view" role="tabpanel">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-3">
+                <div id="bigMap" style="height: 600px; width: 100%; z-index: 1; background-color: #e5e3df;"></div>
+            </div>
+            @if (!hasData)
+            {
+                <div class="alert alert-info text-center rounded-4 shadow-sm" role="alert">
+                    Hiện chưa có phòng trọ nào trong khu vực này. Bạn hãy thử thu nhỏ bản đồ hoặc tìm ở các trường khác xem sao nhé!
+                </div>
+            }
+        </div>
+
+    </div>
 </div>
 
 @section Scripts {
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <script>
-        // JAVASCRIPT: Lọc danh sách trường dựa trên lựa chọn Đại học / Cao đẳng
         document.addEventListener("DOMContentLoaded", function () {
             var loaiTruongFilter = document.getElementById("loaiTruongFilter");
             var truongSelect = document.getElementById("truongSelect");
@@ -205,26 +281,103 @@
 
             loaiTruongFilter.addEventListener("change", function () {
                 var selectedType = this.value;
-
                 allOptions.forEach(function (opt) {
-                    if (selectedType === "all" || opt.getAttribute("data-type") === selectedType || opt.value === "") {
-                        opt.style.display = "";
-                    } else {
-                        opt.style.display = "none";
-                    }
+                    if (selectedType === "all" || opt.getAttribute("data-type") === selectedType || opt.value === "") { opt.style.display = ""; }
+                    else { opt.style.display = "none"; }
                 });
-
                 optGroups.forEach(function (group) {
                     var visibleOptions = Array.from(group.querySelectorAll("option")).filter(o => o.style.display !== "none");
-                    if (visibleOptions.length === 0) {
-                        group.style.display = "none";
-                    } else {
-                        group.style.display = "";
-                    }
+                    group.style.display = visibleOptions.length === 0 ? "none" : "";
                 });
-
                 truongSelect.value = "";
             });
+
+            var tamLat = @tamLat.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var tamLng = @tamLng.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var radiusMeters = @radiusMeters;
+            var isHasData = @hasData.ToString().ToLower();
+            var tenTruong = '@Html.Raw(tenTruongTam)';
+            var listPhongRaw = @Html.Raw(listPhongJson);
+
+            var map = L.map('bigMap').setView([tamLat, tamLng], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+            // Xử lý bản đồ bị xám chuyên sâu bằng ResizeObserver
+            var resizeObserver = new ResizeObserver(function() {
+                map.invalidateSize();
+            });
+            resizeObserver.observe(document.getElementById('bigMap'));
+
+            // Double check khi bấm qua Tab Bản đồ
+            document.getElementById('map-tab').addEventListener('click', function () {
+                setTimeout(function() {
+                    map.invalidateSize();
+                    if (circleBounds) {
+                        map.fitBounds(circleBounds);
+                    } else {
+                        map.setView([tamLat, tamLng], 14);
+                    }
+                }, 100);
+            });
+
+            var circleBounds = null;
+
+            if (radiusMeters > 0) {
+                var circle = L.circle([tamLat, tamLng], {
+                    color: '#0d6efd',
+                    fillColor: '#0d6efd',
+                    fillOpacity: 0.1,
+                    radius: radiusMeters
+                }).addTo(map);
+                circleBounds = circle.getBounds();
+                map.fitBounds(circleBounds);
+            }
+
+            L.marker([tamLat, tamLng], {
+                icon: L.divIcon({
+                    html: `<div style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 20px; font-weight: bold; border: 2px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.3); white-space: nowrap;">🏫 ${tenTruong}</div>`,
+                    className: 'custom-div-icon',
+                    iconAnchor: [40, 20]
+                }),
+                zIndexOffset: 1000
+            }).addTo(map);
+
+            if (isHasData) {
+                listPhongRaw.forEach(function(p) {
+                    if(p.lat && p.lng) {
+                        var bgColor = p.isVip ? '#ffc107' : '#ffffff';
+                        var txtColor = p.isVip ? '#000' : '#0d6efd';
+
+                        var customIcon = L.divIcon({
+                            html: `<div style="background-color: ${bgColor}; color: ${txtColor}; padding: 4px 8px; border-radius: 8px; font-weight: bold; border: 2px solid #0d6efd; box-shadow: 0 2px 4px rgba(0,0,0,0.2); white-space: nowrap;">${p.isVip ? '⭐ ' : ''}${p.gia}</div>`,
+                            className: 'custom-price-icon',
+                            iconAnchor: [30, 15]
+                        });
+
+                        var marker = L.marker([p.lat, p.lng], { icon: customIcon }).addTo(map);
+
+                        var imgTag = p.anh ? `<img src="/images/${p.anh}" style="width:100%; height:120px; object-fit:cover; border-radius:8px" class="mb-2">` : '';
+
+                        var saoHtml = '';
+                        var saoTron = Math.round(p.sao);
+                        for(var i=1; i<=5; i++) {
+                            if(i <= saoTron) saoHtml += '★';
+                            else saoHtml += '<span style="opacity: 0.3">★</span>';
+                        }
+
+                        var popupContent = `
+                            <div style="width: 220px; text-align: center;">
+                                ${imgTag}
+                                <h6 class="text-primary fw-bold mb-1">${p.gia} / tháng</h6>
+                                <div class="text-warning mb-2" style="font-size: 1.1rem">${saoHtml} <span class="text-muted" style="font-size: 0.8rem">(${p.sao.toFixed(1)})</span></div>
+                                <span class="badge bg-danger rounded-pill mb-3">📍 Cách trường: ${p.khoangCach} km</span>
+                                <a href="/PhongTro/Details/${p.id}" class="btn btn-sm btn-primary w-100 rounded-pill">Xem phòng</a>
+                            </div>`;
+
+                        marker.bindPopup(popupContent);
+                    }
+                });
+            }
         });
     </script>
 }

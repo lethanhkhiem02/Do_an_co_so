@@ -1,5 +1,6 @@
 ﻿using Do_an_co_so.Data;
 using Do_an_co_so.Models;
+using Do_an_co_so.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,12 +13,16 @@ using System.Threading.Tasks;
 
 namespace Do_an_co_so.Controllers
 {
-    [Authorize] // Bắt buộc đăng nhập mới được vào các chức năng trong này
+    [Authorize]
     public class PhongTroController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly UserManager<AppUser> _userManager;
+
+        private const string VNP_TMNCODE = "SO3O5OQU";
+        private const string VNP_HASHSECRET = "DAATIHR3EIIV5ZRDRIHY8XA7WZ8SDZZI";
+        private const string VNP_URL = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
 
         public PhongTroController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment, UserManager<AppUser> userManager)
         {
@@ -27,10 +32,7 @@ namespace Do_an_co_so.Controllers
         }
 
         [Authorize(Roles = "ChuTro")]
-        public IActionResult Create()
-        {
-            return View();
-        }
+        public IActionResult Create() => View();
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -39,43 +41,30 @@ namespace Do_an_co_so.Controllers
         {
             if (ModelState.IsValid)
             {
-                // 1. Lấy thông tin tài khoản Chủ trọ đang đăng nhập
                 var user = await _userManager.GetUserAsync(User);
                 phongTro.ChuTroId = user.Id;
 
-                // ========================================================
-                // 2. LOGIC XỬ LÝ TIN VIP & TRỪ TIỀN 
-                // ========================================================
                 if (phongTro.IsVip)
                 {
                     if (user.SoDu < 50000)
                     {
-                        // Nếu ví không đủ 50.000đ -> Ép lỗi và đẩy về lại trang đăng bài
-                        ModelState.AddModelError(string.Empty, "❌ Số dư trong ví không đủ để đăng tin VIP. Vui lòng nạp thêm tiền!");
+                        ModelState.AddModelError(string.Empty, "❌ Ví không đủ 50.000đ để đăng tin VIP.");
                         return View(phongTro);
                     }
-                    else
-                    {
-                        // Đủ tiền -> Trừ 50.000đ và cập nhật lại số dư vào Database
-                        user.SoDu -= 50000;
-                        await _userManager.UpdateAsync(user);
-                    }
+                    user.SoDu -= 50000;
+                    await _userManager.UpdateAsync(user);
                 }
-                // ========================================================
 
-                // 3. Xử lý Upload Hình ảnh
                 if (phongTro.ImageUploads != null && phongTro.ImageUploads.Count > 0)
                 {
                     string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images");
                     if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
 
                     List<string> uploadedFileNames = new List<string>();
-
                     foreach (var file in phongTro.ImageUploads)
                     {
                         string uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName;
                         string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
                         using (var fileStream = new FileStream(filePath, FileMode.Create))
                         {
                             await file.CopyToAsync(fileStream);
@@ -85,34 +74,22 @@ namespace Do_an_co_so.Controllers
                     phongTro.HinhAnh = string.Join(",", uploadedFileNames);
                 }
 
-                // 4. Lưu thông tin phòng trọ vào Database
                 _context.Add(phongTro);
                 await _context.SaveChangesAsync();
-
-                // Đăng xong thì quay về trang chủ
                 return RedirectToAction("Index", "Home");
             }
             return View(phongTro);
         }
 
-        [AllowAnonymous] // Cho phép khách vãng lai xem chi tiết phòng
+        [AllowAnonymous]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
-
-            var phongTro = await _context.PhongTro
-                .Include(p => p.ChuTro)
-                .FirstOrDefaultAsync(m => m.Id == id);
-
+            var phongTro = await _context.PhongTro.Include(p => p.ChuTro).FirstOrDefaultAsync(m => m.Id == id);
             if (phongTro == null) return NotFound();
 
-            // Kéo danh sách đánh giá kèm theo thông tin người đã đánh giá
-            ViewBag.DanhGias = await _context.DanhGias
-                .Include(d => d.User)
-                .Where(d => d.PhongTroId == id)
-                .OrderByDescending(d => d.NgayTao)
-                .ToListAsync();
-
+            ViewBag.DanhGias = await _context.DanhGias.Include(d => d.User)
+                .Where(d => d.PhongTroId == id).OrderByDescending(d => d.NgayTao).ToListAsync();
             return View(phongTro);
         }
 
@@ -120,191 +97,322 @@ namespace Do_an_co_so.Controllers
         public async Task<IActionResult> AddReview(int phongTroId, int sao, string noiDung)
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Challenge(); // Đề phòng lỗi
+            if (user == null) return Challenge();
 
-            var danhGia = new DanhGia
+            _context.DanhGias.Add(new DanhGia
             {
                 PhongTroId = phongTroId,
                 UserId = user.Id,
                 Sao = sao,
                 NoiDung = noiDung,
                 NgayTao = DateTime.Now
-            };
-
-            _context.DanhGias.Add(danhGia);
+            });
             await _context.SaveChangesAsync();
-
             return RedirectToAction("Details", new { id = phongTroId });
         }
 
-        // =====================================================================
-        // TRANG QUẢN LÝ PHÒNG RIÊNG CỦA CHỦ TRỌ
-        // =====================================================================
+        [HttpPost]
+        [Authorize(Roles = "SinhVien")]
+        public async Task<IActionResult> ThanhToanThuePhong(int id)
+        {
+            var phong = await _context.PhongTro.FirstOrDefaultAsync(p => p.Id == id);
+            if (phong == null || phong.DaChoThue) return NotFound();
+
+            string vnp_Returnurl = Url.Action("PaymentCallback", "PhongTro", null, Request.Scheme);
+            VnPayLibrary vnpay = new VnPayLibrary();
+
+            vnpay.AddRequestData("vnp_Version", "2.1.0");
+            vnpay.AddRequestData("vnp_Command", "pay");
+            vnpay.AddRequestData("vnp_TmnCode", VNP_TMNCODE);
+            vnpay.AddRequestData("vnp_Amount", ((long)Math.Round(phong.Gia * 100)).ToString());
+            vnpay.AddRequestData("vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss"));
+            vnpay.AddRequestData("vnp_CurrCode", "VND");
+            vnpay.AddRequestData("vnp_IpAddr", HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1");
+            vnpay.AddRequestData("vnp_Locale", "vn");
+            vnpay.AddRequestData("vnp_OrderInfo", "Thanh toan thue phong " + phong.Id);
+            vnpay.AddRequestData("vnp_OrderType", "other");
+            vnpay.AddRequestData("vnp_ReturnUrl", vnp_Returnurl);
+            vnpay.AddRequestData("vnp_TxnRef", phong.Id.ToString() + "_" + DateTime.Now.Ticks);
+
+            string paymentUrl = vnpay.CreateRequestUrl(VNP_URL, VNP_HASHSECRET);
+            return Redirect(paymentUrl);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> PaymentCallback()
+        {
+            var vnpayData = Request.Query;
+            VnPayLibrary vnpay = new VnPayLibrary();
+
+            foreach (string s in vnpayData.Keys)
+            {
+                if (!string.IsNullOrEmpty(s) && s.StartsWith("vnp_"))
+                    vnpay.AddResponseData(s, vnpayData[s]);
+            }
+
+            int phongId = int.Parse(vnpayData["vnp_TxnRef"].ToString().Split('_')[0]);
+            string vnp_ResponseCode = vnpayData["vnp_ResponseCode"];
+            string vnp_SecureHash = Request.Query["vnp_SecureHash"];
+
+            bool checkSignature = vnpay.ValidateSignature(vnp_SecureHash, VNP_HASHSECRET);
+
+            if (checkSignature && vnp_ResponseCode == "00")
+            {
+                var phong = await _context.PhongTro.Include(p => p.ChuTro).FirstOrDefaultAsync(p => p.Id == phongId);
+                var nguoiThue = await _userManager.GetUserAsync(User);
+                var admin = await _userManager.FindByEmailAsync("admin@gmail.com");
+
+                if (phong != null && !phong.DaChoThue)
+                {
+                    decimal tongTien = phong.Gia;
+                    decimal tienHoaHong = tongTien * 0.10m;
+                    decimal tienChuTro = tongTien - tienHoaHong;
+
+                    if (admin != null) admin.SoDu += tienHoaHong;
+                    if (phong.ChuTro != null) phong.ChuTro.SoDu += tienChuTro;
+                    phong.DaChoThue = true;
+
+                    _context.HoaDons.Add(new HoaDon
+                    {
+                        PhongTroId = phong.Id,
+                        NguoiThueId = nguoiThue?.Id,
+                        TongTien = tongTien,
+                        TienHoaHong = tienHoaHong,
+                        TienChuTroNhan = tienChuTro,
+                        NgayGiaoDich = DateTime.Now
+                    });
+
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "🎉 Thuê phòng thành công qua VNPay!";
+                }
+            }
+            else TempData["Error"] = "❌ Giao dịch thất bại hoặc bị hủy.";
+
+            return RedirectToAction("Details", new { id = phongId });
+        }
+
         [Authorize(Roles = "ChuTro")]
         public async Task<IActionResult> QuanLyPhong()
         {
-            // 1. Xác định "Tôi là ai?"
             var user = await _userManager.GetUserAsync(User);
-
-            // 2. Chỉ lấy những phòng của tôi, ưu tiên VIP lên đầu
-            var danhSachCuaToi = await _context.PhongTro
-                .Where(p => p.ChuTroId == user.Id)
-                .OrderByDescending(p => p.IsVip)
-                .ThenByDescending(p => p.Id)
-                .ToListAsync();
-
-            return View(danhSachCuaToi);
+            var ds = await _context.PhongTro.Where(p => p.ChuTroId == user.Id).OrderByDescending(p => p.IsVip).ToListAsync();
+            return View(ds);
         }
 
-        // =====================================================================
-        // CHỨC NĂNG XÓA BÀI ĐĂNG (BẢO MẬT: CHỈ CHỦ TRỌ MỚI ĐƯỢC XÓA BÀI CỦA MÌNH)
-        // =====================================================================
         [HttpPost]
         [Authorize(Roles = "ChuTro")]
         public async Task<IActionResult> Delete(int id)
         {
-            var phongTro = await _context.PhongTro.FindAsync(id);
-            if (phongTro == null) return NotFound();
-
+            var phong = await _context.PhongTro.FindAsync(id);
             var user = await _userManager.GetUserAsync(User);
-
-            // BẢO MẬT: Kiểm tra xem người đang đăng nhập có đúng là chủ của bài đăng này không?
-            if (phongTro.ChuTroId != user.Id)
-            {
-                return Forbid(); // Trả về lỗi 403 (Cấm truy cập) nếu cố ý xóa bài người khác
-            }
-
-            _context.PhongTro.Remove(phongTro);
+            if (phong == null || phong.ChuTroId != user.Id) return Forbid();
+            _context.PhongTro.Remove(phong);
             await _context.SaveChangesAsync();
-
-            // Xóa xong thì đá về trang chủ
             return RedirectToAction("Index", "Home");
-        }
-
-        // =====================================================================
-        // CHỨC NĂNG TÌM KIẾM THEO BÁN KÍNH VÀ LOẠI TRƯỜNG
-        // =====================================================================
-
-        // Danh sách siêu to khổng lồ các trường Đại học/Cao đẳng (In-Memory)
-        private List<TruongDaiHoc> GetDanhSachTruong()
-        {
-            return new List<TruongDaiHoc>
-            {
-                // ============ HỆ ĐẠI HỌC ============
-                new TruongDaiHoc { Id = "hutech_dbp", TenTruong = "HUTECH (Điện Biên Phủ)", LoaiTruong = "Đại học", Quan = "Bình Thạnh", Latitude = 10.8018, Longitude = 106.7115 },
-                new TruongDaiHoc { Id = "gtvt", TenTruong = "ĐH Giao thông Vận tải", LoaiTruong = "Đại học", Quan = "Bình Thạnh", Latitude = 10.8043, Longitude = 106.7190 },
-                new TruongDaiHoc { Id = "ngoai_thuong", TenTruong = "ĐH Ngoại Thương (CS2)", LoaiTruong = "Đại học", Quan = "Bình Thạnh", Latitude = 10.8048, Longitude = 106.7163 },
-                new TruongDaiHoc { Id = "hutech_khue", TenTruong = "HUTECH (Khu E)", LoaiTruong = "Đại học", Quan = "Thủ Đức", Latitude = 10.8496, Longitude = 106.7766 },
-                new TruongDaiHoc { Id = "spkt", TenTruong = "ĐH Sư Phạm Kỹ Thuật", LoaiTruong = "Đại học", Quan = "Thủ Đức", Latitude = 10.8505, Longitude = 106.7720 },
-                new TruongDaiHoc { Id = "fpt_uni", TenTruong = "Đại học FPT", LoaiTruong = "Đại học", Quan = "Thủ Đức", Latitude = 10.8411, Longitude = 106.8098 },
-                new TruongDaiHoc { Id = "bachkhoa", TenTruong = "ĐH Bách Khoa", LoaiTruong = "Đại học", Quan = "Quận 10", Latitude = 10.7733, Longitude = 106.6597 },
-                new TruongDaiHoc { Id = "khtn", TenTruong = "ĐH Khoa học Tự nhiên", LoaiTruong = "Đại học", Quan = "Quận 5", Latitude = 10.7631, Longitude = 106.6823 },
-                new TruongDaiHoc { Id = "tdt", TenTruong = "ĐH Tôn Đức Thắng", LoaiTruong = "Đại học", Quan = "Quận 7", Latitude = 10.7326, Longitude = 106.6997 },
-                new TruongDaiHoc { Id = "rmit", TenTruong = "ĐH RMIT Nam Sài Gòn", LoaiTruong = "Đại học", Quan = "Quận 7", Latitude = 10.7293, Longitude = 106.6942 },
-
-                // ============ HỆ CAO ĐẲNG ============
-                new TruongDaiHoc { Id = "fpt_poly", TenTruong = "Cao đẳng FPT Polytechnic", LoaiTruong = "Cao đẳng", Quan = "Phú Nhuận", Latitude = 10.7908, Longitude = 106.6823 },
-                new TruongDaiHoc { Id = "cd_kinhte", TenTruong = "Cao đẳng Kinh tế Đối ngoại", LoaiTruong = "Cao đẳng", Quan = "Phú Nhuận", Latitude = 10.7972, Longitude = 106.6806 },
-                new TruongDaiHoc { Id = "cd_congthuong", TenTruong = "Cao đẳng Công Thương", LoaiTruong = "Cao đẳng", Quan = "Thủ Đức", Latitude = 10.8268, Longitude = 106.7303 },
-                new TruongDaiHoc { Id = "cd_caothang", TenTruong = "Cao đẳng Kỹ thuật Cao Thắng", LoaiTruong = "Cao đẳng", Quan = "Quận 1", Latitude = 10.7725, Longitude = 106.7011 },
-                new TruongDaiHoc { Id = "cd_viendong", TenTruong = "Cao đẳng Viễn Đông", LoaiTruong = "Cao đẳng", Quan = "Quận 12", Latitude = 10.8524, Longitude = 106.6275 }
-            };
         }
 
         [AllowAnonymous]
         public async Task<IActionResult> TimKiem(string truongId, double? radius, decimal? minPrice, decimal? maxPrice, string sortBy)
         {
-            // 1. Nạp danh sách trường ra View để làm Dropdown
             var dsTruong = GetDanhSachTruong();
             ViewBag.DanhSachTruong = dsTruong;
 
-            // Giữ lại lựa chọn của người dùng trên thanh tìm kiếm
+            // LƯU LẠI VIEW BAG ĐỂ GIỮ FORM
             ViewBag.TruongId = truongId;
             ViewBag.Radius = radius;
             ViewBag.MinPrice = minPrice;
             ViewBag.MaxPrice = maxPrice;
-            ViewBag.SortBy = sortBy;
+            ViewBag.SortBy = string.IsNullOrEmpty(sortBy) ? "distance_asc" : sortBy;
 
-            var query = _context.PhongTro.Include(p => p.ChuTro).AsQueryable();
+            var query = _context.PhongTro
+                .Include(p => p.ChuTro)
+                .Where(p => p.DaChoThue == false)
+                .AsQueryable();
 
-            // 2. Lọc theo khoảng giá
             if (minPrice.HasValue) query = query.Where(p => p.Gia >= minPrice.Value);
             if (maxPrice.HasValue) query = query.Where(p => p.Gia <= maxPrice.Value);
 
             var listPhong = await query.ToListAsync();
+
+            var phongIds = listPhong.Select(p => p.Id).ToList();
+            var saoDict = await _context.DanhGias
+                .Where(d => phongIds.Contains(d.PhongTroId))
+                .GroupBy(d => d.PhongTroId)
+                .Select(g => new { PhongTroId = g.Key, AvgSao = g.Average(d => d.Sao) })
+                .ToDictionaryAsync(x => x.PhongTroId, x => x.AvgSao);
+
+            ViewBag.SaoDict = saoDict;
+
             var ketQua = new List<PhongTroSearchResultViewModel>();
+            var truong = dsTruong.FirstOrDefault(t => t.Id == truongId);
 
-            var truongDuocChon = dsTruong.FirstOrDefault(t => t.Id == truongId);
-
-            // 3. Tính khoảng cách và lọc theo bán kính
-            if (truongDuocChon != null && radius.HasValue)
+            foreach (var p in listPhong)
             {
-                foreach (var p in listPhong)
-                {
-                    if (p.Latitude.HasValue && p.Longitude.HasValue)
-                    {
-                        double kc = TinhKhoangCach(truongDuocChon.Latitude, truongDuocChon.Longitude, p.Latitude.Value, p.Longitude.Value);
+                double kc = (truong != null && p.Latitude.HasValue && p.Longitude.HasValue)
+                    ? TinhKhoangCach(truong.Latitude, truong.Longitude, p.Latitude.Value, p.Longitude.Value) : 0;
 
-                        // Chỉ lấy phòng nằm trong bán kính đã chọn
-                        if (kc <= radius.Value)
-                        {
-                            ketQua.Add(new PhongTroSearchResultViewModel
-                            {
-                                PhongTro = p,
-                                KhoangCach = kc
-                            });
-                        }
-                    }
-                }
-            }
-            else
-            {
-                // Nếu người dùng không chọn mốc trường học, hiển thị danh sách bình thường
-                foreach (var p in listPhong)
-                {
-                    ketQua.Add(new PhongTroSearchResultViewModel { PhongTro = p, KhoangCach = 0 });
-                }
+                if (!radius.HasValue || kc <= radius.Value)
+                    ketQua.Add(new PhongTroSearchResultViewModel { PhongTro = p, KhoangCach = kc });
             }
 
-            // 4. Sắp xếp kết quả (Sorting) - LUÔN ƯU TIÊN TIN VIP LÊN ĐẦU
-            if (!string.IsNullOrEmpty(sortBy))
+            ketQua = sortBy switch
             {
-                switch (sortBy)
-                {
-                    case "distance_asc":
-                        ketQua = ketQua.OrderByDescending(k => k.PhongTro.IsVip).ThenBy(k => k.KhoangCach).ToList();
-                        break;
-                    case "price_asc":
-                        ketQua = ketQua.OrderByDescending(k => k.PhongTro.IsVip).ThenBy(k => k.PhongTro.Gia).ToList();
-                        break;
-                    case "price_desc":
-                        ketQua = ketQua.OrderByDescending(k => k.PhongTro.IsVip).ThenByDescending(k => k.PhongTro.Gia).ToList();
-                        break;
-                }
-            }
-            else
-            {
-                // Mặc định: Luôn đẩy VIP lên trước. Sau đó ưu tiên khoảng cách (nếu có chọn trường) hoặc bài mới nhất.
-                if (truongDuocChon != null)
-                    ketQua = ketQua.OrderByDescending(k => k.PhongTro.IsVip).ThenBy(k => k.KhoangCach).ToList();
-                else
-                    ketQua = ketQua.OrderByDescending(k => k.PhongTro.IsVip).ThenByDescending(k => k.PhongTro.Id).ToList();
-            }
-
+                "price_asc" => ketQua.OrderByDescending(k => k.PhongTro.IsVip).ThenBy(k => k.PhongTro.Gia).ToList(),
+                "price_desc" => ketQua.OrderByDescending(k => k.PhongTro.IsVip).ThenByDescending(k => k.PhongTro.Gia).ToList(),
+                _ => ketQua.OrderByDescending(k => k.PhongTro.IsVip).ThenBy(k => k.KhoangCach).ToList()
+            };
             return View(ketQua);
         }
 
-        // THUẬT TOÁN HAVERSINE: Tính khoảng cách đường chim bay (bằng km) giữa 2 tọa độ GPS
         private double TinhKhoangCach(double lat1, double lon1, double lat2, double lon2)
         {
-            var R = 6371d; // Bán kính Trái Đất theo km
             var dLat = (lat2 - lat1) * Math.PI / 180.0;
             var dLon = (lon2 - lon1) * Math.PI / 180.0;
-            var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
-                    Math.Cos(lat1 * Math.PI / 180.0) * Math.Cos(lat2 * Math.PI / 180.0) *
-                    Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
-            var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-            return R * c; // Trả về khoảng cách (km)
+            var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) + Math.Cos(lat1 * Math.PI / 180.0) * Math.Cos(lat2 * Math.PI / 180.0) * Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+            return 6371 * 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+        }
+
+        private List<TruongDaiHoc> GetDanhSachTruong()
+        {
+            return new List<TruongDaiHoc> {
+                // ======= KHU VỰC BÌNH THẠNH =======
+                new TruongDaiHoc { Id = "hutech_dbp", TenTruong = "Đại học HUTECH", Latitude = 10.8018, Longitude = 106.7115, LoaiTruong = "Đại học", Quan = "Bình Thạnh" },
+                new TruongDaiHoc { Id = "gtvt", TenTruong = "ĐH Giao thông Vận tải", Latitude = 10.8043, Longitude = 106.7190, LoaiTruong = "Đại học", Quan = "Bình Thạnh" },
+                new TruongDaiHoc { Id = "vlu_bt", TenTruong = "Đại học Văn Lang", Latitude = 10.8222, Longitude = 106.6874, LoaiTruong = "Đại học", Quan = "Bình Thạnh" },
+                new TruongDaiHoc { Id = "ufm_bt", TenTruong = "ĐH Tài chính - Marketing", Latitude = 10.7961, Longitude = 106.6946, LoaiTruong = "Đại học", Quan = "Bình Thạnh" },
+                new TruongDaiHoc { Id = "ftu2", TenTruong = "ĐH Ngoại thương (CS2)", Latitude = 10.8048, Longitude = 106.7169, LoaiTruong = "Đại học", Quan = "Bình Thạnh" },
+                new TruongDaiHoc { Id = "uef", TenTruong = "ĐH Kinh tế - Tài chính (UEF)", Latitude = 10.7956, Longitude = 106.7001, LoaiTruong = "Đại học", Quan = "Bình Thạnh" },
+
+                // ======= KHU VỰC THỦ ĐỨC (LÀNG ĐH & LÂN CẬN) =======
+                new TruongDaiHoc { Id = "spkt", TenTruong = "ĐH Sư Phạm Kỹ Thuật", Latitude = 10.8505, Longitude = 106.7720, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
+                new TruongDaiHoc { Id = "nlu", TenTruong = "ĐH Nông Lâm", Latitude = 10.8697, Longitude = 106.7938, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
+                new TruongDaiHoc { Id = "uit", TenTruong = "ĐH Công nghệ Thông tin (UIT)", Latitude = 10.8700, Longitude = 106.8031, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
+                new TruongDaiHoc { Id = "hcmus_td", TenTruong = "ĐH Khoa học Tự nhiên", Latitude = 10.8761, Longitude = 106.7979, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
+                new TruongDaiHoc { Id = "buh", TenTruong = "ĐH Ngân hàng TP.HCM", Latitude = 10.8566, Longitude = 106.7621, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
+                new TruongDaiHoc { Id = "uel", TenTruong = "ĐH Kinh tế - Luật (UEL)", Latitude = 10.8719, Longitude = 106.7984, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
+                new TruongDaiHoc { Id = "hcmut_td", TenTruong = "ĐH Bách Khoa (Làng ĐH)", Latitude = 10.8804, Longitude = 106.8053, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
+                new TruongDaiHoc { Id = "hcmiu", TenTruong = "ĐH Quốc tế (IU)", Latitude = 10.8732, Longitude = 106.8023, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
+
+                // ======= KHU VỰC QUẬN 1 & QUẬN 3 =======
+                new TruongDaiHoc { Id = "ueh_q3", TenTruong = "ĐH Kinh tế TP.HCM (UEH)", Latitude = 10.7828, Longitude = 106.6925, LoaiTruong = "Đại học", Quan = "Quận 3" },
+                new TruongDaiHoc { Id = "ussh_q1", TenTruong = "ĐH KHXH & Nhân văn", Latitude = 10.7860, Longitude = 106.7011, LoaiTruong = "Đại học", Quan = "Quận 1" },
+                new TruongDaiHoc { Id = "caothang", TenTruong = "CĐ Kỹ thuật Cao Thắng", Latitude = 10.7724, Longitude = 106.7016, LoaiTruong = "Cao đẳng", Quan = "Quận 1" },
+                new TruongDaiHoc { Id = "sgu", TenTruong = "Đại học Sài Gòn (SGU)", Latitude = 10.7599, Longitude = 106.6822, LoaiTruong = "Đại học", Quan = "Quận 3" },
+                new TruongDaiHoc { Id = "uah", TenTruong = "ĐH Kiến trúc TP.HCM", Latitude = 10.7831, Longitude = 106.6946, LoaiTruong = "Đại học", Quan = "Quận 3" },
+                new TruongDaiHoc { Id = "ou", TenTruong = "Đại học Mở TP.HCM", Latitude = 10.7766, Longitude = 106.6917, LoaiTruong = "Đại học", Quan = "Quận 3" },
+
+                // ======= KHU VỰC QUẬN 5 & QUẬN 10 =======
+                new TruongDaiHoc { Id = "hcmut_q10", TenTruong = "ĐH Bách Khoa TP.HCM", Latitude = 10.7732, Longitude = 106.6597, LoaiTruong = "Đại học", Quan = "Quận 10" },
+                new TruongDaiHoc { Id = "huflit", TenTruong = "ĐH Ngoại ngữ - Tin học (HUFLIT)", Latitude = 10.7765, Longitude = 106.6669, LoaiTruong = "Đại học", Quan = "Quận 10" },
+                new TruongDaiHoc { Id = "hcmus_q5", TenTruong = "ĐH Khoa học Tự nhiên", Latitude = 10.7630, Longitude = 106.6821, LoaiTruong = "Đại học", Quan = "Quận 5" },
+                new TruongDaiHoc { Id = "hcmue", TenTruong = "ĐH Sư Phạm TP.HCM", Latitude = 10.7613, Longitude = 106.6822, LoaiTruong = "Đại học", Quan = "Quận 5" },
+                new TruongDaiHoc { Id = "ump", TenTruong = "ĐH Y Dược TP.HCM", Latitude = 10.7562, Longitude = 106.6661, LoaiTruong = "Đại học", Quan = "Quận 5" },
+                new TruongDaiHoc { Id = "pnt", TenTruong = "ĐH Y khoa Phạm Ngọc Thạch", Latitude = 10.7745, Longitude = 106.6668, LoaiTruong = "Đại học", Quan = "Quận 10" },
+
+                // ======= KHU VỰC QUẬN 7 =======
+                new TruongDaiHoc { Id = "tdt", TenTruong = "ĐH Tôn Đức Thắng", Latitude = 10.7325, Longitude = 106.6983, LoaiTruong = "Đại học", Quan = "Quận 7" },
+                new TruongDaiHoc { Id = "rmit", TenTruong = "ĐH RMIT Việt Nam", Latitude = 10.7293, Longitude = 106.6946, LoaiTruong = "Đại học", Quan = "Quận 7" },
+
+                // ======= CÁC QUẬN KHÁC (GÒ VẤP, TÂN BÌNH, QUẬN 12...) =======
+                new TruongDaiHoc { Id = "iuh", TenTruong = "ĐH Công nghiệp TP.HCM (IUH)", Latitude = 10.8222, Longitude = 106.6875, LoaiTruong = "Đại học", Quan = "Gò Vấp" },
+                new TruongDaiHoc { Id = "fpt_poly", TenTruong = "CĐ FPT Polytechnic", Latitude = 10.8531, Longitude = 106.6263, LoaiTruong = "Cao đẳng", Quan = "Quận 12" },
+                new TruongDaiHoc { Id = "viendong", TenTruong = "CĐ Viễn Đông", Latitude = 10.8549, Longitude = 106.6277, LoaiTruong = "Cao đẳng", Quan = "Quận 12" },
+                new TruongDaiHoc { Id = "huit", TenTruong = "ĐH Công thương (HUIT)", Latitude = 10.8066, Longitude = 106.6288, LoaiTruong = "Đại học", Quan = "Tân Phú" }
+            };
+        }
+
+        [Authorize(Roles = "SinhVien")]
+        public async Task<IActionResult> PhongDaThue()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            var danhSachThue = await _context.HoaDons
+                .Include(h => h.PhongTro)
+                .ThenInclude(p => p.ChuTro)
+                .Where(h => h.NguoiThueId == user.Id)
+                .OrderByDescending(h => h.NgayGiaoDich)
+                .ToListAsync();
+
+            return View(danhSachThue);
+        }
+
+        [Authorize(Roles = "ChuTro")]
+        [HttpGet]
+        public IActionResult NapTien()
+        {
+            return View();
+        }
+
+        [Authorize(Roles = "ChuTro")]
+        [HttpPost]
+        public async Task<IActionResult> XuLyNapTien(decimal soTien)
+        {
+            if (soTien < 10000)
+            {
+                TempData["Error"] = "❌ Số tiền nạp tối thiểu là 10.000đ";
+                return RedirectToAction("NapTien");
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+
+            string vnp_Returnurl = Url.Action("NapTienCallback", "PhongTro", null, Request.Scheme);
+            VnPayLibrary vnpay = new VnPayLibrary();
+
+            vnpay.AddRequestData("vnp_Version", "2.1.0");
+            vnpay.AddRequestData("vnp_Command", "pay");
+            vnpay.AddRequestData("vnp_TmnCode", VNP_TMNCODE);
+            vnpay.AddRequestData("vnp_Amount", ((long)Math.Round(soTien * 100)).ToString());
+            vnpay.AddRequestData("vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss"));
+            vnpay.AddRequestData("vnp_CurrCode", "VND");
+            vnpay.AddRequestData("vnp_IpAddr", HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1");
+            vnpay.AddRequestData("vnp_Locale", "vn");
+            vnpay.AddRequestData("vnp_OrderInfo", "Nap tien vao vi VIP - " + user.UserName);
+            vnpay.AddRequestData("vnp_OrderType", "topup");
+            vnpay.AddRequestData("vnp_ReturnUrl", vnp_Returnurl);
+
+            vnpay.AddRequestData("vnp_TxnRef", user.Id + "_" + DateTime.Now.Ticks);
+
+            string paymentUrl = vnpay.CreateRequestUrl(VNP_URL, VNP_HASHSECRET);
+            return Redirect(paymentUrl);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> NapTienCallback()
+        {
+            var vnpayData = Request.Query;
+            VnPayLibrary vnpay = new VnPayLibrary();
+
+            foreach (string s in vnpayData.Keys)
+            {
+                if (!string.IsNullOrEmpty(s) && s.StartsWith("vnp_"))
+                    vnpay.AddResponseData(s, vnpayData[s]);
+            }
+
+            string vnp_ResponseCode = vnpayData["vnp_ResponseCode"];
+            string vnp_SecureHash = Request.Query["vnp_SecureHash"];
+            string txnRef = vnpayData["vnp_TxnRef"].ToString();
+
+            string userId = txnRef.Split('_')[0];
+            decimal soTienNap = decimal.Parse(vnpayData["vnp_Amount"]) / 100;
+
+            bool checkSignature = vnpay.ValidateSignature(vnp_SecureHash, VNP_HASHSECRET);
+
+            if (checkSignature && vnp_ResponseCode == "00")
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user != null)
+                {
+                    user.SoDu += soTienNap;
+                    await _userManager.UpdateAsync(user);
+                    TempData["Success"] = $"🎉 Nạp thành công {soTienNap.ToString("N0")}đ vào ví!";
+                }
+            }
+            else
+            {
+                TempData["Error"] = "❌ Nạp tiền thất bại hoặc giao dịch bị hủy.";
+            }
+
+            return RedirectToAction("QuanLyPhong", "PhongTro");
         }
     }
 }

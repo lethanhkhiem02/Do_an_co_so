@@ -1,0 +1,52 @@
+﻿@{
+    ViewData["Title"] = "Nạp tiền vào ví VIP";
+}
+
+<div class="container mt-5 mb-5 d-flex justify-content-center">
+    <div class="card shadow-lg border-0 rounded-4" style="max-width: 500px; width: 100%;">
+        <div class="card-header bg-success text-white text-center py-4 rounded-top-4">
+            <h4 class="mb-0 fw-bold">💳 Nạp Tiền Vào Ví</h4>
+            <p class="mb-0 small">Sử dụng số dư ví để đăng tin VIP lên đầu trang</p>
+        </div>
+
+        <div class="card-body p-4">
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger fw-bold rounded-3">@TempData["Error"]</div>
+            }
+
+            <form asp-action="XuLyNapTien" method="post">
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Chọn số tiền nạp (VNĐ):</label>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <input type="radio" class="btn-check" name="soTien" id="btn50k" value="50000" checked>
+                            <label class="btn btn-outline-success w-100 fw-bold" for="btn50k">50.000 đ</label>
+                        </div>
+                        <div class="col-6">
+                            <input type="radio" class="btn-check" name="soTien" id="btn100k" value="100000">
+                            <label class="btn btn-outline-success w-100 fw-bold" for="btn100k">100.000 đ</label>
+                        </div>
+                        <div class="col-6">
+                            <input type="radio" class="btn-check" name="soTien" id="btn200k" value="200000">
+                            <label class="btn btn-outline-success w-100 fw-bold" for="btn200k">200.000 đ</label>
+                        </div>
+                        <div class="col-6">
+                            <input type="radio" class="btn-check" name="soTien" id="btn500k" value="500000">
+                            <label class="btn btn-outline-success w-100 fw-bold" for="btn500k">500.000 đ</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning small rounded-3 mb-4">
+                    <i class="bi bi-info-circle fw-bold"></i> Bạn sẽ được chuyển hướng sang cổng thanh toán <strong>VNPay</strong>. Hãy sử dụng thẻ test hoặc ngân hàng NCB để kiểm thử giao dịch.
+                </div>
+
+                <button type="submit" class="btn btn-success w-100 fw-bold rounded-pill py-2 fs-5">
+                    🚀 Thanh Toán Qua VNPay
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

@@ -16,7 +16,7 @@ namespace Do_an_co_so.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<AppUser> _userManager;
-        private readonly IWebHostEnvironment _environment; // Thêm cái này để lấy đường dẫn thư mục wwwroot
+        private readonly IWebHostEnvironment _environment;
 
         public ChatController(ApplicationDbContext context, UserManager<AppUser> userManager, IWebHostEnvironment environment)
         {
@@ -96,19 +96,19 @@ namespace Do_an_co_so.Controllers
                 .Take(50)
                 .ToListAsync();
 
-            // Xử lý tách nhãn và nội dung để gửi sang giao diện
+            // 🔥 TÍNH NĂNG MỚI: Ưu tiên lấy HoTen, nếu null thì cắt đuôi @gmail.com
             var processedMessages = rawMessages.Select(m => new {
-                SenderName = m.Sender?.UserName,
-                // Tách nhãn [GLOBAL_TYPE]: Nội dung
+                SenderName = !string.IsNullOrEmpty(m.Sender?.HoTen) ? m.Sender.HoTen : (m.Sender?.UserName?.Split('@')[0] ?? "Ẩn danh"),
                 Type = m.Content.Split(']')[0].Replace("[GLOBAL_", "").ToLower(),
-                Content = m.Content.Split(": ", 2)[1], // Lấy phần nội dung sau dấu : 
+                Content = m.Content.Split(": ", 2)[1],
                 Time = m.Timestamp.ToString("HH:mm")
             }).ToList();
 
             ViewBag.CurrentUserId = currentUser.Id;
-            ViewBag.CurrentUserName = currentUser.UserName;
 
-            // Truyền sang View dạng dynamic object để dễ dùng
+            // 🔥 TÍNH NĂNG MỚI: Đổi tên hiển thị cho người đang đăng nhập
+            ViewBag.CurrentUserName = !string.IsNullOrEmpty(currentUser.HoTen) ? currentUser.HoTen : (currentUser.UserName?.Split('@')[0] ?? "Ẩn danh");
+
             return View(processedMessages);
         }
 
@@ -118,22 +118,18 @@ namespace Do_an_co_so.Controllers
         {
             if (file == null || file.Length == 0) return Json(new { success = false, message = "Không có file nào được chọn." });
 
-            // Kiểm tra định dạng file có phải là ảnh không
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
             var extension = Path.GetExtension(file.FileName).ToLower();
             if (!allowedExtensions.Contains(extension)) return Json(new { success = false, message = "Chỉ cho phép upload file ảnh (.jpg, .png, .gif)." });
 
-            // Tạo tên file duy nhất để không bị trùng (dùng Guid)
             var fileName = Guid.NewGuid().ToString() + extension;
             var filePath = Path.Combine(_environment.WebRootPath, "uploads", "chat-images", fileName);
 
-            // Lưu file vào Server
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
                 await file.CopyToAsync(stream);
             }
 
-            // Trả về đường link của ảnh để Frontend gửi qua SignalR
             var imageUrl = $"/uploads/chat-images/{fileName}";
             return Json(new { success = true, imageUrl = imageUrl });
         }

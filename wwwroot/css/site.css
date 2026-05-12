@@ -2,114 +2,49 @@
    1. CẤU HÌNH MẶC ĐỊNH CỦA ASP.NET CORE
    ========================================== */
 html {
-  font-size: 14px;
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+    color: var(--bs-secondary-color);
+    text-align: end;
 }
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+    text-align: start;
 }
-
 
 /* ==========================================
    2. TÙY CHỈNH GIAO DIỆN WEB THUÊ PHÒNG TRỌ
    ========================================== */
 
 :root {
-    --primary-blue: #4e73df; /* Xanh dương hiện đại */
-    --hover-blue: #2e59d9;
-    --bg-light: #f8f9fc; /* Nền xám nhạt dịu mắt */
+    --primary-blue: #0d6efd;
+    --hover-blue: #0b5ed7;
+    --bg-light: #f4f6f9;
 }
 
-/* Tùy chỉnh Body (Gộp cả margin mặc định và màu nền mới) */
-body {
-    margin-bottom: 60px;
-    background-color: var(--bg-light);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-/* Tùy chỉnh thanh Menu (Navbar) */
-.navbar-custom {
-    background: linear-gradient(90deg, var(--primary-blue) 0%, #224abe 100%);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    border: none;
-}
-
-    .navbar-custom .navbar-brand,
-    .navbar-custom .nav-link,
-    .navbar-custom .navbar-brand *,
-    .navbar-custom .navbar-brand span {
-        color: #ffffff !important;
-        font-weight: 500;
-        transition: 0.3s;
-    }
-
-.navbar-custom .nav-link:hover {
-    color: #d1d3e2 !important;
-    transform: translateY(-1px);
-}
-
-/* Tùy chỉnh các nút bấm (Buttons) */
-.btn-primary {
-    background-color: var(--primary-blue);
-    border-color: var(--primary-blue);
-    border-radius: 6px;
-    transition: all 0.3s ease;
-}
-
-.btn-primary:hover {
-    background-color: var(--hover-blue);
-    border-color: var(--hover-blue);
-    box-shadow: 0 4px 8px rgba(78, 115, 223, 0.3);
-    transform: translateY(-2px);
-}
-
-/* Tùy chỉnh khung nhập liệu (Form/Card) */
-.card-custom {
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-    border: none;
-    padding: 20px;
-}
-
-/* Tùy chỉnh Footer */
-.footer {
-    background-color: #ffffff;
-    border-top: 1px solid #e3e6f0;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-}
-/* ===== DARK / LIGHT MODE ===== */
-
-/* ===== DARK / LIGHT MODE ===== */
+/* ==========================================
+   3. CẤU HÌNH DARK / LIGHT MODE 
+   ========================================== */
 
 :root {
-    --bg-color: #ffffff;
+    --bg-color: #f4f6f9;
     --text-color: #212529;
     --card-bg: #ffffff;
     --card-border: #dee2e6;
-    --navbar-bg: #3d5a99;
-    --footer-bg: #f8f9fa;
-    --footer-text: #6c757d;
     --input-bg: #ffffff;
     --input-text: #212529;
     --input-border: #ced4da;
@@ -122,9 +57,6 @@ body {
     --text-color: #f0f0f0;
     --card-bg: #1e1e1e;
     --card-border: #333333;
-    --navbar-bg: #1a1a1a;
-    --footer-bg: #1a1a1a;
-    --footer-text: #aaaaaa;
     --input-bg: #2a2a2a;
     --input-text: #f0f0f0;
     --input-border: #444444;
@@ -137,41 +69,36 @@ body {
     background-color: var(--bg-color) !important;
     color: var(--text-color) !important;
     transition: background-color 0.3s ease, color 0.3s ease;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Mọi thẻ chữ thông thường */
-p, h1, h2, h3, h4, h5, h6, span, label, div, td, th, li {
-    color: var(--text-color) !important;
+/* ĐÃ FIX: Không ép buộc màu cho div, span, p nữa để Footer hiển thị được */
+[data-theme="dark"] p,
+[data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3,
+[data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] h6,
+[data-theme="dark"] li, [data-theme="dark"] label {
+    color: var(--text-color);
 }
 
 /* Link */
-a:not(.btn):not(.nav-link) {
-    color: var(--link-color) !important;
+a:not(.btn):not(.nav-link):not(.footer-link) {
+    color: var(--link-color);
 }
 
-/* Chữ mờ (text-muted) */
+/* Chữ mờ */
 .text-muted {
     color: var(--muted-text) !important;
 }
 
-/* Navbar */
-.navbar {
-    background-color: var(--navbar-bg) !important;
-    transition: background-color 0.3s ease;
+/* ĐÃ FIX: Bỏ ép màu navbar-bg. Màu navbar sẽ do class trong _Layout quyết định */
+[data-theme="dark"] .navbar-custom {
+    background-color: #1a1a1a !important;
+    border-bottom: 1px solid #333 !important;
 }
 
-    /* Giữ chữ trên navbar luôn trắng */
-    .navbar .nav-link,
-    .navbar .navbar-brand,
-    .navbar .fw-bold,
-    .navbar span,
-    .navbar a,
-    .navbar li,
-    .navbar div,
-    .navbar-custom .navbar-brand,
-    [data-theme="dark"] .navbar *,
-    [data-theme="dark"] .navbar-custom * {
-        color: #ffffff !important;
+    [data-theme="dark"] .navbar-custom .nav-link,
+    [data-theme="dark"] .navbar-custom .navbar-brand {
+        color: #f0f0f0 !important;
     }
 
 /* Card */
@@ -180,11 +107,11 @@ a:not(.btn):not(.nav-link) {
     border-color: var(--card-border) !important;
 }
 
-    .card .card-title,
-    .card .card-text,
-    .card .card-body {
-        color: var(--text-color) !important;
-    }
+[data-theme="dark"] .card-title,
+[data-theme="dark"] .card-text,
+[data-theme="dark"] .card-body {
+    color: var(--text-color) !important;
+}
 
 /* Input, select, textarea */
 input, select, textarea, .form-control, .form-select {
@@ -193,66 +120,36 @@ input, select, textarea, .form-control, .form-select {
     border-color: var(--input-border) !important;
 }
 
-/* Placeholder chữ trong input */
 ::placeholder {
     color: var(--muted-text) !important;
 }
 
-/* Footer */
-footer {
-    background-color: var(--footer-bg) !important;
-    color: var(--footer-text) !important;
-    transition: background-color 0.3s ease;
-}
-
-/* Container/wrapper trắng */
-.container, .container-fluid {
-    background-color: transparent !important;
-}
-/* Khung trắng (card, alert, box) trong dark mode → màu tối như footer */
-[data-theme="dark"] .card,
+/* Khung cảnh báo (alert) trong dark mode */
 [data-theme="dark"] .alert,
 [data-theme="dark"] .alert-warning,
 [data-theme="dark"] .bg-white,
-[data-theme="dark"] [style*="background-color: white"],
-[data-theme="dark"] [style*="background: white"],
-[data-theme="dark"] .rounded,
-[data-theme="dark"] .shadow,
-[data-theme="dark"] .shadow-sm,
-[data-theme="dark"] .border {
-    background-color: #1a1a1a !important;
-    border-color: #333333 !important;
-    color: var(--text-color) !important;
-}
-
-/* Chữ trong khung vàng (alert) cũng phải sáng lên */
-[data-theme="dark"] .alert * {
-    color: var(--text-color) !important;
-}
-
-/* Khung tìm kiếm (bg-light) trong dark mode */
-[data-theme="dark"] .bg-light {
-    background-color: #1a1a1a !important;
-    color: var(--text-color) !important;
-}
-
-/* Card border-0 (khung phòng trọ và khung tìm kiếm) */
+[data-theme="dark"] .bg-light,
 [data-theme="dark"] .card.border-0 {
-    background-color: #1a1a1a !important;
-}
-
-/* Khung cảnh báo vàng (alert-warning) */
-[data-theme="dark"] .alert-warning {
-    background-color: #1a1a1a !important;
-    border-color: #333333 !important;
+    background-color: #1e1e1e !important;
+    border-color: #333 !important;
     color: var(--text-color) !important;
 }
 
-/* Hộp thư (chat box) - khung trắng trong trang tin nhắn */
-[data-theme="dark"] .card-body {
-    background-color: #1a1a1a !important;
-}
 /* Nút theme-toggle */
 #theme-toggle {
     transition: all 0.3s ease;
 }
+
+/* Tùy chỉnh các nút bấm */
+.btn-primary {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+    transition: all 0.3s ease;
+}
+
+    .btn-primary:hover {
+        background-color: var(--hover-blue);
+        border-color: var(--hover-blue);
+        box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+        transform: translateY(-2px);
+    }

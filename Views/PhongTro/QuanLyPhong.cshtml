@@ -43,14 +43,29 @@
                                     <span class="text-danger fw-bold">@item.Gia.ToString("N0") đ</span>
                                 </td>
                                 <td class="text-center">
-                                    @if (item.IsVip)
-                                    {
-                                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill shadow-sm">⭐ TIN VIP</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-secondary px-3 py-2 rounded-pill">Tin thường</span>
-                                    }
+                                    <!-- Hiển thị phân loại VIP / Thường -->
+                                    <div class="mb-2">
+                                        @if (item.IsVip)
+                                        {
+                                            <span class="badge bg-warning text-dark px-3 py-1 rounded-pill shadow-sm">⭐ TIN VIP</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary px-3 py-1 rounded-pill">Tin thường</span>
+                                        }
+                                    </div>
+
+                                    <!-- 🔥 HIỂN THỊ TÌNH TRẠNG THUÊ PHÒNG -->
+                                    <div>
+                                        @if (item.DaChoThue)
+                                        {
+                                            <span class="badge bg-success px-3 py-1 rounded-pill shadow-sm">✅ Đã có người thuê</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-info text-dark px-3 py-1 rounded-pill shadow-sm">🏠 Đang trống</span>
+                                        }
+                                    </div>
                                 </td>
                                 <td class="text-center pe-4">
                                     <div class="btn-group shadow-sm rounded-pill overflow-hidden">
