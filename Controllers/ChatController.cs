@@ -25,7 +25,7 @@ namespace Do_an_co_so.Controllers
             _environment = environment;
         }
 
-        // 1. TRANG HỘP THƯ (Bấm từ menu Tin nhắn)
+        // 1. TRANG HỘP THƯ (Bấm từ menu Tin nhắn)z
         public async Task<IActionResult> Index()
         {
             var currentUser = await _userManager.GetUserAsync(User);
