@@ -16,7 +16,7 @@
         var currentUser = await UserManager.GetUserAsync(User);
 
         <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle bg-light rounded-pill px-3 shadow-sm border d-flex align-items-center" href="#" id="userMenu" data-bs-toggle="dropdown" style="color: #212529 !important; font-weight: bold;">
+            <a class="nav-link dropdown-toggle bg-light rounded-pill px-3 shadow-sm border d-flex align-items-center text-dark" href="#" id="userMenu" data-bs-toggle="dropdown" style="font-weight: bold;">
                 <i class="bi bi-person-circle text-primary me-2 fs-5"></i> @currentUser?.HoTen
             </a>
             <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 rounded-3">
@@ -33,7 +33,7 @@
     else
     {
         <li class="nav-item">
-            <a class="nav-link px-3 fw-bold" id="login" asp-area="Identity" asp-page="/Account/Login" style="color: #495057 !important;">Đăng nhập</a>
+            <a class="nav-link px-3 fw-bold text-dark" id="login" asp-area="Identity" asp-page="/Account/Login">Đăng nhập</a>
         </li>
         <li class="nav-item">
             <a class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" id="register" asp-area="Identity" asp-page="/Account/Register" style="color: #ffffff !important;">Đăng ký</a>
