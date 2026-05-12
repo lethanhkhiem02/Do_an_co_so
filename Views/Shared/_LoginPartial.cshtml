@@ -5,6 +5,12 @@
 @inject UserManager<AppUser> UserManager
 
 <ul class="navbar-nav align-items-center gap-2">
+    <li class="nav-item ms-2 me-2">
+        <button id="theme-toggle" class="btn btn-outline-secondary btn-sm rounded-circle shadow-sm" type="button" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+            <i id="theme-icon" class="bi bi-sun-fill text-warning"></i>
+        </button>
+    </li>
+
     @if (SignInManager.IsSignedIn(User))
     {
         var currentUser = await UserManager.GetUserAsync(User);
@@ -22,12 +28,6 @@
                     </form>
                 </li>
             </ul>
-        </li>
-
-        <li class="nav-item ms-2">
-            <button id="theme-toggle" class="btn btn-outline-secondary btn-sm rounded-circle shadow-sm" type="button" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
-                <i id="theme-icon" class="bi bi-sun-fill text-warning"></i>
-            </button>
         </li>
     }
     else
