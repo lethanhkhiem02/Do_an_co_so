@@ -122,3 +122,66 @@ input:not(.form-check-input), select, textarea, .form-control, .form-select {
     #theme-toggle:active {
         transform: scale(0.9);
     }
+
+/* 🔥 ĐÃ FIX: LỖI GIAO DIỆN CHAT (RIÊNG & TỔNG) TRONG DARK MODE 🔥 */
+
+/* 1. Ép nền của toàn bộ khung chat lớn chuyển sang màu tối */
+[data-theme="dark"] .bg-white,
+[data-theme="dark"] .bg-light,
+[data-theme="dark"] div[style*="background-color: white"],
+[data-theme="dark"] div[style*="background: #fff"] {
+    background-color: var(--card-bg) !important;
+    border-color: var(--card-border) !important;
+    color: var(--text-color) !important;
+}
+
+    /* 2. Xử lý bong bóng tin nhắn của người khác (bên trái) */
+    /* Thường dùng bg-light, text-dark hoặc nền xám nhạt */
+    [data-theme="dark"] .text-dark.bg-light,
+    [data-theme="dark"] .bg-light.rounded,
+    [data-theme="dark"] .bg-white.rounded,
+    [data-theme="dark"] div[style*="background-color: #f1f0f0"],
+    [data-theme="dark"] div[style*="background-color: #f8f9fa"] {
+        background-color: #2a2a2a !important; /* Xám đậm */
+        color: #ffffff !important;
+    }
+
+    /* 3. Đảm bảo chữ bên trong bong bóng tin nhắn luôn đọc được */
+    [data-theme="dark"] .bg-light p,
+    [data-theme="dark"] .bg-white p,
+    [data-theme="dark"] .bg-light span,
+    [data-theme="dark"] .bg-white span {
+        color: #e0e0e0 !important;
+    }
+
+/* 4. Đổi màu các đường viền ngăn cách (border) trong khung chat */
+[data-theme="dark"] .border,
+[data-theme="dark"] .border-top,
+[data-theme="dark"] .border-bottom,
+[data-theme="dark"] .border-start,
+[data-theme="dark"] .border-end {
+    border-color: var(--card-border) !important;
+}
+
+/* 5. Tên người gửi ở Chat Tổng (nếu bị mờ) */
+[data-theme="dark"] small.text-dark {
+    color: #aaaaaa !important;
+}
+/* 🔥 ĐÃ FIX: Menu Dropdown (Cài đặt, Đăng xuất) 🔥 */
+[data-theme="dark"] .dropdown-menu {
+    background-color: var(--card-bg) !important;
+    border-color: var(--card-border) !important;
+}
+
+[data-theme="dark"] .dropdown-item {
+    color: var(--text-color) !important;
+}
+
+    [data-theme="dark"] .dropdown-item:hover {
+        background-color: #2a2a2a !important;
+        color: #ffffff !important;
+    }
+
+[data-theme="dark"] .dropdown-divider {
+    border-top-color: var(--card-border) !important;
+}
