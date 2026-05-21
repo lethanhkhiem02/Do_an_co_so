@@ -81,12 +81,27 @@ body {
     background-color: #2a2a2a !important;
 }
 
-/* Form Inputs */
-input, select, textarea, .form-control, .form-select {
+/* Form Inputs (ĐÃ SỬA: Loại trừ form-check-input để không bị lỗi tàng hình công tắc) */
+input:not(.form-check-input), select, textarea, .form-control, .form-select {
     background-color: var(--input-bg) !important;
     color: var(--input-text) !important;
     border-color: var(--input-border) !important;
 }
+
+/* ==========================================
+   4. FIX LỖI CÔNG TẮC (SWITCH) CHO GIAO DIỆN
+   ========================================== */
+/* Trạng thái công tắc khi ở Dark Mode */
+[data-theme="dark"] .form-check-input {
+    background-color: #444; /* Nền xám khi tắt */
+    border-color: #666;
+}
+
+    [data-theme="dark"] .form-check-input:checked {
+        background-color: var(--primary-blue); /* Nền xanh khi bật */
+        border-color: var(--primary-blue);
+    }
+
 
 /* Navbar Dark */
 [data-theme="dark"] .navbar-custom {

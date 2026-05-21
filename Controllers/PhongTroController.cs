@@ -42,6 +42,11 @@ namespace Do_an_co_so.Controllers
             if (ModelState.IsValid)
             {
                 var user = await _userManager.GetUserAsync(User);
+                if (user != null && user.TrangThaiKhoa)
+                {
+                    return Content("❌ TÀI KHOẢN CỦA BẠN ĐÃ BỊ KHÓA VÀ KHÔNG THỂ ĐĂNG PHÒNG MỚI.");
+                }
+
                 phongTro.ChuTroId = user.Id;
 
                 if (phongTro.IsVip)
@@ -84,9 +89,27 @@ namespace Do_an_co_so.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Details(int? id)
         {
+            if (User.Identity.IsAuthenticated)
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+                if (currentUser != null && currentUser.TrangThaiKhoa)
+                {
+                    return Content("❌ TÀI KHOẢN CỦA BẠN ĐÃ BỊ KHÓA NÊN KHÔNG THỂ XEM CHI TIẾT PHÒNG. Vui lòng liên hệ Admin.");
+                }
+            }
+
             if (id == null) return NotFound();
             var phongTro = await _context.PhongTro.Include(p => p.ChuTro).FirstOrDefaultAsync(m => m.Id == id);
             if (phongTro == null) return NotFound();
+
+            // BƯỚC THÔNG MINH: NẾU ĐÃ QUÁ HẠN 7 NGÀY CỌC MÀ KHÔNG THUÊ -> TỰ ĐỘNG TƯỚC QUYỀN GIỮ CHỖ
+            if (!string.IsNullOrEmpty(phongTro.NguoiDatCocId) && phongTro.HanDatCoc.HasValue && phongTro.HanDatCoc.Value < DateTime.Now)
+            {
+                phongTro.NguoiDatCocId = null;
+                phongTro.TienCoc = null;
+                phongTro.HanDatCoc = null;
+                await _context.SaveChangesAsync();
+            }
 
             ViewBag.DanhGias = await _context.DanhGias.Include(d => d.User)
                 .Where(d => d.PhongTroId == id).OrderByDescending(d => d.NgayTao).ToListAsync();
@@ -97,7 +120,7 @@ namespace Do_an_co_so.Controllers
         public async Task<IActionResult> AddReview(int phongTroId, int sao, string noiDung)
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Challenge();
+            if (user == null || user.TrangThaiKhoa) return Challenge();
 
             _context.DanhGias.Add(new DanhGia
             {
@@ -112,11 +135,50 @@ namespace Do_an_co_so.Controllers
         }
 
         [HttpPost]
+        public async Task<IActionResult> SubmitReport(int phongTroId, string lyDo, string chiTiet)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || user.TrangThaiKhoa)
+            {
+                TempData["Error"] = "❌ Bạn không có quyền thực hiện thao tác này.";
+                return RedirectToAction("Details", new { id = phongTroId });
+            }
+
+            var report = new BaoCao
+            {
+                PhongTroId = phongTroId,
+                NguoiBaoCaoId = user.Id,
+                LyDo = lyDo,
+                ChiTiet = chiTiet,
+                NgayBaoCao = DateTime.Now,
+                DaXuLy = false
+            };
+
+            _context.BaoCaos.Add(report);
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "🚩 Cảm ơn bạn! Báo cáo lừa đảo đã được gửi tới Admin. Chúng tôi sẽ kiểm tra và xử lý ngay lập tức.";
+
+            return RedirectToAction("Details", new { id = phongTroId });
+        }
+
+        // =========================================================================================
+        // HỆ THỐNG THANH TOÁN (1. THUÊ ĐỨT 100%)
+        // =========================================================================================
+        [HttpPost]
         [Authorize(Roles = "SinhVien")]
         public async Task<IActionResult> ThanhToanThuePhong(int id)
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null && user.TrangThaiKhoa) return Content("Tài khoản đang bị khóa.");
+
             var phong = await _context.PhongTro.FirstOrDefaultAsync(p => p.Id == id);
-            if (phong == null || phong.DaChoThue) return NotFound();
+
+            // Chặn nếu phòng đã thuê hoặc đang bị người KHÁC đặt cọc
+            if (phong == null || phong.DaChoThue || (!string.IsNullOrEmpty(phong.NguoiDatCocId) && phong.NguoiDatCocId != user.Id))
+            {
+                TempData["Error"] = "❌ Phòng này đã được cho thuê hoặc đang được người khác giữ chỗ.";
+                return RedirectToAction("Details", new { id = id });
+            }
 
             string vnp_Returnurl = Url.Action("PaymentCallback", "PhongTro", null, Request.Scheme);
             VnPayLibrary vnpay = new VnPayLibrary();
@@ -170,7 +232,12 @@ namespace Do_an_co_so.Controllers
 
                     if (admin != null) admin.SoDu += tienHoaHong;
                     if (phong.ChuTro != null) phong.ChuTro.SoDu += tienChuTro;
+
                     phong.DaChoThue = true;
+                    // Xóa trạng thái cọc (nếu có) vì đã thanh toán 100%
+                    phong.NguoiDatCocId = null;
+                    phong.TienCoc = null;
+                    phong.HanDatCoc = null;
 
                     _context.HoaDons.Add(new HoaDon
                     {
@@ -179,7 +246,8 @@ namespace Do_an_co_so.Controllers
                         TongTien = tongTien,
                         TienHoaHong = tienHoaHong,
                         TienChuTroNhan = tienChuTro,
-                        NgayGiaoDich = DateTime.Now
+                        NgayGiaoDich = DateTime.Now,
+                        LoaiHoaDon = "ThuePhong"
                     });
 
                     await _context.SaveChangesAsync();
@@ -191,10 +259,201 @@ namespace Do_an_co_so.Controllers
             return RedirectToAction("Details", new { id = phongId });
         }
 
+
+        // =========================================================================================
+        // HỆ THỐNG THANH TOÁN (2. ĐẶT CỌC GIỮ CHỖ 500K)
+        // =========================================================================================
+        [HttpPost]
+        [Authorize(Roles = "SinhVien")]
+        public async Task<IActionResult> DatCocPhong(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null && user.TrangThaiKhoa) return Content("Tài khoản đang bị khóa.");
+
+            var phong = await _context.PhongTro.FirstOrDefaultAsync(p => p.Id == id);
+
+            if (phong == null || phong.DaChoThue || !string.IsNullOrEmpty(phong.NguoiDatCocId))
+            {
+                TempData["Error"] = "❌ Phòng này đã được cho thuê hoặc đang được người khác đặt cọc.";
+                return RedirectToAction("Details", new { id = id });
+            }
+
+            if (phong.Gia <= 500000)
+            {
+                TempData["Error"] = "❌ Giá phòng quá thấp để hỗ trợ tính năng đặt cọc riêng.";
+                return RedirectToAction("Details", new { id = id });
+            }
+
+            string vnp_Returnurl = Url.Action("DatCocCallback", "PhongTro", null, Request.Scheme);
+            VnPayLibrary vnpay = new VnPayLibrary();
+
+            vnpay.AddRequestData("vnp_Version", "2.1.0");
+            vnpay.AddRequestData("vnp_Command", "pay");
+            vnpay.AddRequestData("vnp_TmnCode", VNP_TMNCODE);
+            vnpay.AddRequestData("vnp_Amount", "50000000"); // 500.000 VNĐ x 100
+            vnpay.AddRequestData("vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss"));
+            vnpay.AddRequestData("vnp_CurrCode", "VND");
+            vnpay.AddRequestData("vnp_IpAddr", HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1");
+            vnpay.AddRequestData("vnp_Locale", "vn");
+            vnpay.AddRequestData("vnp_OrderInfo", "Dat coc giu phong " + phong.Id);
+            vnpay.AddRequestData("vnp_OrderType", "other");
+            vnpay.AddRequestData("vnp_ReturnUrl", vnp_Returnurl);
+            vnpay.AddRequestData("vnp_TxnRef", phong.Id.ToString() + "_" + DateTime.Now.Ticks);
+
+            string paymentUrl = vnpay.CreateRequestUrl(VNP_URL, VNP_HASHSECRET);
+            return Redirect(paymentUrl);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DatCocCallback()
+        {
+            var vnpayData = Request.Query;
+            VnPayLibrary vnpay = new VnPayLibrary();
+            foreach (string s in vnpayData.Keys) if (!string.IsNullOrEmpty(s) && s.StartsWith("vnp_")) vnpay.AddResponseData(s, vnpayData[s]);
+
+            int phongId = int.Parse(vnpayData["vnp_TxnRef"].ToString().Split('_')[0]);
+            string vnp_ResponseCode = vnpayData["vnp_ResponseCode"];
+            string vnp_SecureHash = Request.Query["vnp_SecureHash"];
+
+            if (vnpay.ValidateSignature(vnp_SecureHash, VNP_HASHSECRET) && vnp_ResponseCode == "00")
+            {
+                var phong = await _context.PhongTro.Include(p => p.ChuTro).FirstOrDefaultAsync(p => p.Id == phongId);
+                var nguoiThue = await _userManager.GetUserAsync(User);
+                var admin = await _userManager.FindByEmailAsync("admin@gmail.com");
+
+                if (phong != null && !phong.DaChoThue)
+                {
+                    decimal tongTienCoc = 500000m;
+                    decimal tienHoaHong = tongTienCoc * 0.10m;
+                    decimal tienChuTro = tongTienCoc - tienHoaHong;
+
+                    if (admin != null) admin.SoDu += tienHoaHong;
+                    if (phong.ChuTro != null) phong.ChuTro.SoDu += tienChuTro;
+
+                    // LƯU TRÍ NHỚ VÀO PHÒNG TRỌ
+                    phong.NguoiDatCocId = nguoiThue?.Id;
+                    phong.TienCoc = tongTienCoc;
+                    phong.HanDatCoc = DateTime.Now.AddDays(7); // Giữ chỗ 7 ngày
+
+                    _context.HoaDons.Add(new HoaDon
+                    {
+                        PhongTroId = phong.Id,
+                        NguoiThueId = nguoiThue?.Id,
+                        TongTien = tongTienCoc,
+                        TienHoaHong = tienHoaHong,
+                        TienChuTroNhan = tienChuTro,
+                        NgayGiaoDich = DateTime.Now,
+                        LoaiHoaDon = "DatCoc"
+                    });
+
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "🎉 Đặt cọc 500.000 VNĐ thành công! Phòng đã được khóa lại để giữ cho bạn trong 7 ngày.";
+                }
+            }
+            else TempData["Error"] = "❌ Đặt cọc thất bại hoặc bị hủy.";
+
+            return RedirectToAction("Details", new { id = phongId });
+        }
+
+
+        // =========================================================================================
+        // HỆ THỐNG THANH TOÁN (3. THANH TOÁN PHẦN TIỀN NHÀ CÒN LẠI SAU KHI CỌC)
+        // =========================================================================================
+        [HttpPost]
+        [Authorize(Roles = "SinhVien")]
+        public async Task<IActionResult> ThanhToanPhanConLai(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var phong = await _context.PhongTro.FirstOrDefaultAsync(p => p.Id == id);
+
+            if (phong == null || phong.NguoiDatCocId != user.Id)
+            {
+                TempData["Error"] = "❌ Lỗi: Bạn chưa đặt cọc phòng này.";
+                return RedirectToAction("Details", new { id = id });
+            }
+
+            decimal remaining = phong.Gia - (phong.TienCoc ?? 500000);
+
+            string vnp_Returnurl = Url.Action("PhanConLaiCallback", "PhongTro", null, Request.Scheme);
+            VnPayLibrary vnpay = new VnPayLibrary();
+
+            vnpay.AddRequestData("vnp_Version", "2.1.0");
+            vnpay.AddRequestData("vnp_Command", "pay");
+            vnpay.AddRequestData("vnp_TmnCode", VNP_TMNCODE);
+            vnpay.AddRequestData("vnp_Amount", ((long)Math.Round(remaining * 100)).ToString());
+            vnpay.AddRequestData("vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss"));
+            vnpay.AddRequestData("vnp_CurrCode", "VND");
+            vnpay.AddRequestData("vnp_IpAddr", HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1");
+            vnpay.AddRequestData("vnp_Locale", "vn");
+            vnpay.AddRequestData("vnp_OrderInfo", "Thanh toan phan con lai phong " + phong.Id);
+            vnpay.AddRequestData("vnp_OrderType", "other");
+            vnpay.AddRequestData("vnp_ReturnUrl", vnp_Returnurl);
+            vnpay.AddRequestData("vnp_TxnRef", phong.Id.ToString() + "_" + DateTime.Now.Ticks);
+
+            string paymentUrl = vnpay.CreateRequestUrl(VNP_URL, VNP_HASHSECRET);
+            return Redirect(paymentUrl);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> PhanConLaiCallback()
+        {
+            var vnpayData = Request.Query;
+            VnPayLibrary vnpay = new VnPayLibrary();
+            foreach (string s in vnpayData.Keys) if (!string.IsNullOrEmpty(s) && s.StartsWith("vnp_")) vnpay.AddResponseData(s, vnpayData[s]);
+
+            int phongId = int.Parse(vnpayData["vnp_TxnRef"].ToString().Split('_')[0]);
+            string vnp_ResponseCode = vnpayData["vnp_ResponseCode"];
+            string vnp_SecureHash = Request.Query["vnp_SecureHash"];
+
+            if (vnpay.ValidateSignature(vnp_SecureHash, VNP_HASHSECRET) && vnp_ResponseCode == "00")
+            {
+                var phong = await _context.PhongTro.Include(p => p.ChuTro).FirstOrDefaultAsync(p => p.Id == phongId);
+                var nguoiThue = await _userManager.GetUserAsync(User);
+                var admin = await _userManager.FindByEmailAsync("admin@gmail.com");
+
+                if (phong != null && !phong.DaChoThue)
+                {
+                    decimal remaining = phong.Gia - (phong.TienCoc ?? 500000);
+                    decimal tienHoaHong = remaining * 0.10m;
+                    decimal tienChuTro = remaining - tienHoaHong;
+
+                    if (admin != null) admin.SoDu += tienHoaHong;
+                    if (phong.ChuTro != null) phong.ChuTro.SoDu += tienChuTro;
+
+                    phong.DaChoThue = true;
+                    // Reset thông tin cọc về trống vì quy trình thuê đã hoàn tất
+                    phong.NguoiDatCocId = null;
+                    phong.TienCoc = null;
+                    phong.HanDatCoc = null;
+
+                    _context.HoaDons.Add(new HoaDon
+                    {
+                        PhongTroId = phong.Id,
+                        NguoiThueId = nguoiThue?.Id,
+                        TongTien = remaining,
+                        TienHoaHong = tienHoaHong,
+                        TienChuTroNhan = tienChuTro,
+                        NgayGiaoDich = DateTime.Now,
+                        LoaiHoaDon = "ThuePhong"
+                    });
+
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "🎉 Bạn đã thanh toán phần còn lại thành công. Chúc mừng bạn đã thuê được phòng!";
+                }
+            }
+            else TempData["Error"] = "❌ Thanh toán thất bại hoặc bị hủy.";
+
+            return RedirectToAction("Details", new { id = phongId });
+        }
+
+        // =========================================================================================
+
         [Authorize(Roles = "ChuTro")]
         public async Task<IActionResult> QuanLyPhong()
         {
             var user = await _userManager.GetUserAsync(User);
+            if (user != null && user.TrangThaiKhoa) return Content("Tài khoản đang bị khóa.");
+
             var ds = await _context.PhongTro.Where(p => p.ChuTroId == user.Id).OrderByDescending(p => p.IsVip).ToListAsync();
             return View(ds);
         }
@@ -217,7 +476,6 @@ namespace Do_an_co_so.Controllers
             var dsTruong = GetDanhSachTruong();
             ViewBag.DanhSachTruong = dsTruong;
 
-            // LƯU LẠI VIEW BAG ĐỂ GIỮ FORM
             ViewBag.TruongId = truongId;
             ViewBag.Radius = radius;
             ViewBag.MinPrice = minPrice;
@@ -275,7 +533,6 @@ namespace Do_an_co_so.Controllers
         private List<TruongDaiHoc> GetDanhSachTruong()
         {
             return new List<TruongDaiHoc> {
-                // ======= KHU VỰC BÌNH THẠNH =======
                 new TruongDaiHoc { Id = "hutech_dbp", TenTruong = "Đại học HUTECH", Latitude = 10.8018, Longitude = 106.7115, LoaiTruong = "Đại học", Quan = "Bình Thạnh" },
                 new TruongDaiHoc { Id = "gtvt", TenTruong = "ĐH Giao thông Vận tải", Latitude = 10.8043, Longitude = 106.7190, LoaiTruong = "Đại học", Quan = "Bình Thạnh" },
                 new TruongDaiHoc { Id = "vlu_bt", TenTruong = "Đại học Văn Lang", Latitude = 10.8222, Longitude = 106.6874, LoaiTruong = "Đại học", Quan = "Bình Thạnh" },
@@ -283,7 +540,6 @@ namespace Do_an_co_so.Controllers
                 new TruongDaiHoc { Id = "ftu2", TenTruong = "ĐH Ngoại thương (CS2)", Latitude = 10.8048, Longitude = 106.7169, LoaiTruong = "Đại học", Quan = "Bình Thạnh" },
                 new TruongDaiHoc { Id = "uef", TenTruong = "ĐH Kinh tế - Tài chính (UEF)", Latitude = 10.7956, Longitude = 106.7001, LoaiTruong = "Đại học", Quan = "Bình Thạnh" },
 
-                // ======= KHU VỰC THỦ ĐỨC (LÀNG ĐH & LÂN CẬN) =======
                 new TruongDaiHoc { Id = "spkt", TenTruong = "ĐH Sư Phạm Kỹ Thuật", Latitude = 10.8505, Longitude = 106.7720, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
                 new TruongDaiHoc { Id = "nlu", TenTruong = "ĐH Nông Lâm", Latitude = 10.8697, Longitude = 106.7938, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
                 new TruongDaiHoc { Id = "uit", TenTruong = "ĐH Công nghệ Thông tin (UIT)", Latitude = 10.8700, Longitude = 106.8031, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
@@ -293,7 +549,6 @@ namespace Do_an_co_so.Controllers
                 new TruongDaiHoc { Id = "hcmut_td", TenTruong = "ĐH Bách Khoa (Làng ĐH)", Latitude = 10.8804, Longitude = 106.8053, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
                 new TruongDaiHoc { Id = "hcmiu", TenTruong = "ĐH Quốc tế (IU)", Latitude = 10.8732, Longitude = 106.8023, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
 
-                // ======= KHU VỰC QUẬN 1 & QUẬN 3 =======
                 new TruongDaiHoc { Id = "ueh_q3", TenTruong = "ĐH Kinh tế TP.HCM (UEH)", Latitude = 10.7828, Longitude = 106.6925, LoaiTruong = "Đại học", Quan = "Quận 3" },
                 new TruongDaiHoc { Id = "ussh_q1", TenTruong = "ĐH KHXH & Nhân văn", Latitude = 10.7860, Longitude = 106.7011, LoaiTruong = "Đại học", Quan = "Quận 1" },
                 new TruongDaiHoc { Id = "caothang", TenTruong = "CĐ Kỹ thuật Cao Thắng", Latitude = 10.7724, Longitude = 106.7016, LoaiTruong = "Cao đẳng", Quan = "Quận 1" },
@@ -301,7 +556,6 @@ namespace Do_an_co_so.Controllers
                 new TruongDaiHoc { Id = "uah", TenTruong = "ĐH Kiến trúc TP.HCM", Latitude = 10.7831, Longitude = 106.6946, LoaiTruong = "Đại học", Quan = "Quận 3" },
                 new TruongDaiHoc { Id = "ou", TenTruong = "Đại học Mở TP.HCM", Latitude = 10.7766, Longitude = 106.6917, LoaiTruong = "Đại học", Quan = "Quận 3" },
 
-                // ======= KHU VỰC QUẬN 5 & QUẬN 10 =======
                 new TruongDaiHoc { Id = "hcmut_q10", TenTruong = "ĐH Bách Khoa TP.HCM", Latitude = 10.7732, Longitude = 106.6597, LoaiTruong = "Đại học", Quan = "Quận 10" },
                 new TruongDaiHoc { Id = "huflit", TenTruong = "ĐH Ngoại ngữ - Tin học (HUFLIT)", Latitude = 10.7765, Longitude = 106.6669, LoaiTruong = "Đại học", Quan = "Quận 10" },
                 new TruongDaiHoc { Id = "hcmus_q5", TenTruong = "ĐH Khoa học Tự nhiên", Latitude = 10.7630, Longitude = 106.6821, LoaiTruong = "Đại học", Quan = "Quận 5" },
@@ -309,15 +563,8 @@ namespace Do_an_co_so.Controllers
                 new TruongDaiHoc { Id = "ump", TenTruong = "ĐH Y Dược TP.HCM", Latitude = 10.7562, Longitude = 106.6661, LoaiTruong = "Đại học", Quan = "Quận 5" },
                 new TruongDaiHoc { Id = "pnt", TenTruong = "ĐH Y khoa Phạm Ngọc Thạch", Latitude = 10.7745, Longitude = 106.6668, LoaiTruong = "Đại học", Quan = "Quận 10" },
 
-                // ======= KHU VỰC QUẬN 7 =======
                 new TruongDaiHoc { Id = "tdt", TenTruong = "ĐH Tôn Đức Thắng", Latitude = 10.7325, Longitude = 106.6983, LoaiTruong = "Đại học", Quan = "Quận 7" },
-                new TruongDaiHoc { Id = "rmit", TenTruong = "ĐH RMIT Việt Nam", Latitude = 10.7293, Longitude = 106.6946, LoaiTruong = "Đại học", Quan = "Quận 7" },
-
-                // ======= CÁC QUẬN KHÁC (GÒ VẤP, TÂN BÌNH, QUẬN 12...) =======
-                new TruongDaiHoc { Id = "iuh", TenTruong = "ĐH Công nghiệp TP.HCM (IUH)", Latitude = 10.8222, Longitude = 106.6875, LoaiTruong = "Đại học", Quan = "Gò Vấp" },
-                new TruongDaiHoc { Id = "fpt_poly", TenTruong = "CĐ FPT Polytechnic", Latitude = 10.8531, Longitude = 106.6263, LoaiTruong = "Cao đẳng", Quan = "Quận 12" },
-                new TruongDaiHoc { Id = "viendong", TenTruong = "CĐ Viễn Đông", Latitude = 10.8549, Longitude = 106.6277, LoaiTruong = "Cao đẳng", Quan = "Quận 12" },
-                new TruongDaiHoc { Id = "huit", TenTruong = "ĐH Công thương (HUIT)", Latitude = 10.8066, Longitude = 106.6288, LoaiTruong = "Đại học", Quan = "Tân Phú" }
+                new TruongDaiHoc { Id = "rmit", TenTruong = "ĐH RMIT Việt Nam", Latitude = 10.7293, Longitude = 106.6946, LoaiTruong = "Đại học", Quan = "Quận 7" }
             };
         }
 
@@ -325,6 +572,7 @@ namespace Do_an_co_so.Controllers
         public async Task<IActionResult> PhongDaThue()
         {
             var user = await _userManager.GetUserAsync(User);
+            if (user != null && user.TrangThaiKhoa) return Content("Tài khoản đang bị khóa.");
 
             var danhSachThue = await _context.HoaDons
                 .Include(h => h.PhongTro)
@@ -369,7 +617,6 @@ namespace Do_an_co_so.Controllers
             vnpay.AddRequestData("vnp_OrderInfo", "Nap tien vao vi VIP - " + user.UserName);
             vnpay.AddRequestData("vnp_OrderType", "topup");
             vnpay.AddRequestData("vnp_ReturnUrl", vnp_Returnurl);
-
             vnpay.AddRequestData("vnp_TxnRef", user.Id + "_" + DateTime.Now.Ticks);
 
             string paymentUrl = vnpay.CreateRequestUrl(VNP_URL, VNP_HASHSECRET);

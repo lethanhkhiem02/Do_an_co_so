@@ -25,5 +25,9 @@ namespace Do_an_co_so.Models
         public decimal TienChuTroNhan { get; set; } // Ví dụ: Chủ trọ nhận 1.800.000đ
 
         public DateTime NgayGiaoDich { get; set; } = DateTime.Now;
+
+        // --- THÊM THUỘC TÍNH PHÂN BIỆT LOẠI HÓA ĐƠN ---
+        [Display(Name = "Loại hóa đơn")]
+        public string LoaiHoaDon { get; set; } = "ThuePhong"; // Mặc định là "ThuePhong", nếu cọc thì sửa thành "DatCoc"
     }
 }

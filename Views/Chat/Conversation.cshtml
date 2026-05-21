@@ -68,6 +68,17 @@
 </style>
 
 <div class="container mt-4 mb-5">
+
+    <div class="col-md-10 mx-auto mb-2">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show fw-bold shadow-sm" role="alert">
+                @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+    </div>
+
     <div class="col-md-10 mx-auto">
         <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
             <div class="card-header bg-white border-bottom d-flex align-items-center p-3">
@@ -81,6 +92,10 @@
                     <h6 class="mb-0 fw-bold fs-5">@((receiver?.HoTen ?? receiver?.Email))</h6>
                     <small class="text-success">● Đang hoạt động</small>
                 </div>
+
+                <button type="button" class="btn btn-sm btn-outline-danger ms-auto fw-bold rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#reportUserModal">
+                    🚩 Báo cáo
+                </button>
             </div>
 
             <div class="card-body p-4 d-flex flex-column" style="height: 500px; overflow-y: auto; background-color: #f8f9fa;" id="chatBox">
@@ -96,7 +111,6 @@
                     DateTime? lastDate = null;
                     foreach (var msg in Model)
                     {
-                        // 1. TÍNH NĂNG GOM NHÓM THỜI GIAN
                         var msgDate = msg.Timestamp.Date;
                         if (lastDate != msgDate)
                         {
@@ -112,7 +126,6 @@
                         bool isMyMessage = msg.SenderId == currentUserId;
                         var alignClass = isMyMessage ? "align-items-end" : "align-items-start";
                         var bubbleClass = isMyMessage ? "bg-primary text-white rounded-4 rounded-bottom-0 rounded-start-4" : "bg-white border text-dark rounded-4 rounded-bottom-0 rounded-end-4";
-
                         <div class="d-flex flex-column @alignClass mb-3">
                             <div class="msg-bubble p-2 px-3 shadow-sm @bubbleClass">
                                 @if (msg.Content.StartsWith("[IMG]:"))
@@ -168,6 +181,44 @@
     </div>
 </div>
 
+<div class="modal fade" id="reportUserModal" tabindex="-1" aria-labelledby="reportUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold" id="reportUserModalLabel">🚩 BÁO CÁO NGƯỜI DÙNG NÀY</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-controller="Chat" asp-action="SubmitUserReport" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="nguoiBiBaoCaoId" value="@receiver?.Id" />
+                    <p class="text-muted small mb-3">Nếu người này có hành vi đe dọa, xúc phạm hoặc lừa đảo, hãy báo cáo ngay để Admin khóa tài khoản nhé!</p>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Lý do báo cáo: <span class="text-danger">*</span></label>
+                        <select name="lyDo" class="form-select border-danger" required>
+                            <option value="">-- Chọn lý do --</option>
+                            <option value="Ngôn từ đả kích, chửi thề, xúc phạm">Ngôn từ đả kích, chửi thề, xúc phạm</option>
+                            <option value="Quấy rối, làm phiền">Quấy rối, làm phiền liên tục</option>
+                            <option value="Lừa đảo chiếm đoạt tài sản">Lừa đảo chiếm đoạt tài sản</option>
+                            <option value="Gửi tin nhắn rác / Spam">Gửi tin nhắn rác / Spam</option>
+                            <option value="Khác">Lý do khác...</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Chi tiết thêm (không bắt buộc):</label>
+                        <textarea name="chiTiet" class="form-control" rows="3" placeholder="Ghi chú thêm về hành vi vi phạm..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-danger fw-bold">Gửi Báo Cáo 🚀</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
     <script>
@@ -182,6 +233,7 @@
 
         // Xử lý UI Emoji
         document.getElementById("emojiToggleBtn").addEventListener("click", () => document.getElementById("emojiPicker").classList.toggle("d-none"));
+
         document.querySelectorAll(".emoji-item").forEach(emoji => {
             emoji.addEventListener("click", function() {
                 messageInput.value += this.innerText;
@@ -191,6 +243,7 @@
 
         // Xử lý Upload Hình ảnh
         var imgInput = document.getElementById("imageInput");
+
         document.getElementById("imageSelectBtn").addEventListener("click", () => imgInput.click());
         imgInput.addEventListener("change", function() {
             var file = this.files[0];

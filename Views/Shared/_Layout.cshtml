@@ -1,12 +1,20 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using Do_an_co_so.Models
+@using Microsoft.AspNetCore.Localization
+@using Microsoft.Extensions.Localization
 @inject UserManager<AppUser> UserManager
+@inject IStringLocalizer<Do_an_co_so.SharedResource> Localizer
+
+@{
+    var requestCulture = Context.Features.Get<IRequestCultureFeature>();
+    var currentCulture = requestCulture?.RequestCulture.UICulture.Name ?? "vi-VN";
+}
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="@(currentCulture == "en-US" ? "en" : "vi")">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Hệ thống tìm trọ thông minh</title>
+    <title>@ViewData["Title"] - RoomFinder</title>
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -69,34 +77,63 @@
 
                 <div class="collapse navbar-collapse" id="navbarContent">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0 align-items-lg-center">
-                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Trang chủ</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="PhongTro" asp-action="TimKiem">🔍 Tìm trọ</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">@Localizer["Home"]</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="PhongTro" asp-action="TimKiem">@Localizer["FindRoom"]</a></li>
 
                         @if (User.Identity.IsAuthenticated)
                         {
-                            <li class="nav-item"><a class="nav-link" asp-controller="Chat" asp-action="Index">💬 Tin nhắn</a></li>
-                            <li class="nav-item"><a class="nav-link text-warning" asp-controller="Chat" asp-action="GlobalChat">🌍 Chat chung</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="Chat" asp-action="Index">@Localizer["Messages"]</a></li>
+                            <li class="nav-item"><a class="nav-link text-warning" asp-controller="Chat" asp-action="GlobalChat">@Localizer["GlobalChat"]</a></li>
 
                             @if (User.IsInRole("ChuTro"))
                             {
                                 var currentUser = await UserManager.GetUserAsync(User);
                                 <li class="nav-item ms-lg-2 d-flex align-items-center">
                                     <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2">
-                                        Ví: @(currentUser?.SoDu.ToString("N0") ?? "0")đ
+                                        @Localizer["Wallet"]: @(currentUser?.SoDu.ToString("N0") ?? "0")đ
                                     </span>
                                 </li>
                                 <li class="nav-item ms-2 d-flex align-items-center">
                                     <a class="btn btn-sm btn-outline-success rounded-pill fw-bold px-3" asp-controller="PhongTro" asp-action="NapTien">
-                                        <i class="bi bi-credit-card me-1"></i> Nạp tiền
+                                        <i class="bi bi-credit-card me-1"></i> @Localizer["Deposit"]
                                     </a>
                                 </li>
-                                <li class="nav-item ms-2"><a class="nav-link text-primary fw-bold" asp-controller="PhongTro" asp-action="Create">+ Đăng phòng</a></li>
-                                <li class="nav-item"><a class="nav-link" asp-controller="PhongTro" asp-action="QuanLyPhong">Quản lý tin</a></li>
+                                <li class="nav-item ms-2"><a class="nav-link text-primary fw-bold" asp-controller="PhongTro" asp-action="Create">+ @Localizer["PostRoom"]</a></li>
+                                <li class="nav-item"><a class="nav-link" asp-controller="PhongTro" asp-action="QuanLyPhong">@Localizer["ManagePosts"]</a></li>
+                            }
+
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-danger fw-bold" asp-area="" asp-controller="Admin" asp-action="Index">
+                                        ⚙️ @Localizer["AdminManagement"]
+                                    </a>
+                                </li>
                             }
                         }
                     </ul>
 
                     <div class="d-flex align-items-center">
+
+                        <div class="dropdown me-3">
+                            <button class="btn btn-light dropdown-toggle rounded-pill shadow-sm fw-bold border" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                @(currentCulture == "en-US" ? "🇬🇧 English" : "🇻🇳 Tiếng Việt")
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="languageDropdown">
+                                <li>
+                                    <a class="dropdown-item fw-bold @(currentCulture == "vi-VN" ? "active bg-primary" : "")"
+                                       href="/Language/SetLanguage?culture=vi-VN&returnUrl=@Context.Request.Path@Context.Request.QueryString">
+                                        🇻🇳 Tiếng Việt
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item fw-bold @(currentCulture == "en-US" ? "active bg-primary" : "")"
+                                       href="/Language/SetLanguage?culture=en-US&returnUrl=@Context.Request.Path@Context.Request.QueryString">
+                                        🇬🇧 English
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                         <partial name="_LoginPartial" />
                     </div>
                 </div>
@@ -119,8 +156,8 @@
                 </div>
                 <div class="col-lg-2">
                     <h5 class="text-white">Menu</h5>
-                    <a href="/" class="footer-link">Trang chủ</a>
-                    <a href="/PhongTro/TimKiem" class="footer-link">Tìm kiếm</a>
+                    <a href="/" class="footer-link">@Localizer["Home"]</a>
+                    <a href="/PhongTro/TimKiem" class="footer-link">@Localizer["FindRoom"]</a>
                     <a href="/Home/AboutUs" class="footer-link">Về chúng tôi</a>
                 </div>
                 <div class="col-lg-3">
@@ -136,7 +173,7 @@
             </div>
             <hr class="mt-4 border-secondary">
             <div class="text-center small pb-2">
-                &copy; 2026 - Nền tảng hỗ trợ tìm trọ sinh viên
+                &copy; @DateTime.Now.Year - Nền tảng hỗ trợ tìm trọ sinh viên
             </div>
         </div>
     </footer>

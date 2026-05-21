@@ -17,6 +17,9 @@ namespace Do_an_co_so.Data
         // --- THÊM BẢNG HÓA ĐƠN VÀO DATABASE ---
         public DbSet<HoaDon> HoaDons { get; set; }
 
+        // --- THÊM BẢNG BÁO CÁO LỪA ĐẢO VÀO DATABASE ---
+        public DbSet<BaoCao> BaoCaos { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -41,6 +44,19 @@ namespace Do_an_co_so.Data
             modelBuilder.Entity<HoaDon>()
                 .Property(h => h.TienChuTroNhan)
                 .HasColumnType("decimal(18,2)");
+
+            // --- THÊM CHỐNG XUNG ĐỘT XÓA DỮ LIỆU (CASCADE DELETE) CHO BẢNG BÁO CÁO ---
+            modelBuilder.Entity<BaoCao>()
+                .HasOne(b => b.NguoiBaoCao)
+                .WithMany()
+                .HasForeignKey(b => b.NguoiBaoCaoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<BaoCao>()
+                .HasOne(b => b.NguoiBiBaoCao)
+                .WithMany()
+                .HasForeignKey(b => b.NguoiBiBaoCaoId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Http; // Thư viện để dùng biến IFormFile tải ảnh
@@ -47,5 +48,36 @@ namespace Do_an_co_so.Models
         // --- THUỘC TÍNH MỚI: KIỂM TRA PHÒNG ĐÃ THUÊ CHƯA ---
         [Display(Name = "Trạng thái thuê")]
         public bool DaChoThue { get; set; } = false; // false = Còn trống, true = Đã có người thuê
+
+        // ==============================================================================
+        // --- THÊM 4 THUỘC TÍNH MỚI CHO CHI TIẾT PHÒNG TRỌ (BƯỚC 1) ---
+        // ==============================================================================
+
+        [Display(Name = "Chiều dài (m)")]
+        [Range(0, 100, ErrorMessage = "Chiều dài phải là số dương")]
+        public double? ChieuDai { get; set; } // Dùng double? (có dấu ?) để tránh lỗi với các bài đăng cũ
+
+        [Display(Name = "Chiều rộng (m)")]
+        [Range(0, 100, ErrorMessage = "Chiều rộng phải là số dương")]
+        public double? ChieuRong { get; set; }
+
+        [Display(Name = "Có nhà vệ sinh riêng")]
+        public bool CoNhaVeSinh { get; set; } = false; // Mặc định là Không (false)
+
+        [Display(Name = "Có ban công")]
+        public bool CoBanCong { get; set; } = false; // Mặc định là Không (false)
+
+        // ==============================================================================
+        // --- THÊM CÁC THUỘC TÍNH CHO TÍNH NĂNG ĐẶT CỌC GIỮ CHỖ ---
+        // ==============================================================================
+
+        [Display(Name = "Người đặt cọc")]
+        public string? NguoiDatCocId { get; set; } // Lưu ID người cọc để khóa phòng với người khác
+
+        [Display(Name = "Tiền cọc")]
+        public decimal? TienCoc { get; set; } // Lưu số tiền đã cọc (500k)
+
+        [Display(Name = "Hạn đặt cọc")]
+        public DateTime? HanDatCoc { get; set; } // Hạn chót để đóng phần còn lại (7 ngày)
     }
 }

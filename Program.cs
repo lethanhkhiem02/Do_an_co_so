@@ -3,6 +3,8 @@ using Do_an_co_so.Hubs;
 using Do_an_co_so.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Localization; // Thư viện để làm Đa ngôn ngữ
+using System.Globalization; // Thư viện để nhận diện văn hóa/ngôn ngữ
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSignalR();
@@ -17,28 +19,33 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// ĐÃ XÓA DÒNG ADDDEFAULTIDENTITY BỊ TRÙNG LẶP Ở ĐÂY ĐỂ TRÁNH LỖI
-
-// Đăng ký Identity để quản lý User, Role và Phân quyền (Giữ lại đoạn code chuẩn này)
+// Đăng ký Identity để quản lý User, Role và Phân quyền
 builder.Services.AddIdentity<AppUser, IdentityRole>(options => {
-    // Tùy chỉnh độ khó của mật khẩu (tắt các yêu cầu phức tạp để dễ test đồ án)
+    // Tùy chỉnh độ khó của mật khẩu
     options.Password.RequireDigit = false;
     options.Password.RequireLowercase = false;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = false;
     options.Password.RequiredLength = 6;
 
-    // Không bắt buộc xác nhận email lúc mới làm đồ án cho dễ test
+    // Không bắt buộc xác nhận email
     options.SignIn.RequireConfirmedAccount = false;
 })
-.AddDefaultUI() // BẮT BUỘC PHẢI CÓ ĐỂ KẾT NỐI VỚI GIAO DIỆN IDENTITY (LOGIN/REGISTER)
+.AddDefaultUI()
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// ==========================================
+// =======================================================
+// BƯỚC 1: CẤU HÌNH DỊCH VỤ ĐA NGÔN NGỮ (LOCALIZATION)
+// =======================================================
+// Báo cho hệ thống biết các file "Từ điển" (.resx) sẽ nằm trong thư mục tên là "Resources"
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 
-// Add services to the container.
-builder.Services.AddControllersWithViews();
+// Bật tính năng dịch ngôn ngữ cho Controllers và Views
+builder.Services.AddControllersWithViews()
+    .AddViewLocalization(Microsoft.AspNetCore.Mvc.Razor.LanguageViewLocationExpanderFormat.Suffix)
+    .AddDataAnnotationsLocalization(); // Bật dịch luôn cả các thông báo lỗi (vd: Vui lòng nhập giá...)
+// =======================================================
 
 // THÊM DÒNG NÀY ĐỂ HỖ TRỢ RAZOR PAGES CỦA IDENTITY
 builder.Services.AddRazorPages();
@@ -54,6 +61,24 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+
+// =======================================================
+// BƯỚC 1: KÍCH HOẠT ĐƯỜNG ỐNG ĐA NGÔN NGỮ KHI WEB CHẠY
+// =======================================================
+// Đăng ký 2 ngôn ngữ: Tiếng Việt (vi-VN) và Tiếng Anh (en-US)
+var supportedCultures = new[]
+{
+    new CultureInfo("vi-VN"), // Mặc định là Tiếng Việt
+    new CultureInfo("en-US")
+};
+
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture("vi-VN"),
+    SupportedCultures = supportedCultures,
+    SupportedUICultures = supportedCultures
+});
+// =======================================================
 
 // 2. MIDDLEWARE XÁC THỰC VÀ PHÂN QUYỀN
 app.UseAuthentication();

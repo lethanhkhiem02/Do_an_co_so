@@ -4,6 +4,7 @@ using Do_an_co_so.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Do_an_co_so.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260520093135_ThemChiTietPhongTro")]
+    partial class ThemChiTietPhongTro
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -132,17 +135,12 @@ namespace Do_an_co_so.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("NguoiBiBaoCaoId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int?>("PhongTroId")
+                    b.Property<int>("PhongTroId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("NguoiBaoCaoId");
-
-                    b.HasIndex("NguoiBiBaoCaoId");
 
                     b.HasIndex("PhongTroId");
 
@@ -189,10 +187,6 @@ namespace Do_an_co_so.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("LoaiHoaDon")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("NgayGiaoDich")
                         .HasColumnType("datetime2");
@@ -285,9 +279,6 @@ namespace Do_an_co_so.Migrations
                     b.Property<decimal>("Gia")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime?>("HanDatCoc")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("HinhAnh")
                         .HasColumnType("nvarchar(max)");
 
@@ -303,12 +294,6 @@ namespace Do_an_co_so.Migrations
                     b.Property<string>("MoTa")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NguoiDatCocId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal?>("TienCoc")
-                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
@@ -455,21 +440,16 @@ namespace Do_an_co_so.Migrations
                     b.HasOne("Do_an_co_so.Models.AppUser", "NguoiBaoCao")
                         .WithMany()
                         .HasForeignKey("NguoiBaoCaoId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("Do_an_co_so.Models.AppUser", "NguoiBiBaoCao")
-                        .WithMany()
-                        .HasForeignKey("NguoiBiBaoCaoId")
-                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Do_an_co_so.Models.PhongTro", "PhongTro")
                         .WithMany()
-                        .HasForeignKey("PhongTroId");
+                        .HasForeignKey("PhongTroId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("NguoiBaoCao");
-
-                    b.Navigation("NguoiBiBaoCao");
 
                     b.Navigation("PhongTro");
                 });

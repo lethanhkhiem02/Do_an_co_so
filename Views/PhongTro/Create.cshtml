@@ -19,6 +19,31 @@
                 <span asp-validation-for="MoTa" class="text-danger"></span>
             </div>
 
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="ChieuDai" class="form-label fw-bold"></label>
+                    <input asp-for="ChieuDai" type="number" step="0.1" class="form-control" placeholder="Ví dụ: 5.5" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="ChieuRong" class="form-label fw-bold"></label>
+                    <input asp-for="ChieuRong" type="number" step="0.1" class="form-control" placeholder="Ví dụ: 4.0" />
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="form-check form-switch fs-5">
+                        <input class="form-check-input" type="checkbox" asp-for="CoNhaVeSinh" id="wcSwitch">
+                        <label class="form-check-label fw-bold" for="wcSwitch">🚽 Có nhà vệ sinh riêng</label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check form-switch fs-5">
+                        <input class="form-check-input" type="checkbox" asp-for="CoBanCong" id="banCongSwitch">
+                        <label class="form-check-label fw-bold" for="banCongSwitch">🌅 Có ban công</label>
+                    </div>
+                </div>
+            </div>
             <div class="mb-3">
                 <label asp-for="Gia" class="form-label fw-bold"></label>
                 <input asp-for="Gia" type="number" class="form-control" placeholder="Ví dụ: 2500000" />
@@ -81,80 +106,56 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // 1. Khởi tạo bản đồ mặc định
         var map = L.map('map').setView([10.8018, 106.7115], 14);
-
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        // 2. Tạo dấu ghim có thể kéo thả
         var marker = L.marker([10.8018, 106.7115], { draggable: true }).addTo(map);
 
-        // 3. Hàm cập nhật tọa độ vào Input ẩn
         function updateLatLng(lat, lng) {
             document.getElementById('latInput').value = lat;
             document.getElementById('lngInput').value = lng;
         }
 
-        // Khởi tạo giá trị mặc định lúc load trang
         updateLatLng(10.8018, 106.7115);
 
-        // Bắt sự kiện khi người dùng kéo thả ghim xong
         marker.on('dragend', function (e) {
             var coords = e.target.getLatLng();
             updateLatLng(coords.lat, coords.lng);
         });
 
-        // Click vào bản đồ để ghim nhảy tới đó nhanh
         map.on('click', function(e) {
             marker.setLatLng(e.latlng);
             updateLatLng(e.latlng.lat, e.latlng.lng);
         });
 
-        // ==========================================
-        // 4. TÍNH NĂNG GEOCODING (ĐỊA CHỈ -> TỌA ĐỘ)
-        // ==========================================
         document.getElementById('btnTimViTri').addEventListener('click', function () {
             var address = document.getElementById('diaChiInput').value;
-
             if (!address) {
                 alert("Vui lòng nhập địa chỉ trước khi tìm kiếm!");
                 return;
             }
-
-            // Gọi API miễn phí của Nominatim (OpenStreetMap)
             var apiUrl = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(address);
-
             fetch(apiUrl)
                 .then(response => response.json())
                 .then(data => {
                     if (data && data.length > 0) {
                         var lat = data[0].lat;
                         var lon = data[0].lon;
-
-                        // Di chuyển bản đồ mượt mà (flyTo) về vị trí mới với zoom level 16
                         map.flyTo([lat, lon], 16);
-
-                        // Cắm lại ghim vào vị trí mới
                         marker.setLatLng([lat, lon]);
-
-                        // Tự động điền tọa độ vào 2 ô input ẩn
                         updateLatLng(lat, lon);
                     } else {
-                        alert("Không tìm thấy tọa độ cho địa chỉ này. Bạn vui lòng nhập rõ hơn (Thêm Phường, Quận, Thành phố) hoặc tự ghim tay nhé!");
+                        alert("Không tìm thấy tọa độ cho địa chỉ này!");
                     }
                 })
-                .catch(error => {
-                    console.error('Lỗi khi gọi Geocoding API:', error);
-                    alert("Có lỗi xảy ra khi tìm vị trí, vui lòng thử lại.");
-                });
+                .catch(error => { console.error('Lỗi API:', error); });
         });
 
-        // Tự động kích hoạt nút Tìm kiếm nếu người dùng gõ xong và bấm Enter trong ô địa chỉ
         document.getElementById('diaChiInput').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
-                e.preventDefault(); // Ngăn chặn form submit nhầm
+                e.preventDefault();
                 document.getElementById('btnTimViTri').click();
             }
         });

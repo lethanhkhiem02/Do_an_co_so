@@ -16,5 +16,9 @@ namespace Do_an_co_so.Models
         // --- CÁC THUỘC TÍNH MỚI CHO TÍNH NĂNG VIP ---
         [Display(Name = "Số dư ví")]
         public decimal SoDu { get; set; } = 0; // Mặc định ví tạo ra có 0 đồng
+
+        // --- THUỘC TÍNH MỚI DÀNH CHO ADMIN ---
+        [Display(Name = "Trạng thái khóa")]
+        public bool TrangThaiKhoa { get; set; } = false; // Mặc định tài khoản mới tạo không bị khóa
     }
 }

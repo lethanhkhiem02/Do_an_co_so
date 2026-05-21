@@ -25,7 +25,7 @@ namespace Do_an_co_so.Controllers
             _environment = environment;
         }
 
-        // 1. TRANG HỘP THƯ (Bấm từ menu Tin nhắn)z
+        // 1. TRANG HỘP THƯ (Bấm từ menu Tin nhắn)
         public async Task<IActionResult> Index()
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -53,7 +53,6 @@ namespace Do_an_co_so.Controllers
                 .OrderBy(m => m.Timestamp)
                 .ToListAsync();
 
-            // Loại bỏ những tin nhắn của Chat Tổng (bắt đầu bằng [GLOBAL_)
             var privateMessages = messages.Where(m => !m.Content.StartsWith("[GLOBAL_")).ToList();
 
             ViewBag.Receiver = receiver;
@@ -65,9 +64,16 @@ namespace Do_an_co_so.Controllers
         [HttpPost]
         public async Task<IActionResult> SendMessage(string receiverId, string content)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            // CHỐT KIỂM TRA: Bị khóa thì chặn cứng, hiện lỗi
+            if (currentUser != null && currentUser.TrangThaiKhoa)
+            {
+                return Content("❌ TÀI KHOẢN CỦA BẠN ĐÃ BỊ KHÓA, KHÔNG THỂ GỬI TIN NHẮN. Vui lòng liên hệ Admin.");
+            }
+
             if (!string.IsNullOrWhiteSpace(content))
             {
-                var currentUser = await _userManager.GetUserAsync(User);
                 var message = new Message
                 {
                     SenderId = currentUser.Id,
@@ -83,12 +89,11 @@ namespace Do_an_co_so.Controllers
 
         // ============================== PHẦN NÂNG CẤP CHAT TỔNG ==============================
 
-        // 4. TRANG CHAT TỔNG (Lấy dữ liệu để hiển thị ban đầu)
+        // 4. TRANG CHAT TỔNG
         public async Task<IActionResult> GlobalChat()
         {
             var currentUser = await _userManager.GetUserAsync(User);
 
-            // Lấy 50 tin nhắn chat tổng gần nhất (bắt đầu bằng [GLOBAL_)
             var rawMessages = await _context.Messages
                 .Include(m => m.Sender)
                 .Where(m => m.Content.StartsWith("[GLOBAL_"))
@@ -96,7 +101,6 @@ namespace Do_an_co_so.Controllers
                 .Take(50)
                 .ToListAsync();
 
-            // 🔥 TÍNH NĂNG MỚI: Ưu tiên lấy HoTen, nếu null thì cắt đuôi @gmail.com
             var processedMessages = rawMessages.Select(m => new {
                 SenderName = !string.IsNullOrEmpty(m.Sender?.HoTen) ? m.Sender.HoTen : (m.Sender?.UserName?.Split('@')[0] ?? "Ẩn danh"),
                 Type = m.Content.Split(']')[0].Replace("[GLOBAL_", "").ToLower(),
@@ -105,17 +109,23 @@ namespace Do_an_co_so.Controllers
             }).ToList();
 
             ViewBag.CurrentUserId = currentUser.Id;
-
-            // 🔥 TÍNH NĂNG MỚI: Đổi tên hiển thị cho người đang đăng nhập
             ViewBag.CurrentUserName = !string.IsNullOrEmpty(currentUser.HoTen) ? currentUser.HoTen : (currentUser.UserName?.Split('@')[0] ?? "Ẩn danh");
 
             return View(processedMessages);
         }
 
-        // 5. API ĐỂ UPLOAD ẢNH (Dùng JavaScript gọi tới)
+        // 5. API ĐỂ UPLOAD ẢNH
         [HttpPost]
         public async Task<IActionResult> UploadImage(IFormFile file)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            // CHỐT KIỂM TRA: Bị khóa thì không cho gửi ảnh
+            if (currentUser != null && currentUser.TrangThaiKhoa)
+            {
+                return Json(new { success = false, message = "❌ Tài khoản của bạn đã bị khóa, không thể gửi ảnh." });
+            }
+
             if (file == null || file.Length == 0) return Json(new { success = false, message = "Không có file nào được chọn." });
 
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
@@ -132,6 +142,65 @@ namespace Do_an_co_so.Controllers
 
             var imageUrl = $"/uploads/chat-images/{fileName}";
             return Json(new { success = true, imageUrl = imageUrl });
+        }
+
+        // 6. API LẤY LỊCH SỬ TIN NHẮN CHO MINI CHATBOX (Tại trang chi tiết phòng)
+        [HttpGet]
+        public async Task<IActionResult> GetChatHistory(string receiverId)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return Unauthorized();
+
+            var messages = await _context.Messages
+                .Where(m => (m.SenderId == currentUser.Id && m.ReceiverId == receiverId) ||
+                            (m.SenderId == receiverId && m.ReceiverId == currentUser.Id))
+                .OrderBy(m => m.Timestamp)
+                .Select(m => new {
+                    senderId = m.SenderId,
+                    content = m.Content,
+                    time = m.Timestamp.ToString("HH:mm")
+                })
+                .ToListAsync();
+
+            // Lọc bỏ tin nhắn tổng
+            var privateMessages = messages.Where(m => !m.content.StartsWith("[GLOBAL_")).ToList();
+
+            return Json(privateMessages);
+        }
+
+        // ============================== PHẦN NÂNG CẤP CHỐNG TOXIC ==============================
+
+        // 7. API TIẾP NHẬN BÁO CÁO NGƯỜI DÙNG TỪ KHUNG CHAT
+        [HttpPost]
+        public async Task<IActionResult> SubmitUserReport(string nguoiBiBaoCaoId, string lyDo, string chiTiet)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            // Nếu chưa đăng nhập hoặc bị khóa tài khoản thì chặn
+            if (user == null || user.TrangThaiKhoa)
+            {
+                TempData["Error"] = "❌ Bạn không có quyền thực hiện thao tác này.";
+                return RedirectToAction("Conversation", new { receiverId = nguoiBiBaoCaoId });
+            }
+
+            // Tạo một lá đơn báo cáo hướng vào "Tài Khoản" thay vì "Phòng Trọ"
+            var report = new BaoCao
+            {
+                NguoiBiBaoCaoId = nguoiBiBaoCaoId,  // Lưu ID người bị tố cáo
+                PhongTroId = null,                  // Để trống ID phòng trọ
+                NguoiBaoCaoId = user.Id,
+                LyDo = lyDo,
+                ChiTiet = chiTiet,
+                NgayBaoCao = DateTime.Now,
+                DaXuLy = false
+            };
+
+            _context.BaoCaos.Add(report);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "🚩 Cảm ơn bạn! Báo cáo người dùng vi phạm đã được gửi tới Admin xử lý.";
+
+            return RedirectToAction("Conversation", new { receiverId = nguoiBiBaoCaoId });
         }
     }
 }

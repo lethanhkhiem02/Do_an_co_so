@@ -7,7 +7,6 @@
 }
 
 <div class="container mt-4 mb-5">
-    <!-- HIỂN THỊ THÔNG BÁO THÀNH CÔNG / THẤT BẠI KHI THANH TOÁN -->
     @if (TempData["Success"] != null)
     {
         <div class="alert alert-success alert-dismissible fade show fw-bold shadow-sm" role="alert">
@@ -53,6 +52,27 @@
             <div class="card card-custom p-4 h-100 shadow-sm border-0">
                 <h3 class="text-danger fw-bold">@Model.Gia.ToString("N0") VNĐ/Tháng</h3>
                 <hr />
+
+                <div class="d-flex flex-wrap gap-2 mb-3 mt-2">
+                    @if (Model.ChieuDai.HasValue && Model.ChieuRong.HasValue)
+                    {
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary fs-6 fw-normal px-3 py-2 rounded-pill">
+                            <i class="bi bi-arrows-fullscreen me-1"></i> Diện tích: @(Model.ChieuDai* Model.ChieuRong)m² (@Model.ChieuDai x @Model.ChieuRong)
+                        </span>
+                    }
+                    @if (Model.CoNhaVeSinh)
+                    {
+                        <span class="badge bg-info bg-opacity-10 text-info border border-info fs-6 fw-normal px-3 py-2 rounded-pill">
+                            🚽 WC Riêng
+                        </span>
+                    }
+                    @if (Model.CoBanCong)
+                    {
+                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning fs-6 fw-normal px-3 py-2 rounded-pill">
+                            🌅 Ban công
+                        </span>
+                    }
+                </div>
                 <p><strong>📍 Địa chỉ:</strong> @Model.DiaChi</p>
 
                 <p>
@@ -67,13 +87,46 @@
                 <h5 class="mt-4 fw-bold">Mô tả chi tiết:</h5>
                 <p style="white-space: pre-line;" class="text-muted">@Model.MoTa</p>
 
-                <!-- KHU VỰC NÚT BẤM THANH TOÁN VÀ THUÊ PHÒNG -->
                 <div class="mt-4 mb-3 p-3 border rounded bg-light">
+                    @{
+                        // Xác định ai đang xem trang này
+                        var currentUserId = User.Identity.IsAuthenticated ? UserManager.GetUserId(User) : null;
+
+                        // Kiểm tra trạng thái cọc
+                        bool isMyDeposit = !string.IsNullOrEmpty(Model.NguoiDatCocId) && Model.NguoiDatCocId == currentUserId;
+                        bool isDepositedByOther = !string.IsNullOrEmpty(Model.NguoiDatCocId) && Model.NguoiDatCocId != currentUserId;
+                    }
+
                     @if (Model.DaChoThue)
                     {
                         <div class="alert alert-danger fw-bold text-center mb-0 shadow-sm">
                             ❌ PHÒNG NÀY ĐÃ ĐƯỢC CHO THUÊ
                         </div>
+                    }
+                    else if (isDepositedByOther)
+                    {
+                        <div class="alert alert-warning fw-bold text-center mb-0 shadow-sm">
+                            ⏳ PHÒNG ĐÃ CÓ NGƯỜI ĐẶT CỌC GIỮ CHỖ (Đến @Model.HanDatCoc?.ToString("dd/MM/yyyy HH:mm"))
+                        </div>
+                    }
+                    else if (isMyDeposit)
+                    {
+                        <div class="alert alert-info fw-bold text-center mb-3 shadow-sm">
+                            🎉 BẠN ĐÃ ĐẶT CỌC 500.000 VNĐ CHO PHÒNG NÀY
+                            <br />
+                            <small class="text-danger">Vui lòng thanh toán phần còn lại trước @Model.HanDatCoc?.ToString("dd/MM/yyyy HH:mm")</small>
+                        </div>
+
+                        @if (User.IsInRole("SinhVien"))
+                        {
+                            decimal remaining = Model.Gia - (Model.TienCoc ?? 0);
+                            <form asp-action="ThanhToanPhanConLai" asp-controller="PhongTro" asp-route-id="@Model.Id" method="post">
+                                <button type="submit" class="btn btn-primary btn-lg fw-bold w-100 shadow"
+                                        onclick="return confirm('Xác nhận thanh toán @remaining.ToString("N0") VNĐ phần còn lại?');">
+                                    💳 THANH TOÁN @remaining.ToString("N0") VNĐ
+                                </button>
+                            </form>
+                        }
                     }
                     else
                     {
@@ -83,24 +136,43 @@
 
                         @if (User.IsInRole("SinhVien"))
                         {
-                            <form asp-action="ThanhToanThuePhong" asp-controller="PhongTro" asp-route-id="@Model.Id" method="post">
-                                <button type="submit" class="btn btn-primary btn-lg fw-bold w-100 shadow"
-                                        onclick="return confirm('Xác nhận thanh toán @Model.Gia.ToString("N0") VNĐ từ ví hệ thống để thuê phòng này?');">
-                                    💳 THANH TOÁN & THUÊ NGAY
-                                </button>
-                            </form>
+                            <div class="d-flex flex-column gap-2">
+                                <form asp-action="DatCocPhong" asp-controller="PhongTro" asp-route-id="@Model.Id" method="post">
+                                    <button type="submit" class="btn btn-warning btn-lg fw-bold w-100 shadow"
+                                            onclick="return confirm('Xác nhận ĐẶT CỌC 500,000 VNĐ từ ví hệ thống để giữ phòng này trong 7 ngày?');">
+                                        ⏳ ĐẶT CỌC GIỮ CHỖ (500.000 VNĐ)
+                                    </button>
+                                </form>
+
+                                <form asp-action="ThanhToanThuePhong" asp-controller="PhongTro" asp-route-id="@Model.Id" method="post">
+                                    <button type="submit" class="btn btn-primary btn-lg fw-bold w-100 shadow"
+                                            onclick="return confirm('Xác nhận thanh toán @Model.Gia.ToString("N0") VNĐ từ ví hệ thống để thuê đứt phòng này?');">
+                                        💳 THANH TOÁN & THUÊ NGAY
+                                    </button>
+                                </form>
+                            </div>
                         }
                         else if (!User.Identity.IsAuthenticated)
                         {
                             <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-primary fw-bold w-100">
-                                Đăng nhập bằng tài khoản Sinh viên để thuê
+                                Đăng nhập bằng tài khoản Sinh viên để thuê / đặt cọc
                             </a>
                         }
                     }
                 </div>
-
                 <div class="mt-auto">
-                    <a asp-controller="Chat" asp-action="Conversation" asp-route-receiverId="@Model.ChuTroId" class="btn btn-success btn-lg w-100 mb-2 shadow-sm">💬 Nhắn tin</a>
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        @if (UserManager.GetUserId(User) != Model.ChuTroId)
+                        {
+                            <button type="button" onclick="openMiniChat()" class="btn btn-success btn-lg w-100 mb-2 shadow-sm">💬 Nhắn tin nhanh</button>
+                        }
+                    }
+                    else
+                    {
+                        <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-success btn-lg w-100 mb-2 shadow-sm">💬 Đăng nhập để nhắn tin</a>
+                    }
+
                     <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary w-100 fw-bold mb-2">Trở lại trang chủ</a>
 
                     @if (User.Identity.IsAuthenticated && UserManager.GetUserId(User) == Model.ChuTroId)
@@ -111,6 +183,13 @@
                                 🗑️ Xóa bài đăng này
                             </button>
                         </form>
+                    }
+
+                    @if (User.Identity.IsAuthenticated && UserManager.GetUserId(User) != Model.ChuTroId)
+                    {
+                        <button type="button" class="btn btn-outline-danger w-100 fw-bold shadow-sm mt-2" data-bs-toggle="modal" data-bs-target="#reportModal">
+                            🚩 Báo cáo tin giả / lừa đảo
+                        </button>
                     }
                 </div>
             </div>
@@ -187,3 +266,164 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold" id="reportModalLabel">🚩 BÁO CÁO TIN GIAN LẬN</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-controller="PhongTro" asp-action="SubmitReport" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="phongTroId" value="@Model.Id" />
+                    <p class="text-muted small mb-3">Nếu bạn phát hiện tin đăng này có dấu hiệu lừa đảo, sai sự thật, hãy báo cáo ngay để Admin xử lý nhé!</p>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Lý do báo cáo: <span class="text-danger">*</span></label>
+                        <select name="lyDo" class="form-select border-danger" required>
+                            <option value="">-- Chọn lý do --</option>
+                            <option value="Lừa đảo tiền cọc">Lừa đảo tiền cọc</option>
+                            <option value="Phòng trọ không giống ảnh">Phòng trọ không giống ảnh / sai sự thật</option>
+                            <option value="Chủ trọ có thái độ không tốt / đe dọa">Chủ trọ có thái độ không tốt / đe dọa</option>
+                            <option value="Địa chỉ giả mạo">Địa chỉ giả mạo / Không tồn tại</option>
+                            <option value="Khác">Lý do khác...</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Chi tiết thêm (không bắt buộc):</label>
+                        <textarea name="chiTiet" class="form-control" rows="3" placeholder="Mô tả rõ hơn về tình huống bạn gặp phải để Admin dễ xử lý..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-danger fw-bold">Gửi Báo Cáo 🚀</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@if (User.Identity.IsAuthenticated && UserManager.GetUserId(User) != Model.ChuTroId)
+{
+    <div id="miniChatBox" class="card shadow-lg d-none" style="position: fixed; bottom: 20px; right: 20px; width: 360px; z-index: 1050; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center p-3">
+            <h6 class="mb-0 fw-bold"><i class="bi bi-chat-dots-fill me-2"></i>Chat với @(Model.ChuTro?.HoTen ?? "Chủ trọ")</h6>
+            <button type="button" class="btn-close btn-close-white" onclick="closeMiniChat()" title="Đóng"></button>
+        </div>
+        <div id="miniChatBody" class="card-body p-3" style="height: 350px; overflow-y: auto; background-color: #f0f2f5;">
+        </div>
+        <div class="card-footer bg-white p-2 border-top">
+            <div class="input-group">
+                <input type="text" id="miniChatMessage" class="form-control border-success shadow-none" placeholder="Nhập tin nhắn..." onkeypress="handleMiniChatEnter(event)">
+                <button class="btn btn-success fw-bold" type="button" onclick="sendMiniChatMessage()">
+                    Gửi
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+
+    <script>
+        const receiverId = '@Model.ChuTroId';
+        const currentUserId = '@(User.Identity.IsAuthenticated? UserManager.GetUserId(User) : "")';
+        let chatConnection = null;
+
+        // Mở khung Chat
+        function openMiniChat() {
+            document.getElementById('miniChatBox').classList.remove('d-none');
+            loadChatHistory();
+            if (!chatConnection) {
+                startSignalR();
+            }
+        }
+
+        // Đóng khung Chat
+        function closeMiniChat() {
+            document.getElementById('miniChatBox').classList.add('d-none');
+        }
+
+        // Tải lịch sử tin nhắn cũ
+        function loadChatHistory() {
+            fetch(`/Chat/GetChatHistory?receiverId=${receiverId}`)
+                .then(response => response.json())
+                .then(messages => {
+                    const chatBody = document.getElementById('miniChatBody');
+                    chatBody.innerHTML = ''; // Xóa sạch để tải mới
+                    messages.forEach(msg => {
+                        appendMessage(msg.senderId === currentUserId, msg.content, msg.time);
+                    });
+                    chatBody.scrollTop = chatBody.scrollHeight; // Cuộn xuống cuối
+                })
+                .catch(error => console.error("Lỗi khi tải lịch sử chat:", error));
+        }
+
+        // Kết nối SignalR để chat ngay lập tức
+        function startSignalR() {
+            try {
+                chatConnection = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
+                // Lắng nghe tin nhắn bay tới
+                chatConnection.on("ReceivePrivateMessage", function (senderId, message, time) {
+                    if (senderId === receiverId || senderId === currentUserId) {
+                        const isMine = senderId === currentUserId;
+                        appendMessage(isMine, message, time);
+                    }
+                });
+                chatConnection.start().catch(err => console.error("Lỗi kết nối SignalR: ", err));
+            } catch (e) {
+                console.error("Thư viện SignalR chưa được tải: ", e);
+            }
+        }
+
+        // Vẽ bong bóng tin nhắn lên màn hình
+        function appendMessage(isMine, content, time) {
+            const chatBody = document.getElementById('miniChatBody');
+            const alignClass = isMine ? 'text-end' : 'text-start';
+            const bgClass = isMine ? 'bg-success text-white' : 'bg-white text-dark border';
+            const msgHtml = `
+                <div class="mb-2 ${alignClass}">
+                    <div class="d-inline-block p-2 rounded-3 shadow-sm ${bgClass}" style="max-width: 85%; text-align: left; word-wrap: break-word;">
+                        ${content}
+                    </div>
+                    <div class="text-muted mt-1" style="font-size: 0.70rem;">${time}</div>
+                </div>
+            `;
+            chatBody.insertAdjacentHTML('beforeend', msgHtml);
+            chatBody.scrollTop = chatBody.scrollHeight; // Cuộn xuống cuối
+        }
+
+        // Gửi tin nhắn đi
+        function sendMiniChatMessage() {
+            const input = document.getElementById('miniChatMessage');
+            const message = input.value.trim();
+            if (message === '') return; // Không cho gửi tin nhắn trống
+
+            // CÒI BÁO ĐỘNG: Kiểm tra xem kết nối đã thông chưa
+            if (!chatConnection || chatConnection.state !== signalR.HubConnectionState.Connected) {
+                alert("⏳ Máy chủ Chat đang khởi động kết nối, vui lòng chờ 1 giây rồi bấm Gửi lại nhé!");
+                return;
+            }
+
+            // Bắn tin nhắn qua SignalR tới ChatHub
+            chatConnection.invoke("SendPrivateMessage", currentUserId, receiverId, message)
+                .then(() => {
+                    input.value = ''; // Xóa trắng ô nhập chữ sau khi gửi thành công
+                })
+                .catch(err => {
+                    console.error(err.toString());
+                    alert("⚠️ Không thể gửi tin nhắn. Có thể tài khoản của bạn đang bị Admin khóa!");
+                });
+        }
+
+        // Bấm Enter để gửi cho lẹ
+        function handleMiniChatEnter(e) {
+            if (e.key === 'Enter') {
+                sendMiniChatMessage();
+            }
+        }
+    </script>
+}
