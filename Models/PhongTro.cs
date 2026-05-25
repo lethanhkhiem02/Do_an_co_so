@@ -79,5 +79,14 @@ namespace Do_an_co_so.Models
 
         [Display(Name = "Hạn đặt cọc")]
         public DateTime? HanDatCoc { get; set; } // Hạn chót để đóng phần còn lại (7 ngày)
+
+        // ==============================================================================
+        // --- 🔥 THÊM ĐỢT 1: CẤU HÌNH THỜI HẠN TIN ĐĂNG & GIỮ PHÒNG 🔥 ---
+        // ==============================================================================
+        [Display(Name = "Ngày hết hạn hiển thị tin")]
+        public DateTime? NgayHetHan { get; set; }
+
+        [Display(Name = "Số ngày giữ phòng tối đa")]
+        public int? SoNgayGiuPhong { get; set; }
     }
 }

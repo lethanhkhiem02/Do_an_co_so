@@ -24,7 +24,11 @@ namespace Do_an_co_so.Controllers
         public async Task<IActionResult> Index()
         {
             var currentUserId = _userManager.GetUserId(User);
-            var users = await _userManager.Users.Where(u => u.Id != currentUserId).ToListAsync();
+            // Kéo danh sách User, ưu tiên những người đang "Chờ duyệt" lên đầu bảng
+            var users = await _userManager.Users
+                .Where(u => u.Id != currentUserId)
+                .OrderByDescending(u => u.TrangThaiXacThuc == "Chờ duyệt")
+                .ToListAsync();
             return View(users);
         }
 
@@ -80,10 +84,7 @@ namespace Do_an_co_so.Controllers
             var userReportsReceived = await _context.BaoCaos.Where(b => b.NguoiBiBaoCaoId == id).ToListAsync();
             _context.BaoCaos.RemoveRange(userReportsReceived);
 
-            // Lưu toàn bộ quá trình dọn dẹp vào CSDL
             await _context.SaveChangesAsync();
-
-            // 7. Xóa tài khoản
             await _userManager.DeleteAsync(user);
 
             return RedirectToAction("Index");
@@ -112,6 +113,40 @@ namespace Do_an_co_so.Controllers
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction("QuanLyBaoCao");
+        }
+
+        // =========================================================
+        // 🔥 PHẦN 2: ACTION XỬ LÝ PHÊ DUYỆT CCCD (eKYC)
+        // =========================================================
+        [HttpPost]
+        public async Task<IActionResult> DuyetCCCD(string id, string hanhDong)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound("Không tìm thấy người dùng");
+
+            if (hanhDong == "Duyet")
+            {
+                user.TrangThaiXacThuc = "Đã duyệt";
+
+                // Mẹo nhỏ: Auto cộng điểm ưu tiên cho phòng trọ của user này
+                var phongTros = await _context.PhongTro.Where(p => p.ChuTroId == user.Id).ToListAsync();
+                foreach (var phong in phongTros)
+                {
+                    phong.IsVip = true; // Cho tin đăng lên VIP miễn phí như phần thưởng xác thực
+                }
+                await _context.SaveChangesAsync();
+            }
+            else if (hanhDong == "TuChoi")
+            {
+                user.TrangThaiXacThuc = "Chưa xác thực";
+                // Xóa ảnh để user up lại
+                user.CCCDTruoc = null;
+                user.CCCDSau = null;
+                user.SoCCCDQuetDuoc = null;
+            }
+
+            await _userManager.UpdateAsync(user);
+            return RedirectToAction("Index");
         }
     }
 }

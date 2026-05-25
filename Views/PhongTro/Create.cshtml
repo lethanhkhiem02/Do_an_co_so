@@ -30,6 +30,17 @@
                 </div>
             </div>
 
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold text-dark">⏳ Số ngày bài đăng tồn tại</label>
+                    <input type="number" name="soNgayDangBai" class="form-control" value="30" min="1" placeholder="Mặc định: 30 ngày" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold text-dark">⏳ Số ngày giữ phòng khi nhận cọc</label>
+                    <input type="number" name="soNgayGiuPhong" class="form-control" value="7" min="1" placeholder="Mặc định: 7 ngày" />
+                </div>
+            </div>
+
             <div class="row mb-3">
                 <div class="col-md-6">
                     <div class="form-check form-switch fs-5">
@@ -71,7 +82,7 @@
             </div>
 
             <div class="mb-4">
-                <label asp-for="ImageUploads" class="form-label fw-bold text-success">📷 Thêm hình ảnh (Có thể chọn nhiều)</label>
+                <label asp-for="ImageUploads" class="form-label fw-bold text-success">📷 Thêm hình ảnh (Có thể chọn many)</label>
                 <input asp-for="ImageUploads" type="file" class="form-control" accept="image/*" multiple />
                 <span asp-validation-for="ImageUploads" class="text-danger"></span>
             </div>

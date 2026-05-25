@@ -1,24 +1,35 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace Do_an_co_so.Models
 {
-    // Kế thừa IdentityUser để có sẵn các cột: Id, Email, PasswordHash, PhoneNumber...
     public class AppUser : IdentityUser
     {
         public string HoTen { get; set; }
-        // Sau này bạn có thể thêm: DiaChi, NgaySinh, v.v. ở đây
+        public string? Avatar { get; set; }
+        public DateTime? NgaySinh { get; set; }
+        public string? DiaChi { get; set; }
 
-        public string? Avatar { get; set; }       // Lưu tên file ảnh đại diện
-        public DateTime? NgaySinh { get; set; }   // Lưu ngày tháng năm sinh
-        public string? DiaChi { get; set; }       // Lưu địa chỉ
-
-        // --- CÁC THUỘC TÍNH MỚI CHO TÍNH NĂNG VIP ---
         [Display(Name = "Số dư ví")]
-        public decimal SoDu { get; set; } = 0; // Mặc định ví tạo ra có 0 đồng
+        public decimal SoDu { get; set; } = 0;
 
-        // --- THUỘC TÍNH MỚI DÀNH CHO ADMIN ---
         [Display(Name = "Trạng thái khóa")]
-        public bool TrangThaiKhoa { get; set; } = false; // Mặc định tài khoản mới tạo không bị khóa
+        public bool TrangThaiKhoa { get; set; } = false;
+
+        // =========================================================
+        // --- THÊM PHẦN 2: THUỘC TÍNH CHO XÁC THỰC CCCD & OCR ---
+        // =========================================================
+        [Display(Name = "Ảnh CCCD Mặt Trước")]
+        public string? CCCDTruoc { get; set; }
+
+        [Display(Name = "Ảnh CCCD Mặt Sau")]
+        public string? CCCDSau { get; set; }
+
+        [Display(Name = "Trạng thái xác thực")]
+        public string TrangThaiXacThuc { get; set; } = "Chưa xác thực"; // "Chưa xác thực", "Chờ duyệt", "Đã duyệt"
+
+        [Display(Name = "Số CCCD (AI Quét)")]
+        public string? SoCCCDQuetDuoc { get; set; } // AI Tesseract sẽ tự điền vào đây
     }
 }

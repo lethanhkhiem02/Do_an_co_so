@@ -4,7 +4,7 @@
     ViewData["Title"] = "Quản lý người dùng";
 }
 
-<div class="container mt-4">
+<div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="text-danger fw-bold m-0">QUẢN LÝ NGƯỜI DÙNG HỆ THỐNG</h2>
         <a asp-action="QuanLyBaoCao" class="btn btn-warning fw-bold shadow-sm">
@@ -13,46 +13,107 @@
     </div>
     <hr />
 
-    <table class="table table-bordered table-hover mt-3">
-        <thead class="table-dark">
-            <tr>
-                <th>Họ và Tên</th>
-                <th>Email / Tài khoản</th>
-                <th>Trạng thái</th>
-                <th>Hành động của Admin</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var user in Model)
-            {
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover mt-3 align-middle">
+            <thead class="table-dark text-center">
                 <tr>
-                    <td>@user.HoTen</td>
-                    <td>@user.Email</td>
-                    <td>
-                        @if (user.TrangThaiKhoa)
-                        {
-                            <span class="badge bg-danger">Đang bị khóa</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-success">Hoạt động</span>
-                        }
-                    </td>
-                    <td>
-                        <div class="d-flex gap-2">
-                            <form asp-action="ToggleLockUser" asp-route-id="@user.Id" method="post">
-                                <button type="submit" class="btn btn-sm @(user.TrangThaiKhoa ? "btn-success" : "btn-warning")">
-                                    @(user.TrangThaiKhoa ? "Mở Khóa" : "Khóa Tài Khoản")
-                                </button>
-                            </form>
-
-                            <form asp-action="DeleteUser" asp-route-id="@user.Id" method="post" onsubmit="return confirm('Bạn có CHẮC CHẮN muốn xóa vĩnh viễn tài khoản @user.Email này không? Mọi dữ liệu của họ sẽ bị mất!');">
-                                <button type="submit" class="btn btn-sm btn-danger">Xóa Vĩnh Viễn</button>
-                            </form>
-                        </div>
-                    </td>
+                    <th>Họ và Tên</th>
+                    <th>Email / Tài khoản</th>
+                    <th>Trạng thái Khóa</th>
+                    <th>Trạng thái eKYC (CCCD)</th>
+                    <th>Hồ Sơ Xác Thực</th>
+                    <th>Hành động của Admin</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    <tr>
+                        <td class="fw-bold">@user.HoTen</td>
+                        <td>@user.Email</td>
+
+                        <td class="text-center">
+                            @if (user.TrangThaiKhoa)
+                            {
+                                <span class="badge bg-danger p-2"><i class="bi bi-lock-fill"></i> Bị khóa</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success p-2"><i class="bi bi-unlock-fill"></i> Hoạt động</span>
+                            }
+                        </td>
+
+                        <td class="text-center">
+                            @if (user.TrangThaiXacThuc == "Đã duyệt")
+                            {
+                                <span class="badge bg-primary p-2"><i class="bi bi-shield-check"></i> Đã xác thực</span>
+                            }
+                            else if (user.TrangThaiXacThuc == "Chờ duyệt")
+                            {
+                                <span class="badge bg-warning text-dark p-2 animate__animated animate__pulse animate__infinite"><i class="bi bi-hourglass-split"></i> Chờ duyệt</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary p-2">Chưa có</span>
+                            }
+                        </td>
+
+                        <td>
+                            @if (user.TrangThaiXacThuc == "Chờ duyệt" || user.TrangThaiXacThuc == "Đã duyệt")
+                            {
+                                <div class="d-flex flex-column gap-2 align-items-center">
+                                    <div class="d-flex gap-1">
+                                        <a href="~/images/cccd/@user.CCCDTruoc" target="_blank">
+                                            <img src="~/images/cccd/@user.CCCDTruoc" alt="Mặt trước" class="img-thumbnail" style="width: 80px; height: 50px; object-fit: cover; cursor:pointer;" title="Bấm để xem lớn" />
+                                        </a>
+                                        <a href="~/images/cccd/@user.CCCDSau" target="_blank">
+                                            <img src="~/images/cccd/@user.CCCDSau" alt="Mặt sau" class="img-thumbnail" style="width: 80px; height: 50px; object-fit: cover; cursor:pointer;" title="Bấm để xem lớn" />
+                                        </a>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(user.SoCCCDQuetDuoc))
+                                    {
+                                        <small class="text-success fw-bold bg-light p-1 rounded border border-success">AI Quét: @user.SoCCCDQuetDuoc</small>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-muted fst-italic text-center d-block">Trống</span>
+                            }
+                        </td>
+
+                        <td>
+                            <div class="d-flex flex-column gap-2">
+                                <form asp-action="ToggleLockUser" asp-route-id="@user.Id" method="post">
+                                    <button type="submit" class="btn btn-sm w-100 @(user.TrangThaiKhoa ? "btn-outline-success" : "btn-outline-warning")">
+                                        @(user.TrangThaiKhoa ? "Mở Khóa" : "Khóa Tài Khoản")
+                                    </button>
+                                </form>
+
+                                @if (user.TrangThaiXacThuc == "Chờ duyệt")
+                                {
+                                    <div class="d-flex gap-1 mt-1 border-top pt-2">
+                                        <form asp-action="DuyetCCCD" method="post" class="w-50">
+                                            <input type="hidden" name="id" value="@user.Id" />
+                                            <input type="hidden" name="hanhDong" value="Duyet" />
+                                            <button type="submit" class="btn btn-sm btn-success w-100 fw-bold" onclick="return confirm('Xác nhận CCCD hợp lệ?');">Duyệt</button>
+                                        </form>
+                                        <form asp-action="DuyetCCCD" method="post" class="w-50">
+                                            <input type="hidden" name="id" value="@user.Id" />
+                                            <input type="hidden" name="hanhDong" value="TuChoi" />
+                                            <button type="submit" class="btn btn-sm btn-secondary w-100 fw-bold" onclick="return confirm('Từ chối hồ sơ này? Người dùng sẽ phải tải lại ảnh.');">Từ chối</button>
+                                        </form>
+                                    </div>
+                                }
+
+                                <form asp-action="DeleteUser" asp-route-id="@user.Id" method="post" class="mt-1" onsubmit="return confirm('Bạn có CHẮC CHẮN muốn xóa vĩnh viễn tài khoản @user.Email này không? Mọi dữ liệu của họ sẽ bị mất!');">
+                                    <button type="submit" class="btn btn-sm btn-danger w-100">Xóa Vĩnh Viễn</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>

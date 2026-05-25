@@ -37,7 +37,7 @@ namespace Do_an_co_so.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "ChuTro")]
-        public async Task<IActionResult> Create(PhongTro phongTro)
+        public async Task<IActionResult> Create(PhongTro phongTro, int? soNgayDangBai, int? soNgayGiuPhong)
         {
             if (ModelState.IsValid)
             {
@@ -48,6 +48,10 @@ namespace Do_an_co_so.Controllers
                 }
 
                 phongTro.ChuTroId = user.Id;
+
+                // 🔥 ĐÃ FIX ĐỢT 1: Tự động tính ngày hết hạn tin và gán cấu hình số ngày giữ phòng cọc
+                phongTro.NgayHetHan = DateTime.Now.AddDays(soNgayDangBai ?? 30); // Mặc định 30 ngày nếu để trống
+                phongTro.SoNgayGiuPhong = soNgayGiuPhong ?? 7; // Mặc định giữ phòng 7 ngày nếu để trống
 
                 if (phongTro.IsVip)
                 {
@@ -102,7 +106,7 @@ namespace Do_an_co_so.Controllers
             var phongTro = await _context.PhongTro.Include(p => p.ChuTro).FirstOrDefaultAsync(m => m.Id == id);
             if (phongTro == null) return NotFound();
 
-            // BƯỚC THÔNG MINH: NẾU ĐÃ QUÁ HẠN 7 NGÀY CỌC MÀ KHÔNG THUÊ -> TỰ ĐỘNG TƯỚC QUYỀN GIỮ CHỖ
+            // BƯỚC THÔNG MINH: NẾU ĐÃ QUÁ HẠN CỌC MÀ KHÔNG THUÊ -> TỰ ĐỘNG TƯỚC QUYỀN GIỮ CHỖ
             if (!string.IsNullOrEmpty(phongTro.NguoiDatCocId) && phongTro.HanDatCoc.HasValue && phongTro.HanDatCoc.Value < DateTime.Now)
             {
                 phongTro.NguoiDatCocId = null;
@@ -333,7 +337,10 @@ namespace Do_an_co_so.Controllers
                     // LƯU TRÍ NHỚ VÀO PHÒNG TRỌ
                     phong.NguoiDatCocId = nguoiThue?.Id;
                     phong.TienCoc = tongTienCoc;
-                    phong.HanDatCoc = DateTime.Now.AddDays(7); // Giữ chỗ 7 ngày
+
+                    // 🔥 ĐÃ FIX ĐỢT 1: Tính hạn đặt cọc linh hoạt dựa trên cấu hình riêng của phòng trọ đó
+                    int soNgayGiu = phong.SoNgayGiuPhong ?? 7;
+                    phong.HanDatCoc = DateTime.Now.AddDays(soNgayGiu);
 
                     _context.HoaDons.Add(new HoaDon
                     {
@@ -347,7 +354,7 @@ namespace Do_an_co_so.Controllers
                     });
 
                     await _context.SaveChangesAsync();
-                    TempData["Success"] = "🎉 Đặt cọc 500.000 VNĐ thành công! Phòng đã được khóa lại để giữ cho bạn trong 7 ngày.";
+                    TempData["Success"] = $"🎉 Đặt cọc 500.000 VNĐ thành công! Phòng đã được khóa lại để giữ cho bạn trong {soNgayGiu} ngày.";
                 }
             }
             else TempData["Error"] = "❌ Đặt cọc thất bại hoặc bị hủy.";
@@ -458,6 +465,47 @@ namespace Do_an_co_so.Controllers
             return View(ds);
         }
 
+        // 🔥 THÊM MỚI ĐỢT 1: Action cho chủ trọ xác nhận đã cho thuê phòng thủ công bằng tiền mặt 🔥
+        [HttpPost]
+        [Authorize(Roles = "ChuTro")]
+        public async Task<IActionResult> XacNhanChoThue(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null && user.TrangThaiKhoa) return Content("Tài khoản đang bị khóa.");
+
+            var phong = await _context.PhongTro.FirstOrDefaultAsync(p => p.Id == id && p.ChuTroId == user.Id);
+            if (phong == null) return NotFound();
+
+            phong.DaChoThue = true;
+            // Xóa thông tin cọc cũ để giải phóng trạng thái phòng hoàn toàn
+            phong.NguoiDatCocId = null;
+            phong.TienCoc = null;
+            phong.HanDatCoc = null;
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "🎉 Xác nhận cho thuê phòng thành công! Tin đăng này đã chính thức đóng.";
+            return RedirectToAction("QuanLyPhong");
+        }
+
+        // 🔥 BẢN VÁ: Action Hủy xác nhận, mở lại phòng cho thuê khi lỡ tay bấm nhầm 🔥
+        [HttpPost]
+        [Authorize(Roles = "ChuTro")]
+        public async Task<IActionResult> MoLaiPhong(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null && user.TrangThaiKhoa) return Content("Tài khoản đang bị khóa.");
+
+            var phong = await _context.PhongTro.FirstOrDefaultAsync(p => p.Id == id && p.ChuTroId == user.Id);
+            if (phong == null) return NotFound();
+
+            // Mở lại phòng thành trống
+            phong.DaChoThue = false;
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "🔄 Đã mở lại phòng! Tin đăng sẽ xuất hiện lại trên hệ thống tìm kiếm cho sinh viên.";
+            return RedirectToAction("QuanLyPhong");
+        }
+
         [HttpPost]
         [Authorize(Roles = "ChuTro")]
         public async Task<IActionResult> Delete(int id)
@@ -484,7 +532,7 @@ namespace Do_an_co_so.Controllers
 
             var query = _context.PhongTro
                 .Include(p => p.ChuTro)
-                .Where(p => p.DaChoThue == false)
+                .Where(p => p.DaChoThue == false && (p.NgayHetHan == null || p.NgayHetHan >= DateTime.Now)) // Đồng bộ bộ lọc ẩn tin hết hạn
                 .AsQueryable();
 
             if (minPrice.HasValue) query = query.Where(p => p.Gia >= minPrice.Value);

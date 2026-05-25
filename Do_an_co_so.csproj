@@ -20,9 +20,11 @@
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="10.0.2" />
     <PackageReference Include="QRCoder" Version="1.8.0" />
+    <PackageReference Include="Tesseract" Version="5.2.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="wwwroot\tessdata\" />
     <Folder Include="wwwroot\uploads\chat-images\" />
   </ItemGroup>
 

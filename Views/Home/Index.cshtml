@@ -53,7 +53,12 @@
         {
             foreach (var item in Model)
             {
-                // KIỂM TRA XEM CÓ PHẢI TIN VIP KHÔNG ĐỂ GẮN CLASS CSS
+                // 🔥 THÊM MỚI ĐỢT 1: Chặn hiển thị phòng hết hạn
+                if (item.NgayHetHan != null && item.NgayHetHan < DateTime.Now)
+                {
+                    continue;
+                }
+
                 string vipClass = item.IsVip ? "vip-card" : "";
 
                 <div class="col-md-4 mb-4">

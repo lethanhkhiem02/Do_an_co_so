@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Do_an_co_so.Models;
 using Microsoft.AspNetCore.Hosting;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Tesseract; // THƯ VIỆN AI NHẬN DIỆN CHỮ OCR
 
 namespace Do_an_co_so.Areas.Identity.Pages.Account.Manage
 {
@@ -37,7 +39,6 @@ namespace Do_an_co_so.Areas.Identity.Pages.Account.Manage
 
         public class InputModel
         {
-            // ĐÃ SỬA: Thêm dấu ? vào tất cả các biến để cho phép bỏ trống, tránh bị lỗi ngầm
             [Phone(ErrorMessage = "Số điện thoại không hợp lệ")]
             [Display(Name = "Số điện thoại")]
             public string? PhoneNumber { get; set; }
@@ -54,8 +55,19 @@ namespace Do_an_co_so.Areas.Identity.Pages.Account.Manage
 
             [Display(Name = "Ảnh đại diện")]
             public IFormFile? AvatarFile { get; set; }
-
             public string? AvatarUrl { get; set; }
+
+            // 🔥 THÊM BIẾN CHO PHẦN UPLOAD CCCD
+            [Display(Name = "CCCD Mặt Trước")]
+            public IFormFile? CCCDTruocFile { get; set; }
+
+            [Display(Name = "CCCD Mặt Sau")]
+            public IFormFile? CCCDSauFile { get; set; }
+
+            public string? CCCDTruocUrl { get; set; }
+            public string? CCCDSauUrl { get; set; }
+            public string? TrangThaiXacThuc { get; set; }
+            public string? SoCCCDQuetDuoc { get; set; }
         }
 
         private async Task LoadAsync(AppUser user)
@@ -71,7 +83,12 @@ namespace Do_an_co_so.Areas.Identity.Pages.Account.Manage
                 HoTen = user.HoTen,
                 NgaySinh = user.NgaySinh,
                 DiaChi = user.DiaChi,
-                AvatarUrl = user.Avatar
+                AvatarUrl = user.Avatar,
+                // Load dữ liệu CCCD cũ lên giao diện
+                CCCDTruocUrl = user.CCCDTruoc,
+                CCCDSauUrl = user.CCCDSau,
+                TrangThaiXacThuc = user.TrangThaiXacThuc,
+                SoCCCDQuetDuoc = user.SoCCCDQuetDuoc
             };
         }
 
@@ -89,45 +106,112 @@ namespace Do_an_co_so.Areas.Identity.Pages.Account.Manage
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound($"Unable to load user.");
 
-            // Kiểm tra lỗi, nếu qua được bước này thì ảnh mới được lưu
             if (!ModelState.IsValid)
             {
                 await LoadAsync(user);
                 return Page();
             }
 
-            var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
-            if (Input.PhoneNumber != phoneNumber)
+            // 🔥 BẢN VÁ LỖI NULL HOTEN: Chỉ cập nhật Profile nếu Form gửi lên có chứa Họ Tên
+            if (!string.IsNullOrEmpty(Input.HoTen))
             {
-                await _userManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
-            }
+                user.HoTen = Input.HoTen;
+                user.NgaySinh = Input.NgaySinh;
+                user.DiaChi = Input.DiaChi;
 
-            // Lưu các thông tin cá nhân
-            user.HoTen = Input.HoTen;
-            user.NgaySinh = Input.NgaySinh;
-            user.DiaChi = Input.DiaChi;
+                var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
+                if (Input.PhoneNumber != phoneNumber)
+                {
+                    await _userManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
+                }
+            }
 
             // Xử lý lưu ảnh Avatar
             if (Input.AvatarFile != null)
             {
                 var uploadsFolder = Path.Combine(_env.WebRootPath, "images", "avatars");
-                // Tự động tạo thư mục avatars nếu chưa có
                 if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-
                 var uniqueFileName = Guid.NewGuid().ToString() + "_" + Input.AvatarFile.FileName;
-                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                using (var fileStream = new FileStream(Path.Combine(uploadsFolder, uniqueFileName), FileMode.Create))
                 {
                     await Input.AvatarFile.CopyToAsync(fileStream);
                 }
-                user.Avatar = uniqueFileName; // Lưu tên ảnh vào Database
+                user.Avatar = uniqueFileName;
+            }
+
+            // 🔥 XỬ LÝ UPLOAD CCCD VÀ OCR (TRÍ TUỆ NHÂN TẠO)
+            bool isUploadedCCCD = false;
+            string cccdPath = "";
+
+            if (Input.CCCDTruocFile != null)
+            {
+                var cccdFolder = Path.Combine(_env.WebRootPath, "images", "cccd");
+                if (!Directory.Exists(cccdFolder)) Directory.CreateDirectory(cccdFolder);
+
+                var uniqueFileName = Guid.NewGuid().ToString() + "_Truoc_" + Input.CCCDTruocFile.FileName;
+                cccdPath = Path.Combine(cccdFolder, uniqueFileName);
+
+                using (var fileStream = new FileStream(cccdPath, FileMode.Create))
+                {
+                    await Input.CCCDTruocFile.CopyToAsync(fileStream);
+                }
+                user.CCCDTruoc = uniqueFileName;
+                isUploadedCCCD = true;
+            }
+
+            if (Input.CCCDSauFile != null)
+            {
+                var cccdFolder = Path.Combine(_env.WebRootPath, "images", "cccd");
+                if (!Directory.Exists(cccdFolder)) Directory.CreateDirectory(cccdFolder);
+
+                var uniqueFileName = Guid.NewGuid().ToString() + "_Sau_" + Input.CCCDSauFile.FileName;
+                using (var fileStream = new FileStream(Path.Combine(cccdFolder, uniqueFileName), FileMode.Create))
+                {
+                    await Input.CCCDSauFile.CopyToAsync(fileStream);
+                }
+                user.CCCDSau = uniqueFileName;
+                isUploadedCCCD = true;
+            }
+
+            // Nếu user có upload CCCD, gọi AI quét và đổi trạng thái
+            if (isUploadedCCCD)
+            {
+                user.TrangThaiXacThuc = "Chờ duyệt"; // Đổi trạng thái
+
+                // GỌI ENGINE TESSERACT OCR ĐỂ ĐỌC CHỮ TRÊN ẢNH MẶT TRƯỚC
+                if (!string.IsNullOrEmpty(cccdPath))
+                {
+                    try
+                    {
+                        string tessDataPath = Path.Combine(_env.WebRootPath, "tessdata");
+                        using (var engine = new TesseractEngine(tessDataPath, "eng", EngineMode.Default))
+                        {
+                            using (var img = Pix.LoadFromFile(cccdPath))
+                            {
+                                using (var page = engine.Process(img))
+                                {
+                                    var text = page.GetText();
+                                    // Tìm chuỗi 12 số
+                                    var match = Regex.Match(text, @"\b\d{12}\b");
+                                    if (match.Success)
+                                    {
+                                        user.SoCCCDQuetDuoc = match.Value;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Lỗi OCR: " + ex.Message);
+                    }
+                }
             }
 
             await _userManager.UpdateAsync(user);
             await _signInManager.RefreshSignInAsync(user);
 
-            StatusMessage = "Hồ sơ của bạn đã được cập nhật thành công!";
+            StatusMessage = "Thao tác thành công!";
             return RedirectToPage();
         }
     }

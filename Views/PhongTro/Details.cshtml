@@ -75,24 +75,30 @@
                 </div>
                 <p><strong>📍 Địa chỉ:</strong> @Model.DiaChi</p>
 
-                <p>
-                    <strong>👤 Người đăng:</strong>
-                    <a asp-controller="User" asp-action="TrangCaNhan" asp-route-id="@Model.ChuTroId" class="text-decoration-none fw-bold text-primary fs-5">
-                        @(Model.ChuTro?.HoTen ?? "Đang cập nhật")
-                    </a>
-                </p>
+                <div class="mb-3 p-3 bg-light rounded border">
+                    <p class="mb-1 text-muted small text-uppercase fw-bold">Thông tin chủ trọ</p>
+                    <div class="d-flex align-items-center gap-2">
+                        <a asp-controller="User" asp-action="TrangCaNhan" asp-route-id="@Model.ChuTroId" class="text-decoration-none fw-bold text-dark fs-5">
+                            @(Model.ChuTro?.HoTen ?? "Đang cập nhật")
+                        </a>
 
-                <p><strong>📧 Liên hệ:</strong> @Model.ChuTro?.Email</p>
+                        @if (Model.ChuTro?.TrangThaiXacThuc == "Đã duyệt")
+                        {
+                            <span class="badge bg-warning text-dark px-2 py-1 shadow-sm d-flex align-items-center gap-1" title="Chủ trọ này đã được Admin xác minh danh tính bằng thẻ CCCD chính chủ.">
+                                <i class="bi bi-shield-fill-check fs-6 text-success"></i>
+                                <span class="fw-bold" style="font-size: 0.75rem;">Đã Xác Thực CCCD</span>
+                            </span>
+                        }
+                    </div>
+                    <p class="mb-0 mt-1"><strong>📧 Liên hệ:</strong> @Model.ChuTro?.Email</p>
+                </div>
 
-                <h5 class="mt-4 fw-bold">Mô tả chi tiết:</h5>
+                <h5 class="mt-3 fw-bold">Mô tả chi tiết:</h5>
                 <p style="white-space: pre-line;" class="text-muted">@Model.MoTa</p>
 
                 <div class="mt-4 mb-3 p-3 border rounded bg-light">
                     @{
-                        // Xác định ai đang xem trang này
                         var currentUserId = User.Identity.IsAuthenticated ? UserManager.GetUserId(User) : null;
-
-                        // Kiểm tra trạng thái cọc
                         bool isMyDeposit = !string.IsNullOrEmpty(Model.NguoiDatCocId) && Model.NguoiDatCocId == currentUserId;
                         bool isDepositedByOther = !string.IsNullOrEmpty(Model.NguoiDatCocId) && Model.NguoiDatCocId != currentUserId;
                     }
@@ -100,7 +106,7 @@
                     @if (Model.DaChoThue)
                     {
                         <div class="alert alert-danger fw-bold text-center mb-0 shadow-sm">
-                            ❌ PHÒNG NÀY ĐÃ ĐƯỢC CHO THUÊ
+                            ❌ PHÒNG ĐÃ CÓ NGƯỜI THUÊ / CỌC (KHÓA THANH TOÁN)
                         </div>
                     }
                     else if (isDepositedByOther)
@@ -139,7 +145,7 @@
                             <div class="d-flex flex-column gap-2">
                                 <form asp-action="DatCocPhong" asp-controller="PhongTro" asp-route-id="@Model.Id" method="post">
                                     <button type="submit" class="btn btn-warning btn-lg fw-bold w-100 shadow"
-                                            onclick="return confirm('Xác nhận ĐẶT CỌC 500,000 VNĐ từ ví hệ thống để giữ phòng này trong 7 ngày?');">
+                                            onclick="return confirm('Xác nhận ĐẶT CỌC 500,000 VNĐ từ ví hệ thống để giữ phòng này?');">
                                         ⏳ ĐẶT CỌC GIỮ CHỖ (500.000 VNĐ)
                                     </button>
                                 </form>
@@ -333,7 +339,6 @@
         const currentUserId = '@(User.Identity.IsAuthenticated? UserManager.GetUserId(User) : "")';
         let chatConnection = null;
 
-        // Mở khung Chat
         function openMiniChat() {
             document.getElementById('miniChatBox').classList.remove('d-none');
             loadChatHistory();
@@ -342,31 +347,27 @@
             }
         }
 
-        // Đóng khung Chat
         function closeMiniChat() {
             document.getElementById('miniChatBox').classList.add('d-none');
         }
 
-        // Tải lịch sử tin nhắn cũ
         function loadChatHistory() {
             fetch(`/Chat/GetChatHistory?receiverId=${receiverId}`)
                 .then(response => response.json())
                 .then(messages => {
                     const chatBody = document.getElementById('miniChatBody');
-                    chatBody.innerHTML = ''; // Xóa sạch để tải mới
+                    chatBody.innerHTML = '';
                     messages.forEach(msg => {
                         appendMessage(msg.senderId === currentUserId, msg.content, msg.time);
                     });
-                    chatBody.scrollTop = chatBody.scrollHeight; // Cuộn xuống cuối
+                    chatBody.scrollTop = chatBody.scrollHeight;
                 })
                 .catch(error => console.error("Lỗi khi tải lịch sử chat:", error));
         }
 
-        // Kết nối SignalR để chat ngay lập tức
         function startSignalR() {
             try {
                 chatConnection = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
-                // Lắng nghe tin nhắn bay tới
                 chatConnection.on("ReceivePrivateMessage", function (senderId, message, time) {
                     if (senderId === receiverId || senderId === currentUserId) {
                         const isMine = senderId === currentUserId;
@@ -379,7 +380,6 @@
             }
         }
 
-        // Vẽ bong bóng tin nhắn lên màn hình
         function appendMessage(isMine, content, time) {
             const chatBody = document.getElementById('miniChatBody');
             const alignClass = isMine ? 'text-end' : 'text-start';
@@ -393,25 +393,22 @@
                 </div>
             `;
             chatBody.insertAdjacentHTML('beforeend', msgHtml);
-            chatBody.scrollTop = chatBody.scrollHeight; // Cuộn xuống cuối
+            chatBody.scrollTop = chatBody.scrollHeight;
         }
 
-        // Gửi tin nhắn đi
         function sendMiniChatMessage() {
             const input = document.getElementById('miniChatMessage');
             const message = input.value.trim();
-            if (message === '') return; // Không cho gửi tin nhắn trống
+            if (message === '') return;
 
-            // CÒI BÁO ĐỘNG: Kiểm tra xem kết nối đã thông chưa
             if (!chatConnection || chatConnection.state !== signalR.HubConnectionState.Connected) {
                 alert("⏳ Máy chủ Chat đang khởi động kết nối, vui lòng chờ 1 giây rồi bấm Gửi lại nhé!");
                 return;
             }
 
-            // Bắn tin nhắn qua SignalR tới ChatHub
             chatConnection.invoke("SendPrivateMessage", currentUserId, receiverId, message)
                 .then(() => {
-                    input.value = ''; // Xóa trắng ô nhập chữ sau khi gửi thành công
+                    input.value = '';
                 })
                 .catch(err => {
                     console.error(err.toString());
@@ -419,7 +416,6 @@
                 });
         }
 
-        // Bấm Enter để gửi cho lẹ
         function handleMiniChatEnter(e) {
             if (e.key === 'Enter') {
                 sendMiniChatMessage();

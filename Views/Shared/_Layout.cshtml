@@ -114,7 +114,6 @@
                     </ul>
 
                     <div class="d-flex align-items-center">
-
                         <div class="dropdown me-3">
                             <button class="btn btn-light dropdown-toggle rounded-pill shadow-sm fw-bold border" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                 @(currentCulture == "en-US" ? "🇬🇧 English" : "🇻🇳 Tiếng Việt")
@@ -147,6 +146,79 @@
         </main>
     </div>
 
+    <button id="btnAiChat" class="btn btn-warning rounded-circle shadow-lg" style="position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; z-index: 9999;" onclick="toggleAiChat()">
+        <i class="bi bi-robot fs-3 text-dark"></i>
+    </button>
+
+    <div id="aiChatBox" class="card shadow-lg d-none" style="position: fixed; bottom: 100px; right: 30px; width: 360px; z-index: 9999; border-radius: 12px; border: 2px solid #ffc107; overflow: hidden;">
+        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center p-3">
+            <h6 class="mb-0 fw-bold"><i class="bi bi-robot me-2"></i>Trợ Lý Ảo RoomFinder</h6>
+            <button type="button" class="btn-close" onclick="toggleAiChat()"></button>
+        </div>
+
+        <div id="aiChatBody" class="card-body p-3" style="height: 350px; overflow-y: auto; background-color: #f8f9fa;">
+            <div class="mb-3 text-start">
+                <div class="d-inline-block p-2 rounded-3 shadow-sm bg-white text-dark border" style="max-width: 85%;">
+                    👋 Chào bạn! Mình là Trợ lý AI hỗ trợ tìm trọ cho sinh viên. Bạn cần giúp gì ạ?
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer bg-white p-2 border-top">
+            <div class="input-group">
+                <input type="text" id="aiInput" class="form-control border-warning shadow-none" placeholder="Nhập câu hỏi..." onkeypress="if(event.key === 'Enter') sendAiMessage()">
+                <button class="btn btn-warning fw-bold" type="button" onclick="sendAiMessage()">Gửi</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleAiChat() {
+            document.getElementById('aiChatBox').classList.toggle('d-none');
+        }
+
+        function sendAiMessage() {
+            const input = document.getElementById('aiInput');
+            const message = input.value.trim();
+            if (message === '') return;
+
+            // In tin nhắn của người dùng
+            appendAiMsg(message, true);
+            input.value = '';
+
+            // Báo hiệu AI đang gõ
+            const typingId = "typing_" + Date.now();
+            appendAiMsg("<i>Đang suy nghĩ...</i>", false, typingId);
+
+            // Gọi API C#
+            fetch(`/Home/ChatWithAI?message=${encodeURIComponent(message)}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById(typingId).remove(); // Xóa chữ Đang suy nghĩ
+                    appendAiMsg(data.reply, false); // In câu trả lời
+                })
+                .catch(error => {
+                    document.getElementById(typingId).remove();
+                    appendAiMsg("Xin lỗi, hệ thống AI đang bảo trì cục bộ.", false);
+                });
+        }
+
+        function appendAiMsg(text, isUser, id = "") {
+            const chatBody = document.getElementById('aiChatBody');
+            const alignClass = isUser ? 'text-end' : 'text-start';
+            const bgClass = isUser ? 'bg-warning text-dark fw-bold' : 'bg-white text-dark border';
+
+            const msgHtml = `
+                <div class="mb-3 ${alignClass}" ${id ? `id="${id}"` : ''}>
+                    <div class="d-inline-block p-2 rounded-3 shadow-sm ${bgClass}" style="max-width: 85%; text-align: left; word-wrap: break-word;">
+                        ${text}
+                    </div>
+                </div>
+            `;
+            chatBody.insertAdjacentHTML('beforeend', msgHtml);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+    </script>
     <footer class="footer-main">
         <div class="container">
             <div class="row g-4 text-start">

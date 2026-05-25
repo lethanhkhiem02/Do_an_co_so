@@ -33,6 +33,12 @@ namespace Do_an_co_so.Migrations
                     b.Property<string>("Avatar")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("CCCDSau")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CCCDTruoc")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
@@ -80,11 +86,18 @@ namespace Do_an_co_so.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("SoCCCDQuetDuoc")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<decimal>("SoDu")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("TrangThaiKhoa")
                         .HasColumnType("bit");
+
+                    b.Property<string>("TrangThaiXacThuc")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
@@ -304,8 +317,14 @@ namespace Do_an_co_so.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("NgayHetHan")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("NguoiDatCocId")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("SoNgayGiuPhong")
+                        .HasColumnType("int");
 
                     b.Property<decimal?>("TienCoc")
                         .HasColumnType("decimal(18,2)");
