@@ -45,7 +45,7 @@
         .footer-main {
             background-color: #1a1d20;
             color: #a0aab2;
-            padding: 4rem 0 2rem;
+            padding: 2rem 0 1rem;
             margin-top: auto;
         }
 
@@ -60,6 +60,52 @@
             .footer-link:hover {
                 color: #0d6efd;
                 padding-left: 5px;
+            }
+
+        /* 🔥 Style cho icon chat */
+        #btnAiChat {
+            cursor: grab;
+            transition: transform 0.2s;
+            animation: pulse 2s infinite;
+        }
+
+            #btnAiChat:active {
+                cursor: grabbing;
+            }
+
+            #btnAiChat.dragging {
+                animation: none;
+                transform: scale(1.1);
+                transition: none;
+            }
+
+        @@keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 15px rgba(255, 193, 7, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+            }
+        }
+
+        /* Chatbox style */
+        #aiChatBox {
+            transition: none !important;
+            will-change: top, left;
+        }
+
+        #aiChatHeader {
+            cursor: grab;
+            user-select: none;
+        }
+
+            #aiChatHeader:active {
+                cursor: grabbing;
             }
     </style>
 </head>
@@ -82,8 +128,25 @@
 
                         @if (User.Identity.IsAuthenticated)
                         {
-                            <li class="nav-item"><a class="nav-link" asp-controller="Chat" asp-action="Index">@Localizer["Messages"]</a></li>
-                            <li class="nav-item"><a class="nav-link text-warning" asp-controller="Chat" asp-action="GlobalChat">@Localizer["GlobalChat"]</a></li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Chat" asp-action="Index" target="_blank" rel="noopener noreferrer">
+                                    @Localizer["Messages"] <i class="bi bi-box-arrow-up-right small opacity-50"></i>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-warning" asp-controller="Chat" asp-action="GlobalChat" target="_blank" rel="noopener noreferrer">
+                                    @Localizer["GlobalChat"] <i class="bi bi-box-arrow-up-right small opacity-50"></i>
+                                </a>
+                            </li>
+
+                            @if (User.IsInRole("SinhVien"))
+                            {
+                                <li class="nav-item ms-lg-2">
+                                    <a class="nav-link fw-bold text-success" asp-controller="PhongTro" asp-action="PhongDaThue">
+                                        <i class="bi bi-clock-history"></i> Lịch sử thuê
+                                    </a>
+                                </li>
+                            }
 
                             @if (User.IsInRole("ChuTro"))
                             {
@@ -106,7 +169,7 @@
                             {
                                 <li class="nav-item">
                                     <a class="nav-link text-danger fw-bold" asp-area="" asp-controller="Admin" asp-action="Index">
-                                        ⚙️ @Localizer["AdminManagement"]
+                                        @Localizer["AdminManagement"]
                                     </a>
                                 </li>
                             }
@@ -146,20 +209,26 @@
         </main>
     </div>
 
-    <button id="btnAiChat" class="btn btn-warning rounded-circle shadow-lg" style="position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; z-index: 9999;" onclick="toggleAiChat()">
+    <!-- 🔥 Nút Chat Icon Vàng -->
+    <button id="btnAiChat" class="btn btn-warning rounded-circle shadow-lg"
+            style="position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; z-index: 9999;"
+            title="Mở trợ lý ảo">
         <i class="bi bi-robot fs-3 text-dark"></i>
     </button>
 
-    <div id="aiChatBox" class="card shadow-lg d-none" style="position: fixed; bottom: 100px; right: 30px; width: 360px; z-index: 9999; border-radius: 12px; border: 2px solid #ffc107; overflow: hidden;">
-        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center p-3">
-            <h6 class="mb-0 fw-bold"><i class="bi bi-robot me-2"></i>Trợ Lý Ảo RoomFinder</h6>
-            <button type="button" class="btn-close" onclick="toggleAiChat()"></button>
+    <!-- 🔥 Khung Chatbox -->
+    <div id="aiChatBox" class="card shadow-lg d-none"
+         style="position: fixed; bottom: 100px; right: 30px; width: 360px; z-index: 9999; border-radius: 12px; border: 2px solid #ffc107; overflow: hidden; background-color: white;">
+
+        <div id="aiChatHeader" class="card-header bg-warning text-dark d-flex justify-content-between align-items-center p-3">
+            <h6 class="mb-0 fw-bold"><i class="bi bi-robot me-2"></i>Trợ Lý RoomFinder</h6>
+            <button type="button" class="btn-close btn-close-dark" onclick="toggleAiChat()" aria-label="Close"></button>
         </div>
 
         <div id="aiChatBody" class="card-body p-3" style="height: 350px; overflow-y: auto; background-color: #f8f9fa;">
             <div class="mb-3 text-start">
                 <div class="d-inline-block p-2 rounded-3 shadow-sm bg-white text-dark border" style="max-width: 85%;">
-                    👋 Chào bạn! Mình là Trợ lý AI hỗ trợ tìm trọ cho sinh viên. Bạn cần giúp gì ạ?
+                    👋 Chào bạn! Mình là Trợ lý tự động hỗ trợ tìm trọ cho sinh viên. Bạn cần giúp gì ạ?
                 </div>
             </div>
         </div>
@@ -173,36 +242,38 @@
     </div>
 
     <script>
+        // Toggle chatbox
         function toggleAiChat() {
             document.getElementById('aiChatBox').classList.toggle('d-none');
         }
 
+        // Gửi tin nhắn AI
         function sendAiMessage() {
             const input = document.getElementById('aiInput');
             const message = input.value.trim();
             if (message === '') return;
 
-            // In tin nhắn của người dùng
             appendAiMsg(message, true);
             input.value = '';
 
-            // Báo hiệu AI đang gõ
             const typingId = "typing_" + Date.now();
-            appendAiMsg("<i>Đang suy nghĩ...</i>", false, typingId);
+            appendAiMsg("<i>Đang soạn tin...</i>", false, typingId);
 
-            // Gọi API C#
             fetch(`/Home/ChatWithAI?message=${encodeURIComponent(message)}`)
                 .then(response => response.json())
                 .then(data => {
-                    document.getElementById(typingId).remove(); // Xóa chữ Đang suy nghĩ
-                    appendAiMsg(data.reply, false); // In câu trả lời
+                    const typingEl = document.getElementById(typingId);
+                    if (typingEl) typingEl.remove();
+                    appendAiMsg(data.reply, false);
                 })
                 .catch(error => {
-                    document.getElementById(typingId).remove();
-                    appendAiMsg("Xin lỗi, hệ thống AI đang bảo trì cục bộ.", false);
+                    const typingEl = document.getElementById(typingId);
+                    if (typingEl) typingEl.remove();
+                    appendAiMsg("⚠️ Hệ thống đang bận, vui lòng thử lại sau.", false);
                 });
         }
 
+        // Thêm tin nhắn vào khung chat
         function appendAiMsg(text, isUser, id = "") {
             const chatBody = document.getElementById('aiChatBody');
             const alignClass = isUser ? 'text-end' : 'text-start';
@@ -210,7 +281,8 @@
 
             const msgHtml = `
                 <div class="mb-3 ${alignClass}" ${id ? `id="${id}"` : ''}>
-                    <div class="d-inline-block p-2 rounded-3 shadow-sm ${bgClass}" style="max-width: 85%; text-align: left; word-wrap: break-word;">
+                    <div class="d-inline-block p-2 rounded-3 shadow-sm ${bgClass}"
+                         style="max-width: 85%; text-align: left; word-wrap: break-word; white-space: pre-wrap;">
                         ${text}
                     </div>
                 </div>
@@ -218,7 +290,111 @@
             chatBody.insertAdjacentHTML('beforeend', msgHtml);
             chatBody.scrollTop = chatBody.scrollHeight;
         }
+
+        // 🔥 KÉO THẢ ICON VÀNG + PHÂN BIỆT CLICK/DRAG
+        const iconBtn = document.getElementById('btnAiChat');
+        let isDragging = false;
+        let hasMoved = false;
+        let startX, startY, initialLeft, initialTop;
+
+        iconBtn.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+            hasMoved = false;
+            startX = e.clientX;
+            startY = e.clientY;
+
+            const rect = iconBtn.getBoundingClientRect();
+            initialLeft = rect.left;
+            initialTop = rect.top;
+
+            iconBtn.style.bottom = 'auto';
+            iconBtn.style.right = 'auto';
+            iconBtn.style.left = initialLeft + 'px';
+            iconBtn.style.top = initialTop + 'px';
+            iconBtn.classList.add('dragging');
+
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', onDrop);
+        });
+
+        function onDrag(e) {
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+                isDragging = true;
+                hasMoved = true;
+            }
+            if (isDragging) {
+                let newLeft = initialLeft + (e.clientX - startX);
+                let newTop = initialTop + (e.clientY - startY);
+
+                const w = window.innerWidth;
+                const h = window.innerHeight;
+                const bw = iconBtn.offsetWidth;
+                const bh = iconBtn.offsetHeight;
+
+                newLeft = Math.max(0, Math.min(w - bw, newLeft));
+                newTop = Math.max(0, Math.min(h - bh, newTop));
+
+                iconBtn.style.left = newLeft + 'px';
+                iconBtn.style.top = newTop + 'px';
+            }
+        }
+
+        function onDrop() {
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('mouseup', onDrop);
+
+            iconBtn.classList.remove('dragging');
+            isDragging = false;
+
+            if (!hasMoved) {
+                toggleAiChat();
+            }
+        }
+
+        // 🔥 KÉO THẢ KHUNG CHAT
+        const chatBox = document.getElementById("aiChatBox");
+        const dragHandle = document.getElementById("aiChatHeader");
+        let chatDragging = false, chatStartX, chatStartY, chatOffsetX = 0, chatOffsetY = 0;
+
+        if (dragHandle) {
+            dragHandle.addEventListener("mousedown", (e) => {
+                if (e.target.closest('.btn-close')) return;
+                chatDragging = true;
+                const rect = chatBox.getBoundingClientRect();
+                chatOffsetX = rect.left;
+                chatOffsetY = rect.top;
+                chatStartX = e.clientX;
+                chatStartY = e.clientY;
+                chatBox.style.bottom = 'auto';
+                chatBox.style.right = 'auto';
+                chatBox.style.top = chatOffsetY + 'px';
+                chatBox.style.left = chatOffsetX + 'px';
+                chatBox.style.transition = 'none';
+                document.addEventListener('mousemove', chatDrag);
+                document.addEventListener('mouseup', chatDrop);
+                e.preventDefault();
+            });
+        }
+
+        function chatDrag(e) {
+            if (!chatDragging) return;
+            let newLeft = chatOffsetX + (e.clientX - chatStartX);
+            let newTop = chatOffsetY + (e.clientY - chatStartY);
+            newLeft = Math.max(0, Math.min(window.innerWidth - chatBox.offsetWidth, newLeft));
+            newTop = Math.max(0, Math.min(window.innerHeight - chatBox.offsetHeight, newTop));
+            chatBox.style.left = newLeft + 'px';
+            chatBox.style.top = newTop + 'px';
+        }
+
+        function chatDrop() {
+            chatDragging = false;
+            document.removeEventListener('mousemove', chatDrag);
+            document.removeEventListener('mouseup', chatDrop);
+        }
     </script>
+
     <footer class="footer-main">
         <div class="container">
             <div class="row g-4 text-start">

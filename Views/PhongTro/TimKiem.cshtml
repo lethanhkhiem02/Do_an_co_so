@@ -15,7 +15,7 @@
         radiusMeters = r * 1000;
     }
 
-    double tamLat = 10.8018; // Mặc định HUTECH
+    double tamLat = 10.8018;
     double tamLng = 106.7115;
     string tenTruongTam = "Khu vực tìm kiếm";
 
@@ -116,58 +116,75 @@
     <div class="card shadow-sm search-bar-custom rounded-4 mb-4">
         <div class="card-body p-4 rounded-4">
             <h4 class="mb-4 fw-bold text-primary"><i class="bi bi-search me-2"></i>Tìm trọ thông minh theo trường</h4>
-            <form asp-action="TimKiem" method="get" class="row g-3">
-                <div class="col-md-2">
-                    <label class="form-label fw-bold text-secondary">Hệ đào tạo</label>
-                    <select id="loaiTruongFilter" class="form-select rounded-pill">
-                        <option value="all">Tất cả hệ</option>
-                        <option value="Đại học">Đại học</option>
-                        <option value="Cao đẳng">Cao đẳng</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-bold text-secondary">Trường của bạn</label>
-                    <select id="truongSelect" name="truongId" class="form-select rounded-pill">
-                        <option value="" data-type="all">-- Chọn trường --</option>
-                        @if (danhSachTruong != null)
-                        {
-                            foreach (var group in danhSachTruong.GroupBy(t => t.Quan))
+            <form asp-action="TimKiem" method="get">
+
+                <div class="row g-2 mb-3">
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold text-secondary">Tỉnh/Thành</label>
+                        <select id="cityFilter" class="form-select rounded-pill">
+                            <option value="all">Tất cả</option>
+                            <option value="Hồ Chí Minh" selected>Hồ Chí Minh</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold text-secondary">Quận/Huyện</label>
+                        <select id="districtFilter" class="form-select rounded-pill">
+                            <option value="all">-- Tất cả Quận --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold text-secondary">Hệ đào tạo</label>
+                        <select id="loaiTruongFilter" class="form-select rounded-pill">
+                            <option value="all">Tất cả hệ</option>
+                            <option value="Đại học">Đại học</option>
+                            <option value="Cao đẳng">Cao đẳng</option>
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label fw-bold text-secondary">Trường của bạn</label>
+                        <select id="truongSelect" name="truongId" class="form-select rounded-pill">
+                            <option value="" data-type="all" data-quan="all">-- Chọn trường (Vui lòng chọn lọc Quận trước nếu khó tìm) --</option>
+                            @if (danhSachTruong != null)
                             {
-                                <optgroup label="Khu vực @group.Key">
-                                    @foreach (var truong in group)
-                                    {
-                                        <option value="@truong.Id" data-type="@truong.LoaiTruong" selected="@(currentTruongId == truong.Id)">@truong.TenTruong</option>
-                                    }
-                                </optgroup>
+                                foreach (var group in danhSachTruong.GroupBy(t => t.Quan))
+                                {
+                                    <optgroup label="Khu vực @group.Key" data-quan="@group.Key">
+                                        @foreach (var truong in group)
+                                        {
+                                            <option value="@truong.Id" data-type="@truong.LoaiTruong" data-quan="@truong.Quan" selected="@(currentTruongId == truong.Id)">@truong.TenTruong</option>
+                                        }
+                                    </optgroup>
+                                }
                             }
-                        }
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-bold text-secondary">Bán kính</label>
-                    <select name="radius" class="form-select rounded-pill">
-                        <option value="">-- Khoảng cách --</option>
-                        <option value="1" selected="@(ViewBag.Radius?.ToString() == "1")">1 km</option>
-                        <option value="2" selected="@(ViewBag.Radius?.ToString() == "2")">2 km</option>
-                        <option value="5" selected="@(ViewBag.Radius?.ToString() == "5")">5 km</option>
-                        <option value="10" selected="@(ViewBag.Radius?.ToString() == "10")">10 km</option>
-                        <option value="15" selected="@(ViewBag.Radius?.ToString() == "15")">15 km</option>
-                        <option value="20" selected="@(ViewBag.Radius?.ToString() == "20")">20 km</option>
-                        <option value="30" selected="@(ViewBag.Radius?.ToString() == "30")">30 km</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-bold text-secondary">Khoảng giá (VNĐ)</label>
-                    <div class="input-group">
-                        <input type="number" name="minPrice" value="@ViewBag.MinPrice" class="form-control" placeholder="Từ..." step="500000" min="0" style="border-top-left-radius: 50rem; border-bottom-left-radius: 50rem;">
-                        <span class="input-group-text bg-light border-start-0 border-end-0">-</span>
-                        <input type="number" name="maxPrice" value="@ViewBag.MaxPrice" class="form-control" placeholder="Đến..." step="500000" min="0" style="border-top-right-radius: 50rem; border-bottom-right-radius: 50rem;">
+                        </select>
                     </div>
                 </div>
-                <div class="col-md-2 d-flex align-items-end gap-2">
-                    <button type="submit" class="btn btn-primary rounded-pill flex-grow-1 fw-bold shadow-sm py-2">Lọc</button>
-                    <a href="/PhongTro/TimKiem" class="btn btn-outline-secondary rounded-pill fw-bold shadow-sm py-2 px-3" title="Làm mới bộ lọc">🔄</a>
+
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold text-secondary">Bán kính tìm kiếm</label>
+                        <select name="radius" class="form-select rounded-pill">
+                            <option value="">-- Khoảng cách --</option>
+                            <option value="1" selected="@(ViewBag.Radius?.ToString() == "1")">1 km (Đi bộ/Xe đạp)</option>
+                            <option value="2" selected="@(ViewBag.Radius?.ToString() == "2")">2 km</option>
+                            <option value="5" selected="@(ViewBag.Radius?.ToString() == "5")">5 km (Xe máy)</option>
+                            <option value="10" selected="@(ViewBag.Radius?.ToString() == "10")">10 km</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-secondary">Khoảng giá (VNĐ)</label>
+                        <div class="input-group">
+                            <input type="number" name="minPrice" value="@ViewBag.MinPrice" class="form-control" placeholder="Từ..." step="500000" min="0" style="border-top-left-radius: 50rem; border-bottom-left-radius: 50rem;">
+                            <span class="input-group-text bg-light border-start-0 border-end-0">-</span>
+                            <input type="number" name="maxPrice" value="@ViewBag.MaxPrice" class="form-control" placeholder="Đến..." step="500000" min="0" style="border-top-right-radius: 50rem; border-bottom-right-radius: 50rem;">
+                        </div>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary rounded-pill flex-grow-1 fw-bold shadow-sm py-2">🔍 Bắt đầu lọc</button>
+                        <a href="/PhongTro/TimKiem" class="btn btn-outline-secondary rounded-pill fw-bold shadow-sm py-2 px-3" title="Làm mới bộ lọc">🔄</a>
+                    </div>
                 </div>
+
             </form>
         </div>
     </div>
@@ -274,23 +291,65 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            // --- XỬ LÝ JS BỘ LỌC LIÊN HOÀN (Đã xóa bộ lọc cứng, lấy full 22 Quận Huyện) ---
+            var cityFilter = document.getElementById("cityFilter");
+            var districtFilter = document.getElementById("districtFilter");
             var loaiTruongFilter = document.getElementById("loaiTruongFilter");
             var truongSelect = document.getElementById("truongSelect");
+
             var allOptions = Array.from(truongSelect.querySelectorAll("option[data-type]"));
             var optGroups = truongSelect.querySelectorAll("optgroup");
 
-            loaiTruongFilter.addEventListener("change", function () {
-                var selectedType = this.value;
-                allOptions.forEach(function (opt) {
-                    if (selectedType === "all" || opt.getAttribute("data-type") === selectedType || opt.value === "") { opt.style.display = ""; }
-                    else { opt.style.display = "none"; }
+            // Lấy TẤT CẢ danh sách Quận/Huyện từ API
+            fetch('https://provinces.open-api.vn/api/p/79?depth=2')
+                .then(res => res.json())
+                .then(hcmData => {
+                    hcmData.districts.forEach(d => {
+                        let displayName = d.name;
+                        // Ghi chú thêm cho sinh viên dễ tìm
+                        if(d.name === "Thành phố Thủ Đức") displayName = "TP Thủ Đức (Q.2, 9 cũ)";
+                        districtFilter.add(new Option(displayName, d.name));
+                    });
                 });
+
+            // Hàm lọc chung
+            function applyFilters() {
+                var selectedDist = districtFilter.value; // Trả về "Quận Bình Thạnh", "Thành phố Thủ Đức"...
+                var selectedType = loaiTruongFilter.value;
+
+                allOptions.forEach(function (opt) {
+                    var matchType = (selectedType === "all" || opt.getAttribute("data-type") === selectedType);
+                    var truongQuan = opt.getAttribute("data-quan"); // Trả về "Bình Thạnh", "Thủ Đức" từ code C#
+
+                    var matchDist = false;
+                    if (selectedDist === "all") {
+                        matchDist = true;
+                    } else if (selectedDist.includes(truongQuan)) {
+                        // So sánh thông minh: "Quận Bình Thạnh" bao gồm chữ "Bình Thạnh" -> Khớp!
+                        matchDist = true;
+                    }
+
+                    if (opt.value === "" || (matchType && matchDist)) {
+                        opt.style.display = "";
+                    } else {
+                        opt.style.display = "none";
+                    }
+                });
+
+                // Ẩn hiện các OptGroup (Khu vực)
                 optGroups.forEach(function (group) {
+                    var truongQuanGroup = group.getAttribute("data-quan");
+                    var matchDistGroup = (selectedDist === "all" || selectedDist.includes(truongQuanGroup));
+
                     var visibleOptions = Array.from(group.querySelectorAll("option")).filter(o => o.style.display !== "none");
-                    group.style.display = visibleOptions.length === 0 ? "none" : "";
+                    group.style.display = (visibleOptions.length === 0 || !matchDistGroup) ? "none" : "";
                 });
                 truongSelect.value = "";
-            });
+            }
+
+            districtFilter.addEventListener("change", applyFilters);
+            loaiTruongFilter.addEventListener("change", applyFilters);
+            // -------------------------------------------------------------
 
             var tamLat = @tamLat.ToString(System.Globalization.CultureInfo.InvariantCulture);
             var tamLng = @tamLng.ToString(System.Globalization.CultureInfo.InvariantCulture);
@@ -302,13 +361,11 @@
             var map = L.map('bigMap').setView([tamLat, tamLng], 14);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-            // Xử lý bản đồ bị xám chuyên sâu bằng ResizeObserver
             var resizeObserver = new ResizeObserver(function() {
                 map.invalidateSize();
             });
             resizeObserver.observe(document.getElementById('bigMap'));
 
-            // Double check khi bấm qua Tab Bản đồ
             document.getElementById('map-tab').addEventListener('click', function () {
                 setTimeout(function() {
                     map.invalidateSize();
@@ -321,13 +378,9 @@
             });
 
             var circleBounds = null;
-
             if (radiusMeters > 0) {
                 var circle = L.circle([tamLat, tamLng], {
-                    color: '#0d6efd',
-                    fillColor: '#0d6efd',
-                    fillOpacity: 0.1,
-                    radius: radiusMeters
+                    color: '#0d6efd', fillColor: '#0d6efd', fillOpacity: 0.1, radius: radiusMeters
                 }).addTo(map);
                 circleBounds = circle.getBounds();
                 map.fitBounds(circleBounds);
@@ -355,7 +408,6 @@
                         });
 
                         var marker = L.marker([p.lat, p.lng], { icon: customIcon }).addTo(map);
-
                         var imgTag = p.anh ? `<img src="/images/${p.anh}" style="width:100%; height:120px; object-fit:cover; border-radius:8px" class="mb-2">` : '';
 
                         var saoHtml = '';
@@ -370,10 +422,9 @@
                                 ${imgTag}
                                 <h6 class="text-primary fw-bold mb-1">${p.gia} / tháng</h6>
                                 <div class="text-warning mb-2" style="font-size: 1.1rem">${saoHtml} <span class="text-muted" style="font-size: 0.8rem">(${p.sao.toFixed(1)})</span></div>
-                                <span class="badge bg-danger rounded-pill mb-3">📍 Cách trường: ${p.khoangCach} km</span>
+                                <span class="badge bg-danger rounded-pill mb-3">📍 Cách: ${p.khoangCach} km</span>
                                 <a href="/PhongTro/Details/${p.id}" class="btn btn-sm btn-primary w-100 rounded-pill">Xem phòng</a>
                             </div>`;
-
                         marker.bindPopup(popupContent);
                     }
                 });

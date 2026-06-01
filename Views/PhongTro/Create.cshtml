@@ -62,27 +62,55 @@
             </div>
 
             <div class="mb-3">
-                <label asp-for="DiaChi" class="form-label fw-bold"></label>
-                <div class="input-group">
-                    <input asp-for="DiaChi" id="diaChiInput" class="form-control" placeholder="Ví dụ: 475A Điện Biên Phủ, Phường 25, Bình Thạnh, Hồ Chí Minh" />
-                    <button class="btn btn-outline-primary fw-bold" type="button" id="btnTimViTri">
-                        📍 Tìm trên bản đồ
-                    </button>
+                <label class="form-label fw-bold">Địa chỉ chi tiết</label>
+                <div class="row g-2 mb-2">
+                    <div class="col-md-4">
+                        <select class="form-select" id="cboCity">
+                            <option value="" selected>-- Chọn Tỉnh/Thành --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select" id="cboDistrict" disabled>
+                            <option value="" selected>-- Chọn Quận/Huyện --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select" id="cboWard" disabled>
+                            <option value="" selected>-- Chọn Phường/Xã --</option>
+                        </select>
+                    </div>
                 </div>
+                <div class="row g-2">
+                    <div class="col-md-8">
+                        <input type="text" class="form-control" id="txtStreet" placeholder="Ví dụ: 475A Điện Biên Phủ (Số nhà, Tên đường)">
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-outline-primary w-100 fw-bold" type="button" id="btnTimViTri">
+                            📍 Tìm trên bản đồ
+                        </button>
+                    </div>
+                </div>
+                <input type="hidden" asp-for="DiaChi" id="HiddenDiaChi" />
                 <span asp-validation-for="DiaChi" class="text-danger"></span>
             </div>
-
             <div class="mb-4">
-                <label class="form-label fw-bold text-primary">📍 Ghim vị trí trên bản đồ</label>
+                <div class="d-flex justify-content-between align-items-end mb-2">
+                    <label class="form-label fw-bold text-primary mb-0">📍 Ghim vị trí trên bản đồ</label>
+
+                    <button type="button" id="btnCurrentLocation" class="btn btn-sm btn-info text-white fw-bold shadow-sm rounded-pill">
+                        <i class="bi bi-geo-fill"></i> Vị trí của tôi
+                    </button>
+                </div>
+
                 <div id="map" style="height: 350px; border-radius: 10px; border: 1px solid #ddd;"></div>
-                <small class="text-muted">Bản đồ sẽ tự động di chuyển khi bạn bấm "Tìm trên bản đồ". Bạn cũng có thể kéo dấu ghim để chỉnh lại cho chính xác nhất.</small>
+                <small class="text-muted">Bản đồ sẽ tự động di chuyển khi bạn bấm "Tìm trên bản đồ". Bạn cũng có thể bấm "Vị trí của tôi" hoặc kéo dấu ghim để chỉnh lại cho chính xác nhất.</small>
 
                 <input type="hidden" asp-for="Latitude" id="latInput" />
                 <input type="hidden" asp-for="Longitude" id="lngInput" />
             </div>
 
             <div class="mb-4">
-                <label asp-for="ImageUploads" class="form-label fw-bold text-success">📷 Thêm hình ảnh (Có thể chọn many)</label>
+                <label asp-for="ImageUploads" class="form-label fw-bold text-success">📷 Thêm hình ảnh (Có thể chọn nhiều)</label>
                 <input asp-for="ImageUploads" type="file" class="form-control" accept="image/*" multiple />
                 <span asp-validation-for="ImageUploads" class="text-danger"></span>
             </div>
@@ -97,7 +125,7 @@
                             </label>
                         </div>
                         <small class="text-muted mt-2 d-block">
-                            💡 Tin VIP sẽ được ghim lên đầu bảng kết quả tìm kiếm với thiết kế nổi bật, giúp phòng của bạn tiếp cận sinh viên và chốt khách nhanh gấp 3 lần!
+                            💡 Tin VIP sẽ được ghim lên đầu bảng kết quả tìm kiếm với thiết kế nổi bật, giúp phòng của bạn tiếp cận khách nhanh gấp 3 lần!
                         </small>
                     </div>
                 </div>
@@ -117,6 +145,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        // --- 1. XỬ LÝ MAP ---
         var map = L.map('map').setView([10.8018, 106.7115], 14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap'
@@ -124,11 +153,13 @@
 
         var marker = L.marker([10.8018, 106.7115], { draggable: true }).addTo(map);
 
+        // 🔥 BẢN VÁ TỌA ĐỘ: Đổi dấu chấm thành dấu phẩy để C# (.NET) hiểu đúng số thập phân
         function updateLatLng(lat, lng) {
-            document.getElementById('latInput').value = lat;
-            document.getElementById('lngInput').value = lng;
+            var latStr = lat.toString().replace('.', ',');
+            var lngStr = lng.toString().replace('.', ',');
+            document.getElementById('latInput').value = latStr;
+            document.getElementById('lngInput').value = lngStr;
         }
-
         updateLatLng(10.8018, 106.7115);
 
         marker.on('dragend', function (e) {
@@ -141,33 +172,153 @@
             updateLatLng(e.latlng.lat, e.latlng.lng);
         });
 
+        // 🔥 BẢN VÁ TÌM KIẾM THÔNG MINH: Có cơ chế tự động tìm lùi (chỉ tìm phường) nếu số nhà không tồn tại
         document.getElementById('btnTimViTri').addEventListener('click', function () {
-            var address = document.getElementById('diaChiInput').value;
-            if (!address) {
-                alert("Vui lòng nhập địa chỉ trước khi tìm kiếm!");
+            var address = document.getElementById('HiddenDiaChi').value;
+            if (!address || address.length < 5) {
+                alert("Vui lòng chọn đầy đủ Tỉnh/Quận/Phường và Số nhà!");
                 return;
             }
-            var apiUrl = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(address);
+
+            var cleanAddress = address.replace(/ \(.*?\)/g, '');
+            var apiUrl = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(cleanAddress);
+
             fetch(apiUrl)
                 .then(response => response.json())
                 .then(data => {
                     if (data && data.length > 0) {
+                        // TÌM THẤY CHÍNH XÁC SỐ NHÀ
                         var lat = data[0].lat;
                         var lon = data[0].lon;
-                        map.flyTo([lat, lon], 16);
+                        map.flyTo([lat, lon], 17);
                         marker.setLatLng([lat, lon]);
                         updateLatLng(lat, lon);
                     } else {
-                        alert("Không tìm thấy tọa độ cho địa chỉ này!");
+                        // NẾU KHÔNG TÌM THẤY SỐ NHÀ -> CẮT BỎ SỐ NHÀ, CHỈ TÌM PHƯỜNG + QUẬN
+                        var parts = cleanAddress.split(',');
+                        if (parts.length > 1) {
+                            var fallbackAddress = parts.slice(1).join(',').trim();
+                            var fallbackUrl = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(fallbackAddress);
+
+                            fetch(fallbackUrl)
+                                .then(res => res.json())
+                                .then(fbData => {
+                                    if(fbData && fbData.length > 0) {
+                                        var lat = fbData[0].lat;
+                                        var lon = fbData[0].lon;
+                                        map.flyTo([lat, lon], 15);
+                                        marker.setLatLng([lat, lon]);
+                                        updateLatLng(lat, lon);
+                                        alert("Hệ thống không tìm thấy số nhà cụ thể này. Bản đồ đã được di chuyển đến khu vực: " + fallbackAddress + ". Vui lòng kéo ghim đến đúng vị trí nhà trọ của bạn!");
+                                    } else {
+                                        alert("Vẫn không tìm thấy khu vực này. Bạn hãy tự kéo ghim đến đúng vị trí nhé!");
+                                    }
+                                });
+                        } else {
+                            alert("Bản đồ không tìm thấy tọa độ chính xác. Bạn có thể kéo thả ghim bằng tay nhé!");
+                        }
                     }
                 })
-                .catch(error => { console.error('Lỗi API:', error); });
+                .catch(error => { console.error('Lỗi API Map:', error); });
         });
 
-        document.getElementById('diaChiInput').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                document.getElementById('btnTimViTri').click();
+        // NÚT LẤY VỊ TRÍ HIỆN TẠI (GPS)
+        document.getElementById('btnCurrentLocation').addEventListener('click', function() {
+            if (navigator.geolocation) {
+                let btn = this;
+                let oldText = btn.innerHTML;
+                btn.innerHTML = '⏳ Đang định vị...';
+
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    var lat = position.coords.latitude;
+                    var lng = position.coords.longitude;
+
+                    map.flyTo([lat, lng], 17);
+                    marker.setLatLng([lat, lng]);
+                    updateLatLng(lat, lng);
+
+                    btn.innerHTML = oldText;
+                }, function(error) {
+                    alert("❌ Không thể lấy vị trí. Vui lòng kiểm tra xem bạn đã cho phép trình duyệt truy cập vị trí chưa.");
+                    btn.innerHTML = oldText;
+                }, { enableHighAccuracy: true });
+            } else {
+                alert("❌ Trình duyệt của bạn không hỗ trợ định vị GPS.");
+            }
+        });
+
+        // --- 2. XỬ LÝ API HÀNH CHÍNH QUỐC GIA ---
+        document.addEventListener("DOMContentLoaded", function () {
+            const cboCity = document.getElementById('cboCity');
+            const cboDistrict = document.getElementById('cboDistrict');
+            const cboWard = document.getElementById('cboWard');
+            const txtStreet = document.getElementById('txtStreet');
+            const hiddenDiaChi = document.getElementById('HiddenDiaChi');
+            let locationData = [];
+
+            // Gọi toàn bộ dữ liệu 63 Tỉnh Thành VN
+            fetch('https://provinces.open-api.vn/api/?depth=3')
+                .then(res => res.json())
+                .then(apiData => {
+                    locationData = apiData;
+                    // Đưa HCM lên đầu danh sách
+                    let hcmIdx = locationData.findIndex(p => p.code === 79);
+                    if (hcmIdx !== -1) {
+                        let hcm = locationData.splice(hcmIdx, 1)[0];
+                        locationData.unshift(hcm);
+                    }
+                    locationData.forEach(city => {
+                        cboCity.add(new Option(city.name, city.code));
+                    });
+                });
+
+            cboCity.addEventListener('change', function () {
+                cboDistrict.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
+                cboWard.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+                cboWard.disabled = true;
+
+                if (this.value) {
+                    const selectedCity = locationData.find(c => c.code == this.value);
+                    selectedCity.districts.forEach(district => {
+                        let distName = district.name;
+                        // Ghi chú cho TP Thủ Đức
+                        if(distName === "Thành phố Thủ Đức") distName = "TP Thủ Đức (Quận 2, 9, Thủ Đức cũ)";
+
+                        cboDistrict.add(new Option(distName, district.code));
+                    });
+                    cboDistrict.disabled = false;
+                } else {
+                    cboDistrict.disabled = true;
+                }
+                updateHiddenAddress();
+            });
+
+            cboDistrict.addEventListener('change', function () {
+                cboWard.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+                if (this.value) {
+                    const selectedCity = locationData.find(c => c.code == cboCity.value);
+                    const selectedDistrict = selectedCity.districts.find(d => d.code == this.value);
+                    selectedDistrict.wards.forEach(ward => {
+                        cboWard.add(new Option(ward.name, ward.code));
+                    });
+                    cboWard.disabled = false;
+                } else {
+                    cboWard.disabled = true;
+                }
+                updateHiddenAddress();
+            });
+
+            cboWard.addEventListener('change', updateHiddenAddress);
+            txtStreet.addEventListener('keyup', updateHiddenAddress);
+
+            function updateHiddenAddress() {
+                let addressParts = [];
+                if (txtStreet.value.trim()) addressParts.push(txtStreet.value.trim());
+                if (cboWard.value) addressParts.push(cboWard.options[cboWard.selectedIndex].text);
+                if (cboDistrict.value) addressParts.push(cboDistrict.options[cboDistrict.selectedIndex].text);
+                if (cboCity.value) addressParts.push(cboCity.options[cboCity.selectedIndex].text);
+
+                hiddenDiaChi.value = addressParts.join(', ');
             }
         });
     </script>

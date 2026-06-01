@@ -56,7 +56,7 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Giữ nguyên màu cho các trạng thái đặc biệt (Giá tiền, Sao) */
+/* Giữ nguyên màu cho các trạng thái đặc biệt */
 [data-theme="dark"] p:not(.text-danger):not(.text-warning):not(.text-success),
 [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3,
 [data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] h6,
@@ -64,13 +64,13 @@ body {
     color: var(--text-color);
 }
 
-/* Fix lỗi mờ tên User (Chủ trọ nè cưng) */
+/* Fix lỗi mờ tên User */
 [data-theme="dark"] .text-dark,
 [data-theme="dark"] .navbar-custom .nav-link {
     color: var(--text-color) !important;
 }
 
-/* Card & List Group (Hộp thư Chat) */
+/* Card & List Group */
 .card, .list-group-item {
     background-color: var(--card-bg) !important;
     border-color: var(--card-border) !important;
@@ -81,7 +81,7 @@ body {
     background-color: #2a2a2a !important;
 }
 
-/* Form Inputs (ĐÃ SỬA: Loại trừ form-check-input để không bị lỗi tàng hình công tắc) */
+/* Form Inputs */
 input:not(.form-check-input), select, textarea, .form-control, .form-select {
     background-color: var(--input-bg) !important;
     color: var(--input-text) !important;
@@ -89,19 +89,17 @@ input:not(.form-check-input), select, textarea, .form-control, .form-select {
 }
 
 /* ==========================================
-   4. FIX LỖI CÔNG TẮC (SWITCH) CHO GIAO DIỆN
+   4. FIX CÔNG TẮC (SWITCH) CHO GIAO DIỆN
    ========================================== */
-/* Trạng thái công tắc khi ở Dark Mode */
 [data-theme="dark"] .form-check-input {
-    background-color: #444; /* Nền xám khi tắt */
+    background-color: #444;
     border-color: #666;
 }
 
     [data-theme="dark"] .form-check-input:checked {
-        background-color: var(--primary-blue); /* Nền xanh khi bật */
+        background-color: var(--primary-blue);
         border-color: var(--primary-blue);
     }
-
 
 /* Navbar Dark */
 [data-theme="dark"] .navbar-custom {
@@ -109,12 +107,10 @@ input:not(.form-check-input), select, textarea, .form-control, .form-select {
     border-bottom: 1px solid #333 !important;
 }
 
-/* Fix màu mờ text-muted */
 [data-theme="dark"] .text-muted {
     color: var(--muted-text) !important;
 }
 
-/* Theme Toggle Button Animation */
 #theme-toggle {
     transition: transform 0.2s;
 }
@@ -123,9 +119,7 @@ input:not(.form-check-input), select, textarea, .form-control, .form-select {
         transform: scale(0.9);
     }
 
-/* 🔥 ĐÃ FIX: LỖI GIAO DIỆN CHAT (RIÊNG & TỔNG) TRONG DARK MODE 🔥 */
-
-/* 1. Ép nền của toàn bộ khung chat lớn chuyển sang màu tối */
+/* 🔥 FIX GIAO DIỆN CHAT TRONG DARK MODE 🔥 */
 [data-theme="dark"] .bg-white,
 [data-theme="dark"] .bg-light,
 [data-theme="dark"] div[style*="background-color: white"],
@@ -135,18 +129,15 @@ input:not(.form-check-input), select, textarea, .form-control, .form-select {
     color: var(--text-color) !important;
 }
 
-    /* 2. Xử lý bong bóng tin nhắn của người khác (bên trái) */
-    /* Thường dùng bg-light, text-dark hoặc nền xám nhạt */
     [data-theme="dark"] .text-dark.bg-light,
     [data-theme="dark"] .bg-light.rounded,
     [data-theme="dark"] .bg-white.rounded,
     [data-theme="dark"] div[style*="background-color: #f1f0f0"],
     [data-theme="dark"] div[style*="background-color: #f8f9fa"] {
-        background-color: #2a2a2a !important; /* Xám đậm */
+        background-color: #2a2a2a !important;
         color: #ffffff !important;
     }
 
-    /* 3. Đảm bảo chữ bên trong bong bóng tin nhắn luôn đọc được */
     [data-theme="dark"] .bg-light p,
     [data-theme="dark"] .bg-white p,
     [data-theme="dark"] .bg-light span,
@@ -154,7 +145,6 @@ input:not(.form-check-input), select, textarea, .form-control, .form-select {
         color: #e0e0e0 !important;
     }
 
-/* 4. Đổi màu các đường viền ngăn cách (border) trong khung chat */
 [data-theme="dark"] .border,
 [data-theme="dark"] .border-top,
 [data-theme="dark"] .border-bottom,
@@ -163,11 +153,11 @@ input:not(.form-check-input), select, textarea, .form-control, .form-select {
     border-color: var(--card-border) !important;
 }
 
-/* 5. Tên người gửi ở Chat Tổng (nếu bị mờ) */
 [data-theme="dark"] small.text-dark {
     color: #aaaaaa !important;
 }
-/* 🔥 ĐÃ FIX: Menu Dropdown (Cài đặt, Đăng xuất) 🔥 */
+
+/* 🔥 Dropdown Menu */
 [data-theme="dark"] .dropdown-menu {
     background-color: var(--card-bg) !important;
     border-color: var(--card-border) !important;
@@ -184,4 +174,42 @@ input:not(.form-check-input), select, textarea, .form-control, .form-select {
 
 [data-theme="dark"] .dropdown-divider {
     border-top-color: var(--card-border) !important;
+}
+
+/* 🔥 Chatbox Draggable Styles */
+#aiChatBox {
+    will-change: top, left;
+    user-select: none;
+}
+
+#aiChatHeader {
+    cursor: grab;
+}
+
+    #aiChatHeader:active {
+        cursor: grabbing;
+    }
+
+#btnAiChat {
+    transition: transform 0.2s;
+    animation: pulse 2s infinite;
+}
+
+    #btnAiChat:hover {
+        transform: scale(1.1);
+        animation: none;
+    }
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 15px rgba(255, 193, 7, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+    }
 }

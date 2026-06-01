@@ -7,10 +7,7 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Json;
 using System.Threading.Tasks;
-using System.Text.Json.Nodes; // 🔥 Thư viện xử lý JsonNode để chống lỗi candidates
 
 namespace Do_an_co_so.Controllers
 {
@@ -20,7 +17,6 @@ namespace Do_an_co_so.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
 
-        // Hàm khởi tạo đã tiêm đầy đủ Logger, DbContext và Configuration
         public HomeController(ILogger<HomeController> logger, ApplicationDbContext context, IConfiguration configuration)
         {
             _logger = logger;
@@ -43,23 +39,9 @@ namespace Do_an_co_so.Controllers
             return View(danhSachPhong);
         }
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
-        // ==========================================
-        // CÁC HÀM DÀNH CHO FOOTER
-        // ==========================================
-        public IActionResult AboutUs()
-        {
-            return View();
-        }
-
-        public IActionResult Terms()
-        {
-            return View();
-        }
+        public IActionResult Privacy() { return View(); }
+        public IActionResult AboutUs() { return View(); }
+        public IActionResult Terms() { return View(); }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
@@ -67,60 +49,97 @@ namespace Do_an_co_so.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        // ==========================================
-        // 🔥 ACTION GỌI AI GEMINI THẬT 100% 
-        // ==========================================
+        // ====================================================================
+        // 🔥 BỘ NÃO TRỢ LÝ TỰ ĐỘNG - BÁM SÁT 100% DATABASE CỦA ĐỒ ÁN 🔥
+        // ====================================================================
         [HttpGet]
-        public async Task<IActionResult> ChatWithAI(string message)
+        public IActionResult ChatWithAI(string message)
         {
-            if (string.IsNullOrEmpty(message)) return Json(new { reply = "Bạn cần hỏi gì nào?" });
+            if (string.IsNullOrEmpty(message)) return Json(new { reply = "Bạn cần mình trợ giúp gì nào?" });
 
-            var apiKey = _configuration["GeminiApiKey"];
-            if (string.IsNullOrEmpty(apiKey)) return Json(new { reply = "⚠️ Lỗi: Chưa tìm thấy API Key trong file appsettings.json!" });
+            string msg = message.ToLower().Trim();
+            string reply = "";
+            Random rand = new Random();
 
-            // Sử dụng Model đời mới 2.5-flash theo cập nhật hệ thống Google
-            var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={apiKey}";
-
-            // Câu lệnh nhập vai kỷ luật sắt - Tuyệt đối không chứa từ khóa trường học cũ
-            string systemPrompt = "Bạn là nhân viên tư vấn phòng trọ ảo của website RoomFinder do Nguyễn Văn Tính phát triển. Nhiệm vụ của bạn LÀ DUY NHẤT trả lời các vấn đề liên quan đến thuê phòng, giá cả, hợp đồng, lừa đảo, cọc tiền hoặc hướng dẫn dùng web RoomFinder. NẾU người dùng hỏi các chủ đề ngoài lề (toán học, lịch sử, lập trình, làm thơ, v.v.), BẮT BUỘC phải từ chối khéo léo và yêu cầu họ quay lại chủ đề phòng trọ. Luôn xưng 'mình' và gọi người dùng là 'bạn'. Trả lời thân thiện, ngắn gọn dưới 3 câu. Câu hỏi của người dùng là: ";
-
-            using (var client = new HttpClient())
+            // 1. KỊCH BẢN CHÀO HỎI
+            if (msg.Contains("chào") || msg.Contains("hi") || msg.Contains("hello") || msg.Contains("xin chào"))
             {
-                var payload = new
-                {
-                    contents = new[]
-                    {
-                        new { parts = new[] { new { text = systemPrompt + message } } }
-                    }
+                string[] answers = {
+                    "👋 Chào bạn! Mình là Trợ lý tự động của RoomFinder. Mình có thể tư vấn cho bạn thông tin về diện tích, tiện ích phòng, quy trình đặt cọc giữ chỗ, hoặc cách dùng bản đồ tìm trọ nha!",
+                    "✨ Rất vui được gặp bạn! Bạn cần mình hướng dẫn cách lọc phòng có ban công, nhà vệ sinh riêng hay giải đáp thắc mắc về tiền cọc nè?",
+                    "🤖 Xin chào! Mình là chatbot hỗ trợ tự động. Bạn có câu hỏi nào về giá thuê, thời gian giữ phòng hay chính sách tin VIP không?"
                 };
-
-                try
-                {
-                    var response = await client.PostAsJsonAsync(url, payload);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        // Bóc tách JSON bằng JsonNode an toàn, chống crash luồng dữ liệu
-                        var jsonNode = await response.Content.ReadFromJsonAsync<JsonNode>();
-                        string aiReply = jsonNode["candidates"]?[0]?["content"]?["parts"]?[0]?["text"]?.ToString();
-
-                        return Json(new { reply = aiReply?.Trim() });
-                    }
-                    else
-                    {
-                        // Xử lý thẩm mỹ lỗi quá tải tần suất gửi tin nhắn (503 / 429) của Google
-                        if ((int)response.StatusCode == 503 || (int)response.StatusCode == 429)
-                        {
-                            return Json(new { reply = "⚠️ Máy chủ AI hiện đang có quá nhiều người truy cập cùng lúc. Bạn vui lòng đợi khoảng 10 giây rồi gửi lại tin nhắn nhé!" });
-                        }
-
-                        return Json(new { reply = $"⚠️ Trợ lý AI đang tạm nghỉ một chút. (Mã lỗi: {response.StatusCode})" });
-                    }
-                }
-                catch (Exception ex)
-                {
-                    return Json(new { reply = "⚠️ Hệ thống mất kết nối mạng, vui lòng thử lại sau ít phút!" });
-                }
+                reply = answers[rand.Next(answers.Length)];
             }
+
+            // 2. KỊCH BẢN BẤT NGỜ / TỪ LÓNG
+            else if (msg == "hả" || msg.Contains("vailon") || msg == "m" || msg == "gì" || msg == "sao" || msg.Contains("vaiinho"))
+            {
+                string[] answers = {
+                    "🤖 Kìa sếp, bình tĩnh nè! Mình chỉ là Trợ lý tự động thôi. Cứ gõ từ khóa như: 'giá phòng', 'tiện ích', 'đặt cọc' để mình báo thông tin chính xác cho nha!",
+                    "💡 Bối rối hả? Hỏi rõ ràng hơn chút về tính năng web hoặc các thông tin phòng (diện tích, vệ sinh riêng...) để mình giải đáp chu đáo nhé!"
+                };
+                reply = answers[rand.Next(answers.Length)];
+            }
+
+            // 3. KỊCH BẢN TÌM TRỌ / BẢN ĐỒ / VỊ TRÍ
+            else if (msg.Contains("tìm") || msg.Contains("kiếm trọ") || msg.Contains("bản đồ") || msg.Contains("quanh trường") || msg.Contains("vị trí"))
+            {
+                reply = "🗺️ Hệ thống tích hợp bản đồ Leaflet thông minh! Qua mục 'Tìm trọ', chọn tên Trường của bạn và bán kính tìm kiếm (km). Bản đồ sẽ tự đo khoảng cách đường chim bay dựa trên tọa độ (Latitude/Longitude) của phòng đến tận cổng trường luôn!";
+            }
+
+            // 4. KỊCH BẢN ĐẶT CỌC / GIỮ CHỖ (Dựa trên NguoiDatCocId, TienCoc, HanDatCoc, SoNgayGiuPhong)
+            else if (msg.Contains("cọc") || msg.Contains("đặt cọc") || msg.Contains("giữ chỗ") || msg.Contains("giữ phòng") || msg.Contains("vnpay"))
+            {
+                reply = "💰 Khách có thể thanh toán Tiền Cọc trực tiếp qua VNPay để giữ phòng. Thời gian giữ phòng (số ngày) sẽ do Chủ trọ tự cài đặt. Khi quá Hạn Đặt Cọc mà chưa ký hợp đồng, hệ thống sẽ tự động nhả phòng ra cho người khác thuê để đảm bảo công bằng.";
+            }
+
+            // 5. KỊCH BẢN GIÁ CẢ & DIỆN TÍCH & TIỆN ÍCH (Dựa trên Gia, ChieuDai, ChieuRong, CoNhaVeSinh, CoBanCong)
+            else if (msg.Contains("giá") || msg.Contains("bao nhiêu") || msg.Contains("tiền") || msg.Contains("rẻ") || msg.Contains("diện tích") || msg.Contains("rộng") || msg.Contains("tiện ích") || msg.Contains("ban công") || msg.Contains("vệ sinh"))
+            {
+                string[] answers = {
+                    "💵 Mọi bài đăng trên RoomFinder đều niêm yết rõ Giá thuê (VNĐ/tháng). Trong chi tiết phòng, bạn có thể xem được kích thước cụ thể (Chiều dài x Chiều rộng) và biết trước phòng đó có Ban công hay Nhà vệ sinh riêng không nha!",
+                    "📏 Hệ thống yêu cầu chủ trọ khai báo rõ ràng: Giá tiền, Chiều dài, Chiều rộng của phòng. Bạn cũng có thể dễ dàng thấy phòng có trang bị Nhà vệ sinh riêng hay Ban công không ngay trên giao diện chi tiết."
+                };
+                reply = answers[rand.Next(answers.Length)];
+            }
+
+            // 6. KỊCH BẢN PHÒNG CHỐNG LỪA ĐẢO / HẾT HẠN (Dựa trên DaChoThue, NgayHetHan)
+            else if (msg.Contains("lừa đảo") || msg.Contains("uy tín") || msg.Contains("an toàn") || msg.Contains("báo cáo") || msg.Contains("hết hạn") || msg.Contains("phòng ảo"))
+            {
+                reply = "🚩 Để chống tin rác, các bài đăng đều có 'Ngày hết hạn hiển thị'. Những phòng 'Đã cho thuê' sẽ tự động bị ẩn khỏi danh sách. Nếu phát hiện chủ trọ gian lận thông tin diện tích hay lừa tiền cọc, bạn nhớ bấm Báo cáo cho Admin xử lý nhé!";
+            }
+
+            // 7. KỊCH BẢN ĐĂNG TIN VIP (Dựa trên IsVip)
+            else if (msg.Contains("vip") || msg.Contains("đăng tin vip") || msg.Contains("phí tin"))
+            {
+                reply = "⭐ Bài đăng có tích chọn 'Tin VIP' sẽ được ghim nổi bật và ưu tiên hiển thị trên cùng ở cả danh sách lẫn bản đồ. Đây là tính năng rất tiện để chủ trọ tìm khách thuê nhanh chóng hơn!";
+            }
+
+            // 8. KỊCH BẢN THÔNG TIN TÁC GIẢ
+            else if (msg.Contains("tác giả") || msg.Contains("ai làm") || msg.Contains("phát triển") || msg.Contains("roomfinder"))
+            {
+                reply = "🏫 Hệ thống RoomFinder được nghiên cứu và phát triển bằng ASP.NET Core MVC nhằm mang lại giải pháp tìm chỗ ở an toàn cho các bạn sinh viên!";
+            }
+
+            // 9. TỪ CHỐI KHÉO CÂU HỎI NGOÀI LỀ
+            else if (msg.Contains("toán") || msg.Contains("lập trình") || msg.Contains("code") || msg.Contains("thơ") || msg.Contains("lịch sử") || msg.Contains("văn"))
+            {
+                reply = "🤖 Mình là Trợ lý tự động của hệ thống RoomFinder, nên mình chỉ được lập trình để trả lời các vấn đề xoay quanh hệ thống phòng trọ thôi sếp ơi!";
+            }
+
+            // 10. KỊCH BẢN DỰ PHÒNG (FALLBACK)
+            else
+            {
+                string[] fallbacks = {
+                    "💡 Mình chưa hiểu ý bạn lắm! Bạn có thể hỏi mình rõ hơn về: giá thuê, diện tích (chiều dài, chiều rộng), tiện ích (ban công, vệ sinh), hoặc thời hạn giữ tiền cọc được không?",
+                    "📬 Câu hỏi này ngoài vùng dữ liệu của mình mất rồi! Bạn có thể nhắn tin trực tiếp cho Chủ trọ ở trang chi tiết phòng để trao đổi thêm thông tin nhé.",
+                    "🤖 Nếu bạn đang tìm phòng, hãy thử lọc Tỉnh thành, Quận huyện và tên Trường trên thanh tìm kiếm nhé. Hệ thống sẽ tính tọa độ và báo khoảng cách cụ thể cho bạn."
+                };
+                reply = fallbacks[rand.Next(fallbacks.Length)];
+            }
+
+            return Json(new { reply = reply });
         }
     }
 }
