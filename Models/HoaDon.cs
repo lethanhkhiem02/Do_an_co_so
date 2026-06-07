@@ -29,5 +29,9 @@ namespace Do_an_co_so.Models
         // --- THÊM THUỘC TÍNH PHÂN BIỆT LOẠI HÓA ĐƠN ---
         [Display(Name = "Loại hóa đơn")]
         public string LoaiHoaDon { get; set; } = "ThuePhong"; // Mặc định là "ThuePhong", nếu cọc thì sửa thành "DatCoc"
+
+        // --- CỘT MỚI: TRẠNG THÁI GIAO DỊCH (ESCROW) ---
+        [Display(Name = "Trạng thái")]
+        public string TrangThai { get; set; } = "HoanThanh";
     }
 }

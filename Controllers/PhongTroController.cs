@@ -164,8 +164,9 @@ namespace Do_an_co_so.Controllers
         }
 
         // =========================================================================================
-        // HỆ THỐNG THANH TOÁN
+        // HỆ THỐNG THANH TOÁN & ESCROW
         // =========================================================================================
+
         [HttpPost]
         [Authorize(Roles = "SinhVien")]
         public async Task<IActionResult> ThanhToanThuePhong(int id)
@@ -247,7 +248,8 @@ namespace Do_an_co_so.Controllers
                         TienHoaHong = tienHoaHong,
                         TienChuTroNhan = tienChuTro,
                         NgayGiaoDich = DateTime.Now,
-                        LoaiHoaDon = "ThuePhong"
+                        LoaiHoaDon = "ThuePhong",
+                        TrangThai = "HoanThanh"
                     });
 
                     await _context.SaveChangesAsync();
@@ -320,11 +322,9 @@ namespace Do_an_co_so.Controllers
                 if (phong != null && !phong.DaChoThue)
                 {
                     decimal tongTienCoc = 500000m;
-                    decimal tienHoaHong = tongTienCoc * 0.10m;
-                    decimal tienChuTro = tongTienCoc - tienHoaHong;
 
-                    if (admin != null) admin.SoDu += tienHoaHong;
-                    if (phong.ChuTro != null) phong.ChuTro.SoDu += tienChuTro;
+                    // ESCROW: Admin tạm giữ toàn bộ 500k, Chủ trọ CHƯA được nhận tiền
+                    if (admin != null) admin.SoDu += tongTienCoc;
 
                     phong.NguoiDatCocId = nguoiThue?.Id;
                     phong.TienCoc = tongTienCoc;
@@ -337,14 +337,15 @@ namespace Do_an_co_so.Controllers
                         PhongTroId = phong.Id,
                         NguoiThueId = nguoiThue?.Id,
                         TongTien = tongTienCoc,
-                        TienHoaHong = tienHoaHong,
-                        TienChuTroNhan = tienChuTro,
+                        TienHoaHong = 0, // Chưa tính hoa hồng
+                        TienChuTroNhan = 0, // Chủ trọ chưa nhận
                         NgayGiaoDich = DateTime.Now,
-                        LoaiHoaDon = "DatCoc"
+                        LoaiHoaDon = "DatCoc",
+                        TrangThai = "TamGiu" // Đánh dấu là tiền đang bị giữ
                     });
 
                     await _context.SaveChangesAsync();
-                    TempData["Success"] = $"🎉 Đặt cọc 500.000 VNĐ thành công! Phòng đã được khóa lại để giữ cho bạn trong {soNgayGiu} ngày.";
+                    TempData["Success"] = $"🎉 Đặt cọc 500.000 VNĐ thành công! Tiền đang được Hệ thống tạm giữ để đảm bảo an toàn cho bạn trong {soNgayGiu} ngày.";
                 }
             }
             else TempData["Error"] = "❌ Đặt cọc thất bại hoặc bị hủy.";
@@ -407,16 +408,27 @@ namespace Do_an_co_so.Controllers
                 if (phong != null && !phong.DaChoThue)
                 {
                     decimal remaining = phong.Gia - (phong.TienCoc ?? 500000);
-                    decimal tienHoaHong = remaining * 0.10m;
-                    decimal tienChuTro = remaining - tienHoaHong;
 
-                    if (admin != null) admin.SoDu += tienHoaHong;
+                    // TÍNH TOÁN LẠI TỔNG TIỀN (Gộp cả cọc 500k Admin đang giữ + Tiền mới thanh toán)
+                    decimal tongTien = phong.Gia;
+                    decimal tienHoaHong = tongTien * 0.10m;
+                    decimal tienChuTro = tongTien - tienHoaHong;
+
+                    // Admin nhận nốt phần còn lại từ VNPay
+                    if (admin != null) admin.SoDu += remaining;
+
+                    // Admin giải ngân: Chuyển 1 cục tiền (đã trừ hoa hồng) cho Chủ trọ
+                    if (admin != null) admin.SoDu -= tienChuTro;
                     if (phong.ChuTro != null) phong.ChuTro.SoDu += tienChuTro;
 
                     phong.DaChoThue = true;
                     phong.NguoiDatCocId = null;
                     phong.TienCoc = null;
                     phong.HanDatCoc = null;
+
+                    // Cập nhật trạng thái Hóa đơn cọc cũ thành "GiaiNgan"
+                    var hoaDonCoc = await _context.HoaDons.FirstOrDefaultAsync(h => h.PhongTroId == phong.Id && h.NguoiThueId == nguoiThue.Id && h.TrangThai == "TamGiu");
+                    if (hoaDonCoc != null) hoaDonCoc.TrangThai = "GiaiNgan";
 
                     _context.HoaDons.Add(new HoaDon
                     {
@@ -426,11 +438,12 @@ namespace Do_an_co_so.Controllers
                         TienHoaHong = tienHoaHong,
                         TienChuTroNhan = tienChuTro,
                         NgayGiaoDich = DateTime.Now,
-                        LoaiHoaDon = "ThuePhong"
+                        LoaiHoaDon = "ThuePhong",
+                        TrangThai = "HoanThanh"
                     });
 
                     await _context.SaveChangesAsync();
-                    TempData["Success"] = "🎉 Bạn đã thanh toán phần còn lại thành công. Chúc mừng bạn đã thuê được phòng!";
+                    TempData["Success"] = "🎉 Thuê phòng thành công! Tiền cọc và tiền thuê đã được giải ngân cho chủ trọ.";
                 }
             }
             else TempData["Error"] = "❌ Thanh toán thất bại hoặc bị hủy.";
@@ -438,6 +451,42 @@ namespace Do_an_co_so.Controllers
             return RedirectToAction("Details", new { id = phongId });
         }
 
+        // =========================================================================================
+        // TÍNH NĂNG HOÀN TIỀN CỌC (ESCROW REFUND)
+        // =========================================================================================
+        [HttpPost]
+        [Authorize(Roles = "SinhVien")]
+        public async Task<IActionResult> HuyDatCoc(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var phong = await _context.PhongTro.FirstOrDefaultAsync(p => p.Id == id);
+            var admin = await _userManager.FindByEmailAsync("admin@gmail.com");
+
+            if (phong == null || phong.NguoiDatCocId != user.Id)
+            {
+                TempData["Error"] = "❌ Lỗi: Bạn không có quyền hủy cọc phòng này.";
+                return RedirectToAction("Details", new { id = id });
+            }
+
+            // Hoàn lại tiền cọc từ ví Admin về ví Sinh viên
+            decimal tienCoc = phong.TienCoc ?? 500000m;
+            if (admin != null) admin.SoDu -= tienCoc;
+            user.SoDu += tienCoc;
+
+            // Xóa thông tin giữ phòng
+            phong.NguoiDatCocId = null;
+            phong.TienCoc = null;
+            phong.HanDatCoc = null;
+
+            // Cập nhật hóa đơn
+            var hoaDonCoc = await _context.HoaDons.FirstOrDefaultAsync(h => h.PhongTroId == phong.Id && h.NguoiThueId == user.Id && h.TrangThai == "TamGiu");
+            if (hoaDonCoc != null) hoaDonCoc.TrangThai = "HoanTien";
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"✔️ Hủy cọc thành công! Hệ thống đã hoàn lại {tienCoc.ToString("N0")} VNĐ vào ví của bạn.";
+            return RedirectToAction("Details", new { id = id });
+        }
         // =========================================================================================
 
         [Authorize(Roles = "ChuTro")]
@@ -559,8 +608,6 @@ namespace Do_an_co_so.Controllers
             return 6371 * 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
         }
 
-        // 🔥 DANH SÁCH TRƯỜNG ĐÃ ĐƯỢC CHIA CƠ SỞ CHI TIẾT
-        // 🔥 DANH SÁCH TRƯỜNG ĐÃ ĐƯỢC MỞ RỘNG (THÊM NHIỀU CAO ĐẲNG VÀ ĐẠI HỌC)
         private List<TruongDaiHoc> GetDanhSachTruong()
         {
             return new List<TruongDaiHoc> {

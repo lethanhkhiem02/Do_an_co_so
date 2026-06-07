@@ -132,6 +132,13 @@
                                     💳 THANH TOÁN @remaining.ToString("N0") VNĐ
                                 </button>
                             </form>
+
+                            <form asp-action="HuyDatCoc" asp-controller="PhongTro" asp-route-id="@Model.Id" method="post" class="mt-2">
+                                <button type="submit" class="btn btn-outline-danger fw-bold w-100 shadow-sm"
+                                        onclick="return confirm('Xác nhận HỦY CỌC? Bạn sẽ được hoàn lại 500.000 VNĐ vào ví và mất quyền giữ phòng này.');">
+                                    🚫 HỦY CỌC & HOÀN TIỀN
+                                </button>
+                            </form>
                         }
                     }
                     else
