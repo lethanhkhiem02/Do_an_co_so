@@ -129,13 +129,13 @@
                         @if (User.Identity.IsAuthenticated)
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Chat" asp-action="Index" target="_blank" rel="noopener noreferrer">
-                                    @Localizer["Messages"] <i class="bi bi-box-arrow-up-right small opacity-50"></i>
+                                <a class="nav-link" asp-controller="Chat" asp-action="Index">
+                                    @Localizer["Messages"]
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-warning" asp-controller="Chat" asp-action="GlobalChat" target="_blank" rel="noopener noreferrer">
-                                    @Localizer["GlobalChat"] <i class="bi bi-box-arrow-up-right small opacity-50"></i>
+                                <a class="nav-link text-warning" asp-controller="Chat" asp-action="GlobalChat">
+                                    @Localizer["GlobalChat"]
                                 </a>
                             </li>
 
@@ -209,14 +209,12 @@
         </main>
     </div>
 
-    <!-- 🔥 Nút Chat Icon Vàng -->
     <button id="btnAiChat" class="btn btn-warning rounded-circle shadow-lg"
             style="position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; z-index: 9999;"
             title="Mở trợ lý ảo">
         <i class="bi bi-robot fs-3 text-dark"></i>
     </button>
 
-    <!-- 🔥 Khung Chatbox -->
     <div id="aiChatBox" class="card shadow-lg d-none"
          style="position: fixed; bottom: 100px; right: 30px; width: 360px; z-index: 9999; border-radius: 12px; border: 2px solid #ffc107; overflow: hidden; background-color: white;">
 
