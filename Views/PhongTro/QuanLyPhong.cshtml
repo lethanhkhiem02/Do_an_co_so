@@ -1,13 +1,15 @@
 ﻿@model IEnumerable<Do_an_co_so.Models.PhongTro>
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<Do_an_co_so.SharedResource> Localizer
 
 @{
-    ViewData["Title"] = "Quản lý phòng của tôi";
+    ViewData["Title"] = Localizer["MyRooms"];
 }
 
 <div class="container mt-4 mb-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="text-primary fw-bold">📋 Danh sách phòng bạn đã đăng</h2>
-        <a asp-action="Create" class="btn btn-warning fw-bold rounded-pill shadow-sm">✨ Đăng phòng mới</a>
+        <h2 class="text-primary fw-bold">📋 @Localizer["MyPostedRooms"]</h2>
+        <a asp-action="Create" class="btn btn-warning fw-bold rounded-pill shadow-sm">✨ @Localizer["PostNewRoom"]</a>
     </div>
 
     @if (TempData["Success"] != null)
@@ -23,11 +25,11 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="bg-primary text-white">
                     <tr>
-                        <th class="ps-4">Hình ảnh</th>
-                        <th>Thông tin phòng</th>
-                        <th>Giá thuê</th>
-                        <th class="text-center">Trạng thái</th>
-                        <th class="text-center pe-4">Thao tác</th>
+                        <th class="ps-4">@Localizer["Image"]</th>
+                        <th>@Localizer["RoomInfo"]</th>
+                        <th>@Localizer["RentPriceTable"]</th>
+                        <th class="text-center">@Localizer["Status"]</th>
+                        <th class="text-center pe-4">@Localizer["Actions"]</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -36,68 +38,61 @@
                         foreach (var item in Model)
                         {
                             <tr>
-                                <td class="ps-4">
+                                <td class="ps-4" style="width: 120px;">
                                     @{
-                                        string img = "/images/no-image.jpg";
-                                        if (!string.IsNullOrEmpty(item.HinhAnh)) img = "/images/" + item.HinhAnh.Split(',')[0];
+                                        string firstImage = "https://placehold.co/600x400/eeeeee/999999?text=No+Image";
+                                        if (!string.IsNullOrEmpty(item.HinhAnh)) { firstImage = "/images/" + item.HinhAnh.Split(',')[0]; }
                                     }
-                                    <img src="@img" class="rounded-3 shadow-sm" style="width: 100px; height: 70px; object-fit: cover;">
+                                    <img src="@firstImage" class="rounded-3 shadow-sm" style="width: 100px; height: 75px; object-fit: cover;" onerror="this.onerror=null;this.src='https://placehold.co/600x400/eeeeee/999999?text=No+Image';" />
                                 </td>
                                 <td>
-                                    <div class="fw-bold text-dark">@item.DiaChi</div>
-                                    <small class="text-muted d-block text-truncate" style="max-width: 250px;">@item.MoTa</small>
+                                    <h6 class="fw-bold mb-1">@item.DiaChi.Split(',').FirstOrDefault()</h6>
+                                    <small class="text-muted">@item.MoTa</small>
                                 </td>
                                 <td>
                                     <span class="text-danger fw-bold">@item.Gia.ToString("N0") đ</span>
                                 </td>
                                 <td class="text-center">
-                                    <div class="mb-2">
-                                        @if (item.IsVip)
-                                        {
-                                            <span class="badge bg-warning text-dark px-3 py-1 rounded-pill shadow-sm">⭐ TIN VIP</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-secondary px-3 py-1 rounded-pill">Tin thường</span>
-                                        }
-                                    </div>
-
-                                    <div>
-                                        @if (item.DaChoThue)
-                                        {
-                                            <span class="badge bg-success px-3 py-1 rounded-pill shadow-sm">✅ Đã cho thuê</span>
-                                        }
-                                        else if (!string.IsNullOrEmpty(item.NguoiDatCocId))
-                                        {
-                                            <span class="badge bg-warning text-dark px-3 py-1 rounded-pill shadow-sm">⏳ Đang được cọc</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-info text-dark px-3 py-1 rounded-pill shadow-sm">🏠 Đang trống</span>
-                                        }
-                                    </div>
+                                    @if (item.IsVip)
+                                    {
+                                        <span class="badge bg-warning text-dark mb-1 w-100 shadow-sm">⭐ @Localizer["VIPStatus"]</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary mb-1 w-100">@Localizer["NormalStatus"]</span>
+                                    }
+                                    <br />
+                                    @if (item.DaChoThue)
+                                    {
+                                        <span class="badge bg-danger w-100 shadow-sm">✅ @Localizer["RentedStatus"]</span>
+                                    }
+                                    else if (!string.IsNullOrEmpty(item.NguoiDatCocId))
+                                    {
+                                        <span class="badge bg-warning text-dark w-100 shadow-sm">⏳ @Localizer["DepositedStatus"]</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success w-100 shadow-sm">🏡 @Localizer["EmptyStatus"]</span>
+                                    }
                                 </td>
-                                <td class="text-center pe-4">
-                                    <div class="d-flex flex-column gap-1 align-items-center">
-                                        <div class="btn-group shadow-sm rounded-pill overflow-hidden">
-                                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary px-3">Xem</a>
-
-                                            <form asp-action="Delete" asp-route-id="@item.Id" method="post"
-                                                  onsubmit="return confirm('Bạn có chắc muốn xóa phòng này?');" style="display:inline;">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger px-3">Xóa</button>
-                                            </form>
-                                        </div>
-
+                                <td class="text-center pe-4" style="width: 180px;">
+                                    <div class="d-flex justify-content-center mb-1">
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary px-3 rounded-pill shadow-sm me-1">@Localizer["View"]</a>
+                                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('@Localizer["ConfirmDeleteRoom"]');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger px-3 rounded-pill shadow-sm">@Localizer["Delete"]</button>
+                                        </form>
+                                    </div>
+                                    <div>
                                         @if (!item.DaChoThue)
                                         {
-                                            <form asp-action="XacNhanChoThue" asp-route-id="@item.Id" method="post" class="mt-1 w-100" onsubmit="return confirm('Xác nhận phòng này đã được thuê thành công? Hệ thống sẽ ẩn tin đăng này.');">
-                                                <button type="submit" class="btn btn-sm btn-success fw-bold rounded-pill shadow-sm w-100">✔️ Báo đã cho thuê</button>
+                                            <form asp-action="XacNhanChoThue" asp-route-id="@item.Id" method="post" class="mt-1 w-100" onsubmit="return confirm('@Localizer["ConfirmMarkRented"]');">
+                                                <button type="submit" class="btn btn-sm btn-success fw-bold rounded-pill shadow-sm w-100">✔️ @Localizer["MarkAsRented"]</button>
                                             </form>
                                         }
                                         else
                                         {
-                                            <form asp-action="MoLaiPhong" asp-route-id="@item.Id" method="post" class="mt-1 w-100" onsubmit="return confirm('Bạn có chắc chắn muốn HỦY XÁC NHẬN và mở lại phòng này cho người khác thuê tiếp không?');">
-                                                <button type="submit" class="btn btn-sm btn-outline-secondary fw-bold rounded-pill shadow-sm w-100">🔄 Mở lại phòng</button>
+                                            <form asp-action="MoLaiPhong" asp-route-id="@item.Id" method="post" class="mt-1 w-100" onsubmit="return confirm('@Localizer["ConfirmReopen"]');">
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary fw-bold rounded-pill shadow-sm w-100">🔄 @Localizer["ReopenRoom"]</button>
                                             </form>
                                         }
                                     </div>
@@ -109,7 +104,7 @@
                     {
                         <tr>
                             <td colspan="5" class="text-center p-5 text-muted">
-                                <h5>Bạn chưa đăng phòng trọ nào. Hãy bắt đầu ngay! 🚀</h5>
+                                <h5>@Localizer["NoPostedRooms"]</h5>
                             </td>
                         </tr>
                     }

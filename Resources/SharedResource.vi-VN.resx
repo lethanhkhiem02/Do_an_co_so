@@ -177,4 +177,529 @@
   <data name="Wallet" xml:space="preserve">
     <value>Ví</value>
   </data>
+  <data name="LichSuThue" xml:space="preserve">
+    <value>Lịch sử thuê</value>
+  </data>
+  <data name="SearchArea" xml:space="preserve">
+    <value>Khu vực tìm kiếm</value>
+  </data>
+  <data name="SmartSearchTitle" xml:space="preserve">
+    <value>Tìm trọ thông minh theo trường</value>
+  </data>
+  <data name="ProvinceCity" xml:space="preserve">
+    <value>Tỉnh/Thành</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>Tất cả</value>
+  </data>
+  <data name="District" xml:space="preserve">
+    <value>Quận/Huyện</value>
+  </data>
+  <data name="AllDistricts" xml:space="preserve">
+    <value>-- Tất cả Quận --</value>
+  </data>
+  <data name="EducationLevel" xml:space="preserve">
+    <value>Hệ đào tạo</value>
+  </data>
+  <data name="AllLevels" xml:space="preserve">
+    <value>Tất cả hệ</value>
+  </data>
+  <data name="University" xml:space="preserve">
+    <value>Đại học</value>
+  </data>
+  <data name="College" xml:space="preserve">
+    <value>Cao đẳng</value>
+  </data>
+  <data name="YourSchool" xml:space="preserve">
+    <value>Trường của bạn</value>
+  </data>
+  <data name="SelectSchool" xml:space="preserve">
+    <value>-- Chọn trường (Chọn Quận trước nếu khó tìm) --</value>
+  </data>
+  <data name="Area" xml:space="preserve">
+    <value>Khu vực</value>
+  </data>
+  <data name="SearchRadius" xml:space="preserve">
+    <value>Bán kính tìm kiếm</value>
+  </data>
+  <data name="Distance" xml:space="preserve">
+    <value>-- Khoảng cách --</value>
+  </data>
+  <data name="WalkBike" xml:space="preserve">
+    <value>Đi bộ/Xe đạp</value>
+  </data>
+  <data name="Motorbike" xml:space="preserve">
+    <value>Xe máy</value>
+  </data>
+  <data name="PriceRange" xml:space="preserve">
+    <value>Khoảng giá (VNĐ)</value>
+  </data>
+  <data name="From" xml:space="preserve">
+    <value>Từ...</value>
+  </data>
+  <data name="To" xml:space="preserve">
+    <value>Đến...</value>
+  </data>
+  <data name="StartFilter" xml:space="preserve">
+    <value>Bắt đầu lọc</value>
+  </data>
+  <data name="RefreshFilter" xml:space="preserve">
+    <value>Làm mới bộ lọc</value>
+  </data>
+  <data name="Found" xml:space="preserve">
+    <value>Tìm thấy</value>
+  </data>
+  <data name="SuitableRooms" xml:space="preserve">
+    <value>phòng trọ phù hợp</value>
+  </data>
+  <data name="List" xml:space="preserve">
+    <value>Danh sách</value>
+  </data>
+  <data name="Map" xml:space="preserve">
+    <value>Bản đồ</value>
+  </data>
+  <data name="NoRoomsMatch" xml:space="preserve">
+    <value>Không có phòng trọ nào khớp với tiêu chí của bạn.</value>
+  </data>
+  <data name="TryExpanding" xml:space="preserve">
+    <value>Thử mở rộng bán kính hoặc điều chỉnh lại khoảng giá nhé!</value>
+  </data>
+  <data name="DistanceLabel" xml:space="preserve">
+    <value>Cách:</value>
+  </data>
+  <data name="NoRoomsInArea" xml:space="preserve">
+    <value>Hiện chưa có phòng trọ nào trong khu vực này.</value>
+  </data>
+  <data name="TPThuDuc" xml:space="preserve">
+    <value>TP Thủ Đức (Q.2, 9 cũ)</value>
+  </data>
+  <data name="ViewRoom" xml:space="preserve">
+    <value>Xem phòng</value>
+  </data>
+  <data name="Month" xml:space="preserve">
+    <value>tháng</value>
+  </data>
+  <data name="YourInbox" xml:space="preserve">
+    <value>Hộp thư của bạn</value>
+  </data>
+  <data name="ClickToViewChat" xml:space="preserve">
+    <value>Bấm vào để xem cuộc trò chuyện</value>
+  </data>
+  <data name="NoConversations" xml:space="preserve">
+    <value>Bạn chưa có cuộc trò chuyện nào.</value>
+  </data>
+  <data name="GlobalChatRoom" xml:space="preserve">
+    <value>Phòng Chat Tổng &amp; Diễn Đàn</value>
+  </data>
+  <data name="TypeMessage" xml:space="preserve">
+    <value>Nhập tin nhắn...</value>
+  </data>
+  <data name="You" xml:space="preserve">
+    <value>Bạn</value>
+  </data>
+  <data name="UploadFailed" xml:space="preserve">
+    <value>Upload ảnh thất bại:</value>
+  </data>
+  <data name="UploadError" xml:space="preserve">
+    <value>Có lỗi xảy ra khi upload ảnh.</value>
+  </data>
+  <data name="RoomDetails" xml:space="preserve">
+    <value>Chi tiết phòng trọ</value>
+  </data>
+  <data name="PrivateWC" xml:space="preserve">
+    <value>WC Riêng</value>
+  </data>
+  <data name="Balcony" xml:space="preserve">
+    <value>Ban công</value>
+  </data>
+  <data name="Address" xml:space="preserve">
+    <value>Địa chỉ</value>
+  </data>
+  <data name="LandlordInfo" xml:space="preserve">
+    <value>THÔNG TIN CHỦ TRỌ</value>
+  </data>
+  <data name="Updating" xml:space="preserve">
+    <value>Đang cập nhật</value>
+  </data>
+  <data name="VerifiedTooltip" xml:space="preserve">
+    <value>Chủ trọ này đã được Admin xác minh CCCD.</value>
+  </data>
+  <data name="VerifiedID" xml:space="preserve">
+    <value>Đã Xác Thực CCCD</value>
+  </data>
+  <data name="Contact" xml:space="preserve">
+    <value>Liên hệ</value>
+  </data>
+  <data name="DetailDescription" xml:space="preserve">
+    <value>Mô tả chi tiết</value>
+  </data>
+  <data name="RoomRentedOrDeposited" xml:space="preserve">
+    <value>❌ PHÒNG ĐÃ CÓ NGƯỜI THUÊ / CỌC (KHÓA THANH TOÁN)</value>
+  </data>
+  <data name="RoomDepositedUntil" xml:space="preserve">
+    <value>⏳ PHÒNG ĐÃ CÓ NGƯỜI ĐẶT CỌC GIỮ CHỖ (Đến</value>
+  </data>
+  <data name="YouDeposited" xml:space="preserve">
+    <value>🎉 BẠN ĐÃ ĐẶT CỌC 500.000 VNĐ CHO PHÒNG NÀY</value>
+  </data>
+  <data name="PayRemainingBefore" xml:space="preserve">
+    <value>Vui lòng thanh toán phần còn lại trước</value>
+  </data>
+  <data name="PayRemaining" xml:space="preserve">
+    <value>THANH TOÁN</value>
+  </data>
+  <data name="CancelDepositRefund" xml:space="preserve">
+    <value>🚫 HỦY CỌC &amp; HOÀN TIỀN</value>
+  </data>
+  <data name="RoomAvailable" xml:space="preserve">
+    <value>✅ PHÒNG ĐANG TRỐNG - CÓ THỂ THUÊ NGAY</value>
+  </data>
+  <data name="DepositToHold" xml:space="preserve">
+    <value>⏳ ĐẶT CỌC GIỮ CHỖ (500.000 VNĐ)</value>
+  </data>
+  <data name="PayAndRentNow" xml:space="preserve">
+    <value>💳 THANH TOÁN &amp; THUÊ NGAY</value>
+  </data>
+  <data name="LoginToRentDeposit" xml:space="preserve">
+    <value>Đăng nhập bằng tài khoản Sinh viên để thuê / đặt cọc</value>
+  </data>
+  <data name="QuickMessage" xml:space="preserve">
+    <value>Nhắn tin nhanh</value>
+  </data>
+  <data name="LoginToMessage" xml:space="preserve">
+    <value>Đăng nhập để nhắn tin</value>
+  </data>
+  <data name="BackToHome" xml:space="preserve">
+    <value>Trở lại trang chủ</value>
+  </data>
+  <data name="DeleteThisPost" xml:space="preserve">
+    <value>🗑️ Xóa bài đăng này</value>
+  </data>
+  <data name="ReportFakeNews" xml:space="preserve">
+    <value>🚩 Báo cáo tin giả / lừa đảo</value>
+  </data>
+  <data name="ReviewsFromTenants" xml:space="preserve">
+    <value>Đánh giá từ người thuê</value>
+  </data>
+  <data name="WriteYourReview" xml:space="preserve">
+    <value>Viết đánh giá của bạn</value>
+  </data>
+  <data name="ChooseSatisfaction" xml:space="preserve">
+    <value>Chọn mức độ hài lòng:</value>
+  </data>
+  <data name="5Star" xml:space="preserve">
+    <value>5 Sao - Tuyệt vời</value>
+  </data>
+  <data name="4Star" xml:space="preserve">
+    <value>4 Sao - Rất tốt</value>
+  </data>
+  <data name="3Star" xml:space="preserve">
+    <value>3 Sao - Bình thường</value>
+  </data>
+  <data name="2Star" xml:space="preserve">
+    <value>2 Sao - Kém</value>
+  </data>
+  <data name="1Star" xml:space="preserve">
+    <value>1 Sao - Tệ</value>
+  </data>
+  <data name="DetailedComment" xml:space="preserve">
+    <value>Bình luận chi tiết:</value>
+  </data>
+  <data name="ShareExperience" xml:space="preserve">
+    <value>Chia sẻ trải nghiệm chân thực của bạn...</value>
+  </data>
+  <data name="SubmitReview" xml:space="preserve">
+    <value>Gửi Đánh Giá 🚀</value>
+  </data>
+  <data name="NoReviewsFirstToReview" xml:space="preserve">
+    <value>Chưa có đánh giá nào. Hãy là người đầu tiên bóc tem phòng trọ này! 🎉</value>
+  </data>
+  <data name="ReportFraudTitle" xml:space="preserve">
+    <value>BÁO CÁO TIN GIAN LẬN</value>
+  </data>
+  <data name="ReportDesc" xml:space="preserve">
+    <value>Nếu bạn phát hiện tin đăng lừa đảo, sai sự thật, hãy báo cáo ngay!</value>
+  </data>
+  <data name="ReportReason" xml:space="preserve">
+    <value>Lý do báo cáo:</value>
+  </data>
+  <data name="SelectReason" xml:space="preserve">
+    <value>-- Chọn lý do --</value>
+  </data>
+  <data name="Reason1" xml:space="preserve">
+    <value>Lừa đảo tiền cọc</value>
+  </data>
+  <data name="Reason2" xml:space="preserve">
+    <value>Phòng không giống ảnh</value>
+  </data>
+  <data name="Reason3" xml:space="preserve">
+    <value>Thái độ không tốt/Đe dọa</value>
+  </data>
+  <data name="Reason4" xml:space="preserve">
+    <value>Địa chỉ giả mạo</value>
+  </data>
+  <data name="Reason5" xml:space="preserve">
+    <value>Lý do khác...</value>
+  </data>
+  <data name="AdditionalDetails" xml:space="preserve">
+    <value>Chi tiết thêm (không bắt buộc):</value>
+  </data>
+  <data name="ReportPlaceholder" xml:space="preserve">
+    <value>Mô tả rõ hơn về tình huống bạn gặp phải...</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Hủy bỏ</value>
+  </data>
+  <data name="SubmitReportBtn" xml:space="preserve">
+    <value>Gửi Báo Cáo 🚀</value>
+  </data>
+  <data name="ChatWith" xml:space="preserve">
+    <value>Chat với</value>
+  </data>
+  <data name="SendBtn" xml:space="preserve">
+    <value>Gửi</value>
+  </data>
+  <data name="ConfirmPayRemaining" xml:space="preserve">
+    <value>Xác nhận thanh toán phần còn lại?</value>
+  </data>
+  <data name="ConfirmCancelDeposit" xml:space="preserve">
+    <value>Xác nhận HỦY CỌC? Bạn sẽ được hoàn 500.000 VNĐ và mất quyền giữ phòng.</value>
+  </data>
+  <data name="ConfirmDeposit" xml:space="preserve">
+    <value>Xác nhận ĐẶT CỌC 500,000 VNĐ để giữ phòng này?</value>
+  </data>
+  <data name="ConfirmPayAndRent" xml:space="preserve">
+    <value>Xác nhận thanh toán để thuê đứt phòng này?</value>
+  </data>
+  <data name="ConfirmDeletePost" xml:space="preserve">
+    <value>⚠️ CẢNH BÁO: Bạn có chắc muốn xóa bài đăng này không?</value>
+  </data>
+  <data name="ConnectingChat" xml:space="preserve">
+    <value>⏳ Máy chủ Chat đang kết nối, vui lòng chờ 1 giây rồi Gửi lại nhé!</value>
+  </data>
+  <data name="CantSendMessage" xml:space="preserve">
+    <value>⚠️ Không thể gửi tin nhắn. Có thể tài khoản đang bị khóa!</value>
+  </data>
+  <data name="PostNewRoom" xml:space="preserve">
+    <value>Đăng phòng mới</value>
+  </data>
+  <data name="FillRoomInfo" xml:space="preserve">
+    <value>Điền Thông Tin Phòng Trọ</value>
+  </data>
+  <data name="RoomDescPlaceholder" xml:space="preserve">
+    <value>Ví dụ: Phòng trọ 25m2, có gác lửng, WC riêng...</value>
+  </data>
+  <data name="LengthPlaceholder" xml:space="preserve">
+    <value>Ví dụ: 5.5</value>
+  </data>
+  <data name="WidthPlaceholder" xml:space="preserve">
+    <value>Ví dụ: 4.0</value>
+  </data>
+  <data name="PostDuration" xml:space="preserve">
+    <value>Số ngày bài đăng tồn tại</value>
+  </data>
+  <data name="HoldDuration" xml:space="preserve">
+    <value>Số ngày giữ phòng khi nhận cọc</value>
+  </data>
+  <data name="HasPrivateWC" xml:space="preserve">
+    <value>Có nhà vệ sinh riêng</value>
+  </data>
+  <data name="HasBalcony" xml:space="preserve">
+    <value>Có ban công</value>
+  </data>
+  <data name="RentPrice" xml:space="preserve">
+    <value>Giá thuê (VNĐ/Tháng)</value>
+  </data>
+  <data name="PricePlaceholder" xml:space="preserve">
+    <value>Ví dụ: 2500000</value>
+  </data>
+  <data name="DetailedAddress" xml:space="preserve">
+    <value>Địa chỉ chi tiết</value>
+  </data>
+  <data name="SelectProvince" xml:space="preserve">
+    <value>Chọn Tỉnh/Thành</value>
+  </data>
+  <data name="SelectDistrict" xml:space="preserve">
+    <value>Chọn Quận/Huyện</value>
+  </data>
+  <data name="SelectWard" xml:space="preserve">
+    <value>Chọn Phường/Xã</value>
+  </data>
+  <data name="AddressPlaceholder" xml:space="preserve">
+    <value>Ví dụ: 475A Điện Biên Phủ (Số nhà, Tên đường)</value>
+  </data>
+  <data name="FindOnMap" xml:space="preserve">
+    <value>Tìm trên bản đồ</value>
+  </data>
+  <data name="PinOnMap" xml:space="preserve">
+    <value>Ghim vị trí trên bản đồ</value>
+  </data>
+  <data name="MapInstruction" xml:space="preserve">
+    <value>Bản đồ tự động di chuyển hoặc bạn có thể kéo ghim.</value>
+  </data>
+  <data name="MyLocation" xml:space="preserve">
+    <value>Vị trí của tôi</value>
+  </data>
+  <data name="AddImages" xml:space="preserve">
+    <value>Thêm hình ảnh (Có thể chọn nhiều)</value>
+  </data>
+  <data name="PostVip" xml:space="preserve">
+    <value>Đăng tin VIP (Phí: 50.000 VNĐ)</value>
+  </data>
+  <data name="VipInstruction" xml:space="preserve">
+    <value>Tin VIP sẽ được ghim lên đầu bảng kết quả!</value>
+  </data>
+  <data name="PublishPost" xml:space="preserve">
+    <value>Đăng Lên Hệ Thống</value>
+  </data>
+  <data name="MyRooms" xml:space="preserve">
+    <value>Quản lý phòng của tôi</value>
+  </data>
+  <data name="MyPostedRooms" xml:space="preserve">
+    <value>Danh sách phòng bạn đã đăng</value>
+  </data>
+  <data name="Image" xml:space="preserve">
+    <value>Hình ảnh</value>
+  </data>
+  <data name="RoomInfo" xml:space="preserve">
+    <value>Thông tin phòng</value>
+  </data>
+  <data name="RentPriceTable" xml:space="preserve">
+    <value>Giá thuê</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Trạng thái</value>
+  </data>
+  <data name="Actions" xml:space="preserve">
+    <value>Thao tác</value>
+  </data>
+  <data name="VIPStatus" xml:space="preserve">
+    <value>TIN VIP</value>
+  </data>
+  <data name="NormalStatus" xml:space="preserve">
+    <value>Tin thường</value>
+  </data>
+  <data name="EmptyStatus" xml:space="preserve">
+    <value>Đang trống</value>
+  </data>
+  <data name="DepositedStatus" xml:space="preserve">
+    <value>Đang được cọc</value>
+  </data>
+  <data name="RentedStatus" xml:space="preserve">
+    <value>Đã cho thuê</value>
+  </data>
+  <data name="View" xml:space="preserve">
+    <value>Xem</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Xóa</value>
+  </data>
+  <data name="MarkAsRented" xml:space="preserve">
+    <value>Báo đã cho thuê</value>
+  </data>
+  <data name="ConfirmMarkRented" xml:space="preserve">
+    <value>Bạn xác nhận phòng đã có người thuê? Tin sẽ ẩn.</value>
+  </data>
+  <data name="ReopenRoom" xml:space="preserve">
+    <value>Mở lại phòng</value>
+  </data>
+  <data name="ConfirmReopen" xml:space="preserve">
+    <value>Bạn có chắc muốn HỦY XÁC NHẬN và mở lại phòng?</value>
+  </data>
+  <data name="NoPostedRooms" xml:space="preserve">
+    <value>Bạn chưa đăng phòng trọ nào. Hãy bắt đầu ngay! 🚀</value>
+  </data>
+  <data name="ConfirmDeleteRoom" xml:space="preserve">
+    <value>Bạn có chắc chắn muốn xóa tin đăng này không?</value>
+  </data>
+  <data name="AdminUserManagement" xml:space="preserve">
+    <value>Quản lý người dùng</value>
+  </data>
+  <data name="SystemUserManagement" xml:space="preserve">
+    <value>QUẢN LÝ NGƯỜI DÙNG HỆ THỐNG</value>
+  </data>
+  <data name="ViewScamReports" xml:space="preserve">
+    <value>Xem Đơn Tố Cáo Lừa Đảo</value>
+  </data>
+  <data name="FullName" xml:space="preserve">
+    <value>Họ và Tên</value>
+  </data>
+  <data name="EmailAccount" xml:space="preserve">
+    <value>Email / Tài khoản</value>
+  </data>
+  <data name="LockStatus" xml:space="preserve">
+    <value>Trạng thái Khóa</value>
+  </data>
+  <data name="eKYCStatus" xml:space="preserve">
+    <value>Trạng thái eKYC (CCCD)</value>
+  </data>
+  <data name="VerificationProfile" xml:space="preserve">
+    <value>Hồ Sơ Xác Thực</value>
+  </data>
+  <data name="AdminActions" xml:space="preserve">
+    <value>Hành động của Admin</value>
+  </data>
+  <data name="Locked" xml:space="preserve">
+    <value>Bị khóa</value>
+  </data>
+  <data name="Active" xml:space="preserve">
+    <value>Hoạt động</value>
+  </data>
+  <data name="Verified" xml:space="preserve">
+    <value>Đã xác thực</value>
+  </data>
+  <data name="PendingReview" xml:space="preserve">
+    <value>Chờ duyệt</value>
+  </data>
+  <data name="None" xml:space="preserve">
+    <value>Chưa có</value>
+  </data>
+  <data name="FrontSide" xml:space="preserve">
+    <value>Mặt trước</value>
+  </data>
+  <data name="BackSide" xml:space="preserve">
+    <value>Mặt sau</value>
+  </data>
+  <data name="ClickToEnlarge" xml:space="preserve">
+    <value>Bấm để xem lớn</value>
+  </data>
+  <data name="AIScan" xml:space="preserve">
+    <value>AI Quét</value>
+  </data>
+  <data name="EmptyProfile" xml:space="preserve">
+    <value>Trống</value>
+  </data>
+  <data name="Unlock" xml:space="preserve">
+    <value>Mở Khóa</value>
+  </data>
+  <data name="LockAccount" xml:space="preserve">
+    <value>Khóa Tài Khoản</value>
+  </data>
+  <data name="Approve" xml:space="preserve">
+    <value>Duyệt</value>
+  </data>
+  <data name="Reject" xml:space="preserve">
+    <value>Từ chối</value>
+  </data>
+  <data name="ConfirmValidCCCD" xml:space="preserve">
+    <value>Xác nhận CCCD hợp lệ?</value>
+  </data>
+  <data name="ConfirmRejectProfile" xml:space="preserve">
+    <value>Từ chối hồ sơ này? Người dùng sẽ phải tải lại ảnh.</value>
+  </data>
+  <data name="PermanentDelete" xml:space="preserve">
+    <value>Xóa Vĩnh Viễn</value>
+  </data>
+  <data name="ConfirmDeleteAccount1" xml:space="preserve">
+    <value>Bạn có CHẮC CHẮN muốn xóa vĩnh viễn tài khoản</value>
+  </data>
+  <data name="ConfirmDeleteAccount2" xml:space="preserve">
+    <value>này không? Mọi dữ liệu của họ sẽ bị mất!</value>
+  </data>
+  <data name="OnlyRenterCanReviewTitle" xml:space="preserve">
+    <value>Chỉ dành cho khách thuê thật</value>
+  </data>
+  <data name="OnlyRenterCanReviewDesc" xml:space="preserve">
+    <value>Tính năng đánh giá chỉ được mở khóa sau khi bạn đã hoàn tất thanh toán và thuê phòng này.</value>
+  </data>
 </root>

@@ -1,13 +1,15 @@
 ﻿@model Do_an_co_so.Models.PhongTro
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<Do_an_co_so.SharedResource> Localizer
 
 @{
-    ViewData["Title"] = "Đăng phòng mới";
+    ViewData["Title"] = Localizer["PostNewRoom"];
 }
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
 <div class="container mt-4 mb-5">
-    <h2 class="text-primary fw-bold mb-4">✨ Điền Thông Tin Phòng Trọ</h2>
+    <h2 class="text-primary fw-bold mb-4">✨ @Localizer["FillRoomInfo"]</h2>
 
     <div class="card card-custom p-4 col-md-8 mx-auto shadow-sm rounded-4">
         <form asp-action="Create" enctype="multipart/form-data" method="post">
@@ -15,28 +17,28 @@
 
             <div class="mb-3">
                 <label asp-for="MoTa" class="form-label fw-bold"></label>
-                <textarea asp-for="MoTa" class="form-control" rows="4" placeholder="Ví dụ: Phòng trọ 25m2, có gác lửng, WC riêng, giờ giấc tự do..."></textarea>
+                <textarea asp-for="MoTa" class="form-control" rows="4" placeholder="@Localizer["RoomDescPlaceholder"]"></textarea>
                 <span asp-validation-for="MoTa" class="text-danger"></span>
             </div>
 
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label asp-for="ChieuDai" class="form-label fw-bold"></label>
-                    <input asp-for="ChieuDai" type="number" step="0.1" class="form-control" placeholder="Ví dụ: 5.5" />
+                    <input asp-for="ChieuDai" type="number" step="0.1" class="form-control" placeholder="@Localizer["LengthPlaceholder"]" />
                 </div>
                 <div class="col-md-6 mb-3">
                     <label asp-for="ChieuRong" class="form-label fw-bold"></label>
-                    <input asp-for="ChieuRong" type="number" step="0.1" class="form-control" placeholder="Ví dụ: 4.0" />
+                    <input asp-for="ChieuRong" type="number" step="0.1" class="form-control" placeholder="@Localizer["WidthPlaceholder"]" />
                 </div>
             </div>
 
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold text-dark">⏳ Số ngày bài đăng tồn tại</label>
+                    <label class="form-label fw-bold text-dark">⏳ @Localizer["PostDuration"]</label>
                     <input type="number" name="soNgayDangBai" class="form-control" value="30" min="1" placeholder="Mặc định: 30 ngày" />
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold text-dark">⏳ Số ngày giữ phòng khi nhận cọc</label>
+                    <label class="form-label fw-bold text-dark">⏳ @Localizer["HoldDuration"]</label>
                     <input type="number" name="soNgayGiuPhong" class="form-control" value="7" min="1" placeholder="Mặc định: 7 ngày" />
                 </div>
             </div>
@@ -45,72 +47,74 @@
                 <div class="col-md-6">
                     <div class="form-check form-switch fs-5">
                         <input class="form-check-input" type="checkbox" asp-for="CoNhaVeSinh" id="wcSwitch">
-                        <label class="form-check-label fw-bold" for="wcSwitch">🚽 Có nhà vệ sinh riêng</label>
+                        <label class="form-check-label fw-bold" for="wcSwitch">🚽 @Localizer["HasPrivateWC"]</label>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-check form-switch fs-5">
                         <input class="form-check-input" type="checkbox" asp-for="CoBanCong" id="banCongSwitch">
-                        <label class="form-check-label fw-bold" for="banCongSwitch">🌅 Có ban công</label>
+                        <label class="form-check-label fw-bold" for="banCongSwitch">🌅 @Localizer["HasBalcony"]</label>
                     </div>
                 </div>
             </div>
+
             <div class="mb-3">
-                <label asp-for="Gia" class="form-label fw-bold"></label>
-                <input asp-for="Gia" type="number" class="form-control" placeholder="Ví dụ: 2500000" />
+                <label asp-for="Gia" class="form-label fw-bold">@Localizer["RentPrice"]</label>
+                <input asp-for="Gia" type="number" class="form-control" placeholder="@Localizer["PricePlaceholder"]" />
                 <span asp-validation-for="Gia" class="text-danger"></span>
             </div>
 
             <div class="mb-3">
-                <label class="form-label fw-bold">Địa chỉ chi tiết</label>
+                <label class="form-label fw-bold">@Localizer["DetailedAddress"]</label>
                 <div class="row g-2 mb-2">
                     <div class="col-md-4">
                         <select class="form-select" id="cboCity">
-                            <option value="" selected>-- Chọn Tỉnh/Thành --</option>
+                            <option value="" selected>-- @Localizer["SelectProvince"] --</option>
                         </select>
                     </div>
                     <div class="col-md-4">
                         <select class="form-select" id="cboDistrict" disabled>
-                            <option value="" selected>-- Chọn Quận/Huyện --</option>
+                            <option value="" selected>-- @Localizer["SelectDistrict"] --</option>
                         </select>
                     </div>
                     <div class="col-md-4">
                         <select class="form-select" id="cboWard" disabled>
-                            <option value="" selected>-- Chọn Phường/Xã --</option>
+                            <option value="" selected>-- @Localizer["SelectWard"] --</option>
                         </select>
                     </div>
                 </div>
                 <div class="row g-2">
                     <div class="col-md-8">
-                        <input type="text" class="form-control" id="txtStreet" placeholder="Ví dụ: 475A Điện Biên Phủ (Số nhà, Tên đường)">
+                        <input type="text" class="form-control" id="txtStreet" placeholder="@Localizer["AddressPlaceholder"]">
                     </div>
                     <div class="col-md-4">
                         <button class="btn btn-outline-primary w-100 fw-bold" type="button" id="btnTimViTri">
-                            📍 Tìm trên bản đồ
+                            📍 @Localizer["FindOnMap"]
                         </button>
                     </div>
                 </div>
                 <input type="hidden" asp-for="DiaChi" id="HiddenDiaChi" />
                 <span asp-validation-for="DiaChi" class="text-danger"></span>
             </div>
+
             <div class="mb-4">
                 <div class="d-flex justify-content-between align-items-end mb-2">
-                    <label class="form-label fw-bold text-primary mb-0">📍 Ghim vị trí trên bản đồ</label>
+                    <label class="form-label fw-bold text-primary mb-0">📍 @Localizer["PinOnMap"]</label>
 
                     <button type="button" id="btnCurrentLocation" class="btn btn-sm btn-info text-white fw-bold shadow-sm rounded-pill">
-                        <i class="bi bi-geo-fill"></i> Vị trí của tôi
+                        <i class="bi bi-geo-fill"></i> @Localizer["MyLocation"]
                     </button>
                 </div>
 
                 <div id="map" style="height: 350px; border-radius: 10px; border: 1px solid #ddd;"></div>
-                <small class="text-muted">Bản đồ sẽ tự động di chuyển khi bạn bấm "Tìm trên bản đồ". Bạn cũng có thể bấm "Vị trí của tôi" hoặc kéo dấu ghim để chỉnh lại cho chính xác nhất.</small>
+                <small class="text-muted">@Localizer["MapInstruction"]</small>
 
                 <input type="hidden" asp-for="Latitude" id="latInput" />
                 <input type="hidden" asp-for="Longitude" id="lngInput" />
             </div>
 
             <div class="mb-4">
-                <label asp-for="ImageUploads" class="form-label fw-bold text-success">📷 Thêm hình ảnh (Có thể chọn nhiều)</label>
+                <label asp-for="ImageUploads" class="form-label fw-bold text-success">📷 @Localizer["AddImages"]</label>
                 <input asp-for="ImageUploads" type="file" class="form-control" accept="image/*" multiple />
                 <span asp-validation-for="ImageUploads" class="text-danger"></span>
             </div>
@@ -121,22 +125,25 @@
                         <div class="form-check form-switch fs-5">
                             <input class="form-check-input border-warning" type="checkbox" asp-for="IsVip" id="vipSwitch">
                             <label class="form-check-label fw-bold text-danger" for="vipSwitch" style="cursor: pointer;">
-                                ⭐ Đăng tin VIP (Phí: 50.000 VNĐ)
+                                ⭐ @Localizer["PostVip"]
                             </label>
                         </div>
                         <small class="text-muted mt-2 d-block">
-                            💡 Tin VIP sẽ được ghim lên đầu bảng kết quả tìm kiếm với thiết kế nổi bật, giúp phòng của bạn tiếp cận khách nhanh gấp 3 lần!
+                            💡 @Localizer["VipInstruction"]
                         </small>
                     </div>
                 </div>
             </div>
 
             <div class="mt-4 text-center">
-                <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill fw-bold">Đăng Lên Hệ Thống</button>
+                <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill fw-bold">@Localizer["PublishPost"]</button>
             </div>
         </form>
     </div>
 </div>
+
+<input type="hidden" id="langSelectDistrict" value="@Localizer["SelectDistrict"]" />
+<input type="hidden" id="langSelectWard" value="@Localizer["SelectWard"]" />
 
 @section Scripts {
     @{
@@ -150,7 +157,6 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap'
         }).addTo(map);
-
         var marker = L.marker([10.8018, 106.7115], { draggable: true }).addTo(map);
 
         // 🔥 BẢN VÁ TỌA ĐỘ: Đổi dấu chấm thành dấu phẩy để C# (.NET) hiểu đúng số thập phân
@@ -254,6 +260,10 @@
             const cboWard = document.getElementById('cboWard');
             const txtStreet = document.getElementById('txtStreet');
             const hiddenDiaChi = document.getElementById('HiddenDiaChi');
+
+            // Lấy chuỗi đa ngôn ngữ cho JS
+            const txtSelectDistrict = document.getElementById("langSelectDistrict").value;
+            const txtSelectWard = document.getElementById("langSelectWard").value;
             let locationData = [];
 
             // Gọi toàn bộ dữ liệu 63 Tỉnh Thành VN
@@ -273,8 +283,8 @@
                 });
 
             cboCity.addEventListener('change', function () {
-                cboDistrict.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
-                cboWard.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+                cboDistrict.innerHTML = `<option value="">-- ${txtSelectDistrict} --</option>`;
+                cboWard.innerHTML = `<option value="">-- ${txtSelectWard} --</option>`;
                 cboWard.disabled = true;
 
                 if (this.value) {
@@ -294,7 +304,7 @@
             });
 
             cboDistrict.addEventListener('change', function () {
-                cboWard.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+                cboWard.innerHTML = `<option value="">-- ${txtSelectWard} --</option>`;
                 if (this.value) {
                     const selectedCity = locationData.find(c => c.code == cboCity.value);
                     const selectedDistrict = selectedCity.districts.find(d => d.code == this.value);

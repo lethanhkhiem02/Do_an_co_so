@@ -92,12 +92,24 @@ namespace Do_an_co_so.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Details(int? id)
         {
+            bool canReview = false; // 🔥 BIẾN KIỂM TRA QUYỀN ĐÁNH GIÁ
+
             if (User.Identity.IsAuthenticated)
             {
                 var currentUser = await _userManager.GetUserAsync(User);
                 if (currentUser != null && currentUser.TrangThaiKhoa)
                 {
                     return Content("❌ TÀI KHOẢN CỦA BẠN ĐÃ BỊ KHÓA NÊN KHÔNG THỂ XEM CHI TIẾT PHÒNG. Vui lòng liên hệ Admin.");
+                }
+
+                // 🔥 LOGIC KIỂM TRA: User phải có hóa đơn THUÊ PHÒNG và đã HOÀN THÀNH
+                if (currentUser != null)
+                {
+                    canReview = await _context.HoaDons.AnyAsync(h =>
+                        h.PhongTroId == id &&
+                        h.NguoiThueId == currentUser.Id &&
+                        h.LoaiHoaDon == "ThuePhong" &&
+                        h.TrangThai == "HoanThanh");
                 }
             }
 
@@ -115,6 +127,9 @@ namespace Do_an_co_so.Controllers
 
             ViewBag.DanhGias = await _context.DanhGias.Include(d => d.User)
                 .Where(d => d.PhongTroId == id).OrderByDescending(d => d.NgayTao).ToListAsync();
+
+            ViewBag.CanReview = canReview; // 🔥 ĐẨY CỜ NÀY RA VIEW ĐỂ ẨN/HIỆN FORM
+
             return View(phongTro);
         }
 
@@ -123,6 +138,19 @@ namespace Do_an_co_so.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null || user.TrangThaiKhoa) return Challenge();
+
+            // 🔥 BẢO MẬT BACKEND: Kẻ gian dùng tool post data cũng sẽ bị chặn lại ở đây
+            var hasRented = await _context.HoaDons.AnyAsync(h =>
+                h.PhongTroId == phongTroId &&
+                h.NguoiThueId == user.Id &&
+                h.LoaiHoaDon == "ThuePhong" &&
+                h.TrangThai == "HoanThanh");
+
+            if (!hasRented)
+            {
+                TempData["Error"] = "❌ Lỗi: Bạn chỉ có thể đánh giá sau khi đã thuê và thanh toán phòng này!";
+                return RedirectToAction("Details", new { id = phongTroId });
+            }
 
             _context.DanhGias.Add(new DanhGia
             {
@@ -133,6 +161,8 @@ namespace Do_an_co_so.Controllers
                 NgayTao = DateTime.Now
             });
             await _context.SaveChangesAsync();
+
+            TempData["Success"] = "🎉 Cảm ơn bạn đã để lại đánh giá chân thực!";
             return RedirectToAction("Details", new { id = phongTroId });
         }
 
@@ -323,7 +353,6 @@ namespace Do_an_co_so.Controllers
                 {
                     decimal tongTienCoc = 500000m;
 
-                    // ESCROW: Admin tạm giữ toàn bộ 500k, Chủ trọ CHƯA được nhận tiền
                     if (admin != null) admin.SoDu += tongTienCoc;
 
                     phong.NguoiDatCocId = nguoiThue?.Id;
@@ -337,11 +366,11 @@ namespace Do_an_co_so.Controllers
                         PhongTroId = phong.Id,
                         NguoiThueId = nguoiThue?.Id,
                         TongTien = tongTienCoc,
-                        TienHoaHong = 0, // Chưa tính hoa hồng
-                        TienChuTroNhan = 0, // Chủ trọ chưa nhận
+                        TienHoaHong = 0,
+                        TienChuTroNhan = 0,
                         NgayGiaoDich = DateTime.Now,
                         LoaiHoaDon = "DatCoc",
-                        TrangThai = "TamGiu" // Đánh dấu là tiền đang bị giữ
+                        TrangThai = "TamGiu"
                     });
 
                     await _context.SaveChangesAsync();
@@ -409,15 +438,12 @@ namespace Do_an_co_so.Controllers
                 {
                     decimal remaining = phong.Gia - (phong.TienCoc ?? 500000);
 
-                    // TÍNH TOÁN LẠI TỔNG TIỀN (Gộp cả cọc 500k Admin đang giữ + Tiền mới thanh toán)
                     decimal tongTien = phong.Gia;
                     decimal tienHoaHong = tongTien * 0.10m;
                     decimal tienChuTro = tongTien - tienHoaHong;
 
-                    // Admin nhận nốt phần còn lại từ VNPay
                     if (admin != null) admin.SoDu += remaining;
 
-                    // Admin giải ngân: Chuyển 1 cục tiền (đã trừ hoa hồng) cho Chủ trọ
                     if (admin != null) admin.SoDu -= tienChuTro;
                     if (phong.ChuTro != null) phong.ChuTro.SoDu += tienChuTro;
 
@@ -426,7 +452,6 @@ namespace Do_an_co_so.Controllers
                     phong.TienCoc = null;
                     phong.HanDatCoc = null;
 
-                    // Cập nhật trạng thái Hóa đơn cọc cũ thành "GiaiNgan"
                     var hoaDonCoc = await _context.HoaDons.FirstOrDefaultAsync(h => h.PhongTroId == phong.Id && h.NguoiThueId == nguoiThue.Id && h.TrangThai == "TamGiu");
                     if (hoaDonCoc != null) hoaDonCoc.TrangThai = "GiaiNgan";
 
@@ -468,17 +493,14 @@ namespace Do_an_co_so.Controllers
                 return RedirectToAction("Details", new { id = id });
             }
 
-            // Hoàn lại tiền cọc từ ví Admin về ví Sinh viên
             decimal tienCoc = phong.TienCoc ?? 500000m;
             if (admin != null) admin.SoDu -= tienCoc;
             user.SoDu += tienCoc;
 
-            // Xóa thông tin giữ phòng
             phong.NguoiDatCocId = null;
             phong.TienCoc = null;
             phong.HanDatCoc = null;
 
-            // Cập nhật hóa đơn
             var hoaDonCoc = await _context.HoaDons.FirstOrDefaultAsync(h => h.PhongTroId == phong.Id && h.NguoiThueId == user.Id && h.TrangThai == "TamGiu");
             if (hoaDonCoc != null) hoaDonCoc.TrangThai = "HoanTien";
 
@@ -611,9 +633,6 @@ namespace Do_an_co_so.Controllers
         private List<TruongDaiHoc> GetDanhSachTruong()
         {
             return new List<TruongDaiHoc> {
-                // ==========================================
-                // 🏫 HỆ ĐẠI HỌC - KHU VỰC BÌNH THẠNH
-                // ==========================================
                 new TruongDaiHoc { Id = "hutech_dbp", TenTruong = "HUTECH - Saigon Campus (Điện Biên Phủ)", Latitude = 10.8018, Longitude = 106.7115, LoaiTruong = "Đại học", Quan = "Bình Thạnh" },
                 new TruongDaiHoc { Id = "hutech_uvk", TenTruong = "HUTECH - Ung Văn Khiêm Campus", Latitude = 10.8055, Longitude = 106.7145, LoaiTruong = "Đại học", Quan = "Bình Thạnh" },
                 new TruongDaiHoc { Id = "vlu_cs2", TenTruong = "Đại học Văn Lang - Cơ sở 2 (Đinh Bộ Lĩnh)", Latitude = 10.8118, Longitude = 106.7081, LoaiTruong = "Đại học", Quan = "Bình Thạnh" },
@@ -621,10 +640,6 @@ namespace Do_an_co_so.Controllers
                 new TruongDaiHoc { Id = "gtvt", TenTruong = "ĐH Giao thông Vận tải (Cơ sở chính)", Latitude = 10.8043, Longitude = 106.7190, LoaiTruong = "Đại học", Quan = "Bình Thạnh" },
                 new TruongDaiHoc { Id = "ftu2", TenTruong = "ĐH Ngoại thương (Cơ sở 2)", Latitude = 10.8048, Longitude = 106.7169, LoaiTruong = "Đại học", Quan = "Bình Thạnh" },
                 new TruongDaiHoc { Id = "uef", TenTruong = "ĐH Kinh tế - Tài chính (UEF)", Latitude = 10.7956, Longitude = 106.7001, LoaiTruong = "Đại học", Quan = "Bình Thạnh" },
-
-                // ==========================================
-                // 🏫 HỆ ĐẠI HỌC - KHU VỰC TP THỦ ĐỨC (Q2, Q9, Thủ Đức)
-                // ==========================================
                 new TruongDaiHoc { Id = "hutech_td", TenTruong = "HUTECH - Thu Đức Campus (Khu E Làng ĐH)", Latitude = 10.8558, Longitude = 106.7851, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
                 new TruongDaiHoc { Id = "hcmut_td", TenTruong = "ĐH Bách Khoa - Cơ sở Dĩ An (Làng ĐH)", Latitude = 10.8804, Longitude = 106.8053, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
                 new TruongDaiHoc { Id = "spkt", TenTruong = "ĐH Sư Phạm Kỹ Thuật TP.HCM", Latitude = 10.8505, Longitude = 106.7720, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
@@ -635,39 +650,24 @@ namespace Do_an_co_so.Controllers
                 new TruongDaiHoc { Id = "uel", TenTruong = "ĐH Kinh tế - Luật (UEL)", Latitude = 10.8719, Longitude = 106.7984, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
                 new TruongDaiHoc { Id = "fpt_hcm", TenTruong = "Đại học FPT TP.HCM (Khu Công Nghệ Cao)", Latitude = 10.8411, Longitude = 106.8099, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
                 new TruongDaiHoc { Id = "hcmulaw_td", TenTruong = "Đại học Luật TP.HCM (Cơ sở Bình Triệu)", Latitude = 10.8266, Longitude = 106.7126, LoaiTruong = "Đại học", Quan = "Thủ Đức" },
-
-                // ==========================================
-                // 🏫 HỆ ĐẠI HỌC - CÁC QUẬN KHÁC (Gò Vấp, Q1, Q3, Q4, Q5, Q7, Q10, Tân Bình, Tân Phú)
-                // ==========================================
                 new TruongDaiHoc { Id = "vlu_cs3", TenTruong = "Đại học Văn Lang - Cơ sở 3 (Gò Vấp)", Latitude = 10.8222, Longitude = 106.6874, LoaiTruong = "Đại học", Quan = "Gò Vấp" },
                 new TruongDaiHoc { Id = "iuh", TenTruong = "ĐH Công nghiệp TP.HCM (IUH)", Latitude = 10.8225, Longitude = 106.6875, LoaiTruong = "Đại học", Quan = "Gò Vấp" },
                 new TruongDaiHoc { Id = "ou_gv", TenTruong = "Đại học Mở TP.HCM (Cơ sở Nguyễn Kiệm)", Latitude = 10.8165, Longitude = 106.6775, LoaiTruong = "Đại học", Quan = "Gò Vấp" },
-
                 new TruongDaiHoc { Id = "ueh_q3", TenTruong = "ĐH Kinh tế TP.HCM (UEH - Cơ sở chính)", Latitude = 10.7828, Longitude = 106.6925, LoaiTruong = "Đại học", Quan = "Quận 3" },
                 new TruongDaiHoc { Id = "uah", TenTruong = "ĐH Kiến trúc TP.HCM", Latitude = 10.7831, Longitude = 106.6946, LoaiTruong = "Đại học", Quan = "Quận 3" },
-
                 new TruongDaiHoc { Id = "hsu", TenTruong = "Đại học Hoa Sen (Trụ sở chính)", Latitude = 10.7712, Longitude = 106.6923, LoaiTruong = "Đại học", Quan = "Quận 1" },
                 new TruongDaiHoc { Id = "ussh_q1", TenTruong = "ĐH KHXH & Nhân văn (Cơ sở Đinh Tiên Hoàng)", Latitude = 10.7860, Longitude = 106.7011, LoaiTruong = "Đại học", Quan = "Quận 1" },
-
                 new TruongDaiHoc { Id = "hcmulaw_q4", TenTruong = "Đại học Luật TP.HCM (Cơ sở Nguyễn Tất Thành)", Latitude = 10.7629, Longitude = 106.7088, LoaiTruong = "Đại học", Quan = "Quận 4" },
                 new TruongDaiHoc { Id = "ntt_q4", TenTruong = "Đại học Nguyễn Tất Thành (Trụ sở chính)", Latitude = 10.7615, Longitude = 106.7103, LoaiTruong = "Đại học", Quan = "Quận 4" },
-
                 new TruongDaiHoc { Id = "hcmus_q5", TenTruong = "ĐH Khoa học Tự nhiên (Cơ sở Nguyễn Văn Cừ)", Latitude = 10.7630, Longitude = 106.6821, LoaiTruong = "Đại học", Quan = "Quận 5" },
                 new TruongDaiHoc { Id = "hcmue", TenTruong = "ĐH Sư Phạm TP.HCM", Latitude = 10.7613, Longitude = 106.6822, LoaiTruong = "Đại học", Quan = "Quận 5" },
                 new TruongDaiHoc { Id = "ump", TenTruong = "ĐH Y Dược TP.HCM", Latitude = 10.7562, Longitude = 106.6661, LoaiTruong = "Đại học", Quan = "Quận 5" },
-
                 new TruongDaiHoc { Id = "hcmut_q10", TenTruong = "ĐH Bách Khoa - Cơ sở Lý Thường Kiệt", Latitude = 10.7732, Longitude = 106.6597, LoaiTruong = "Đại học", Quan = "Quận 10" },
                 new TruongDaiHoc { Id = "huflit", TenTruong = "ĐH Ngoại ngữ - Tin học (HUFLIT)", Latitude = 10.7765, Longitude = 106.6669, LoaiTruong = "Đại học", Quan = "Quận 10" },
-
                 new TruongDaiHoc { Id = "tdt", TenTruong = "ĐH Tôn Đức Thắng (Cơ sở Tân Phong)", Latitude = 10.7325, Longitude = 106.6983, LoaiTruong = "Đại học", Quan = "Quận 7" },
                 new TruongDaiHoc { Id = "rmit", TenTruong = "ĐH RMIT Việt Nam", Latitude = 10.7293, Longitude = 106.6946, LoaiTruong = "Đại học", Quan = "Quận 7" },
-
                 new TruongDaiHoc { Id = "vaa", TenTruong = "Học viện Hàng không Việt Nam", Latitude = 10.7997, Longitude = 106.6621, LoaiTruong = "Đại học", Quan = "Tân Bình" },
                 new TruongDaiHoc { Id = "huit", TenTruong = "ĐH Công Thương TP.HCM (HUIT)", Latitude = 10.8064, Longitude = 106.6288, LoaiTruong = "Đại học", Quan = "Tân Phú" },
-
-                // ==========================================
-                // 🏫 HỆ CAO ĐẲNG - PHỦ KHẮP CÁC QUẬN
-                // ==========================================
                 new TruongDaiHoc { Id = "caothang", TenTruong = "CĐ Kỹ thuật Cao Thắng", Latitude = 10.7724, Longitude = 106.7016, LoaiTruong = "Cao đẳng", Quan = "Quận 1" },
                 new TruongDaiHoc { Id = "cd_congthuong", TenTruong = "CĐ Công Thương TP.HCM", Latitude = 10.8268, Longitude = 106.7314, LoaiTruong = "Cao đẳng", Quan = "Thủ Đức" },
                 new TruongDaiHoc { Id = "cd_cn_thuduc", TenTruong = "CĐ Công nghệ Thủ Đức (TDC)", Latitude = 10.8523, Longitude = 106.7584, LoaiTruong = "Cao đẳng", Quan = "Thủ Đức" },

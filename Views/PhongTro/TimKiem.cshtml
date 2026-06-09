@@ -1,9 +1,12 @@
 ﻿@model IEnumerable<Do_an_co_so.Models.PhongTroSearchResultViewModel>
 @using Do_an_co_so.Models
 @using System.Text.Json
+@using Microsoft.Extensions.Localization
+
+@inject IStringLocalizer<Do_an_co_so.SharedResource> Localizer
 
 @{
-    ViewData["Title"] = "Tìm trọ quanh trường";
+    ViewData["Title"] = Localizer["FindRoom"];
     var danhSachTruong = ViewBag.DanhSachTruong as List<TruongDaiHoc>;
     var saoDict = ViewBag.SaoDict as Dictionary<int, double> ?? new Dictionary<int, double>();
 
@@ -17,7 +20,7 @@
 
     double tamLat = 10.8018;
     double tamLng = 106.7115;
-    string tenTruongTam = "Khu vực tìm kiếm";
+    string tenTruongTam = Localizer["SearchArea"];
 
     string currentTruongId = ViewBag.TruongId as string;
     if (!string.IsNullOrEmpty(currentTruongId) && danhSachTruong != null)
@@ -115,40 +118,40 @@
 <div class="container mt-4 mb-5">
     <div class="card shadow-sm search-bar-custom rounded-4 mb-4">
         <div class="card-body p-4 rounded-4">
-            <h4 class="mb-4 fw-bold text-primary"><i class="bi bi-search me-2"></i>Tìm trọ thông minh theo trường</h4>
+            <h4 class="mb-4 fw-bold text-primary"><i class="bi bi-search me-2"></i>@Localizer["SmartSearchTitle"]</h4>
             <form asp-action="TimKiem" method="get">
 
                 <div class="row g-2 mb-3">
                     <div class="col-md-2">
-                        <label class="form-label fw-bold text-secondary">Tỉnh/Thành</label>
+                        <label class="form-label fw-bold text-secondary">@Localizer["ProvinceCity"]</label>
                         <select id="cityFilter" class="form-select rounded-pill">
-                            <option value="all">Tất cả</option>
+                            <option value="all">@Localizer["All"]</option>
                             <option value="Hồ Chí Minh" selected>Hồ Chí Minh</option>
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label fw-bold text-secondary">Quận/Huyện</label>
+                        <label class="form-label fw-bold text-secondary">@Localizer["District"]</label>
                         <select id="districtFilter" class="form-select rounded-pill">
-                            <option value="all">-- Tất cả Quận --</option>
+                            <option value="all">@Localizer["AllDistricts"]</option>
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label fw-bold text-secondary">Hệ đào tạo</label>
+                        <label class="form-label fw-bold text-secondary">@Localizer["EducationLevel"]</label>
                         <select id="loaiTruongFilter" class="form-select rounded-pill">
-                            <option value="all">Tất cả hệ</option>
-                            <option value="Đại học">Đại học</option>
-                            <option value="Cao đẳng">Cao đẳng</option>
+                            <option value="all">@Localizer["AllLevels"]</option>
+                            <option value="Đại học">@Localizer["University"]</option>
+                            <option value="Cao đẳng">@Localizer["College"]</option>
                         </select>
                     </div>
                     <div class="col-md-5">
-                        <label class="form-label fw-bold text-secondary">Trường của bạn</label>
+                        <label class="form-label fw-bold text-secondary">@Localizer["YourSchool"]</label>
                         <select id="truongSelect" name="truongId" class="form-select rounded-pill">
-                            <option value="" data-type="all" data-quan="all">-- Chọn trường (Vui lòng chọn lọc Quận trước nếu khó tìm) --</option>
+                            <option value="" data-type="all" data-quan="all">@Localizer["SelectSchool"]</option>
                             @if (danhSachTruong != null)
                             {
                                 foreach (var group in danhSachTruong.GroupBy(t => t.Quan))
                                 {
-                                    <optgroup label="Khu vực @group.Key" data-quan="@group.Key">
+                                    <optgroup label="@Localizer["Area"] @group.Key" data-quan="@group.Key">
                                         @foreach (var truong in group)
                                         {
                                             <option value="@truong.Id" data-type="@truong.LoaiTruong" data-quan="@truong.Quan" selected="@(currentTruongId == truong.Id)">@truong.TenTruong</option>
@@ -162,26 +165,26 @@
 
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <label class="form-label fw-bold text-secondary">Bán kính tìm kiếm</label>
+                        <label class="form-label fw-bold text-secondary">@Localizer["SearchRadius"]</label>
                         <select name="radius" class="form-select rounded-pill">
-                            <option value="">-- Khoảng cách --</option>
-                            <option value="1" selected="@(ViewBag.Radius?.ToString() == "1")">1 km (Đi bộ/Xe đạp)</option>
+                            <option value="">@Localizer["Distance"]</option>
+                            <option value="1" selected="@(ViewBag.Radius?.ToString() == "1")">1 km (@Localizer["WalkBike"])</option>
                             <option value="2" selected="@(ViewBag.Radius?.ToString() == "2")">2 km</option>
-                            <option value="5" selected="@(ViewBag.Radius?.ToString() == "5")">5 km (Xe máy)</option>
+                            <option value="5" selected="@(ViewBag.Radius?.ToString() == "5")">5 km (@Localizer["Motorbike"])</option>
                             <option value="10" selected="@(ViewBag.Radius?.ToString() == "10")">10 km</option>
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-bold text-secondary">Khoảng giá (VNĐ)</label>
+                        <label class="form-label fw-bold text-secondary">@Localizer["PriceRange"]</label>
                         <div class="input-group">
-                            <input type="number" name="minPrice" value="@ViewBag.MinPrice" class="form-control" placeholder="Từ..." step="500000" min="0" style="border-top-left-radius: 50rem; border-bottom-left-radius: 50rem;">
+                            <input type="number" name="minPrice" value="@ViewBag.MinPrice" class="form-control" placeholder="@Localizer["From"]" step="500000" min="0" style="border-top-left-radius: 50rem; border-bottom-left-radius: 50rem;">
                             <span class="input-group-text bg-light border-start-0 border-end-0">-</span>
-                            <input type="number" name="maxPrice" value="@ViewBag.MaxPrice" class="form-control" placeholder="Đến..." step="500000" min="0" style="border-top-right-radius: 50rem; border-bottom-right-radius: 50rem;">
+                            <input type="number" name="maxPrice" value="@ViewBag.MaxPrice" class="form-control" placeholder="@Localizer["To"]" step="500000" min="0" style="border-top-right-radius: 50rem; border-bottom-right-radius: 50rem;">
                         </div>
                     </div>
                     <div class="col-md-3 d-flex align-items-end gap-2">
-                        <button type="submit" class="btn btn-primary rounded-pill flex-grow-1 fw-bold shadow-sm py-2">🔍 Bắt đầu lọc</button>
-                        <a href="/PhongTro/TimKiem" class="btn btn-outline-secondary rounded-pill fw-bold shadow-sm py-2 px-3" title="Làm mới bộ lọc">🔄</a>
+                        <button type="submit" class="btn btn-primary rounded-pill flex-grow-1 fw-bold shadow-sm py-2">🔍 @Localizer["StartFilter"]</button>
+                        <a href="/PhongTro/TimKiem" class="btn btn-outline-secondary rounded-pill fw-bold shadow-sm py-2 px-3" title="@Localizer["RefreshFilter"]">🔄</a>
                     </div>
                 </div>
 
@@ -190,14 +193,14 @@
     </div>
 
     <div class="d-flex justify-content-between align-items-center mb-4 mt-5">
-        <h5 class="fw-bold mb-0">Tìm thấy <span class="text-primary fs-4">@Model.Count()</span> phòng trọ phù hợp</h5>
+        <h5 class="fw-bold mb-0">@Localizer["Found"] <span class="text-primary fs-4">@Model.Count()</span> @Localizer["SuitableRooms"]</h5>
 
         <ul class="nav nav-pills bg-light p-1 rounded-pill shadow-sm" id="viewTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active rounded-pill" id="list-tab" data-bs-toggle="pill" data-bs-target="#list-view" type="button" role="tab">📋 Danh sách</button>
+                <button class="nav-link active rounded-pill" id="list-tab" data-bs-toggle="pill" data-bs-target="#list-view" type="button" role="tab">📋 @Localizer["List"]</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link rounded-pill" id="map-tab" data-bs-toggle="pill" data-bs-target="#map-view" type="button" role="tab">🗺️ Bản đồ</button>
+                <button class="nav-link rounded-pill" id="map-tab" data-bs-toggle="pill" data-bs-target="#map-view" type="button" role="tab">🗺️ @Localizer["Map"]</button>
             </li>
         </ul>
     </div>
@@ -209,8 +212,8 @@
             {
                 <div class="alert alert-warning text-center rounded-4 shadow-sm py-4" role="alert">
                     <span class="fs-1 d-block mb-2">😢</span>
-                    <strong class="fs-5">Không có phòng trọ nào khớp với tiêu chí của bạn.</strong>
-                    <p class="mb-0 mt-2 text-muted">Thử mở rộng bán kính hoặc điều chỉnh lại khoảng giá nhé!</p>
+                    <strong class="fs-5">@Localizer["NoRoomsMatch"]</strong>
+                    <p class="mb-0 mt-2 text-muted">@Localizer["TryExpanding"]</p>
                 </div>
             }
             else
@@ -225,20 +228,20 @@
                             <div class="card h-100 shadow-sm border-0 rounded-4 position-relative overflow-hidden @vipClass">
                                 @if (item.PhongTro.IsVip)
                                 {
-                                    <div class="vip-badge">⭐ TIN VIP</div>
+                                    <div class="vip-badge">⭐ @Localizer["VipNews"]</div>
                                 }
                                 @if (!string.IsNullOrEmpty(currentTruongId))
                                 {
                                     <div class="position-absolute top-0 start-0 m-2" style="z-index: 5;">
-                                        <span class="badge bg-danger bg-opacity-75 rounded-pill px-3 py-2 fs-6 shadow">📍 Cách: @item.KhoangCach.ToString("0.0") km</span>
+                                        <span class="badge bg-danger bg-opacity-75 rounded-pill px-3 py-2 fs-6 shadow">📍 @Localizer["DistanceLabel"] @item.KhoangCach.ToString("0.0") km</span>
                                     </div>
                                 }
 
                                 @{
-                                    string firstImage = "https://placehold.co/600x400/eeeeee/999999?text=Chưa+có+ảnh";
+                                    string firstImage = "https://placehold.co/600x400/eeeeee/999999?text=No+Image";
                                     if (!string.IsNullOrEmpty(item.PhongTro.HinhAnh)) { firstImage = "/images/" + item.PhongTro.HinhAnh.Split(',')[0]; }
                                 }
-                                <img src="@firstImage" onerror="this.onerror=null;this.src='https://placehold.co/600x400/eeeeee/999999?text=Lỗi+tải+ảnh';" class="card-img-top" style="height: 240px; object-fit: cover;">
+                                <img src="@firstImage" onerror="this.onerror=null;this.src='https://placehold.co/600x400/eeeeee/999999?text=Error';" class="card-img-top" style="height: 240px; object-fit: cover;">
 
                                 <div class="card-body d-flex flex-column">
                                     <h4 class="card-title text-primary fw-bold mb-1">@item.PhongTro.Gia.ToString("N0") VNĐ</h4>
@@ -261,7 +264,7 @@
                                     <small class="text-muted d-block mb-3"><i class="bi bi-geo-alt-fill text-danger me-1"></i> @item.PhongTro.DiaChi</small>
 
                                     <div class="mt-auto">
-                                        <a asp-action="Details" asp-route-id="@item.PhongTro.Id" class="btn btn-outline-primary w-100 rounded-pill fw-bold">Xem chi tiết</a>
+                                        <a asp-action="Details" asp-route-id="@item.PhongTro.Id" class="btn btn-outline-primary w-100 rounded-pill fw-bold">@Localizer["ViewDetails"]</a>
                                     </div>
                                 </div>
                             </div>
@@ -278,7 +281,7 @@
             @if (!hasData)
             {
                 <div class="alert alert-info text-center rounded-4 shadow-sm" role="alert">
-                    Hiện chưa có phòng trọ nào trong khu vực này. Bạn hãy thử thu nhỏ bản đồ hoặc tìm ở các trường khác xem sao nhé!
+                    @Localizer["NoRoomsInArea"]
                 </div>
             }
         </div>
@@ -291,7 +294,13 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // --- XỬ LÝ JS BỘ LỌC LIÊN HOÀN (Đã xóa bộ lọc cứng, lấy full 22 Quận Huyện) ---
+
+            // Lấy ngôn ngữ từ C# truyền xuống JS
+            var txtTPThuDuc = '@Localizer["TPThuDuc"]';
+            var txtThang = '@Localizer["Month"]';
+            var txtCach = '@Localizer["DistanceLabel"]';
+            var txtXemPhong = '@Localizer["ViewRoom"]';
+
             var cityFilter = document.getElementById("cityFilter");
             var districtFilter = document.getElementById("districtFilter");
             var loaiTruongFilter = document.getElementById("loaiTruongFilter");
@@ -300,32 +309,28 @@
             var allOptions = Array.from(truongSelect.querySelectorAll("option[data-type]"));
             var optGroups = truongSelect.querySelectorAll("optgroup");
 
-            // Lấy TẤT CẢ danh sách Quận/Huyện từ API
             fetch('https://provinces.open-api.vn/api/p/79?depth=2')
                 .then(res => res.json())
                 .then(hcmData => {
                     hcmData.districts.forEach(d => {
                         let displayName = d.name;
-                        // Ghi chú thêm cho sinh viên dễ tìm
-                        if(d.name === "Thành phố Thủ Đức") displayName = "TP Thủ Đức (Q.2, 9 cũ)";
+                        if(d.name === "Thành phố Thủ Đức") displayName = txtTPThuDuc;
                         districtFilter.add(new Option(displayName, d.name));
                     });
                 });
 
-            // Hàm lọc chung
             function applyFilters() {
-                var selectedDist = districtFilter.value; // Trả về "Quận Bình Thạnh", "Thành phố Thủ Đức"...
+                var selectedDist = districtFilter.value;
                 var selectedType = loaiTruongFilter.value;
 
                 allOptions.forEach(function (opt) {
                     var matchType = (selectedType === "all" || opt.getAttribute("data-type") === selectedType);
-                    var truongQuan = opt.getAttribute("data-quan"); // Trả về "Bình Thạnh", "Thủ Đức" từ code C#
+                    var truongQuan = opt.getAttribute("data-quan");
 
                     var matchDist = false;
                     if (selectedDist === "all") {
                         matchDist = true;
                     } else if (selectedDist.includes(truongQuan)) {
-                        // So sánh thông minh: "Quận Bình Thạnh" bao gồm chữ "Bình Thạnh" -> Khớp!
                         matchDist = true;
                     }
 
@@ -336,7 +341,6 @@
                     }
                 });
 
-                // Ẩn hiện các OptGroup (Khu vực)
                 optGroups.forEach(function (group) {
                     var truongQuanGroup = group.getAttribute("data-quan");
                     var matchDistGroup = (selectedDist === "all" || selectedDist.includes(truongQuanGroup));
@@ -349,7 +353,6 @@
 
             districtFilter.addEventListener("change", applyFilters);
             loaiTruongFilter.addEventListener("change", applyFilters);
-            // -------------------------------------------------------------
 
             var tamLat = @tamLat.ToString(System.Globalization.CultureInfo.InvariantCulture);
             var tamLng = @tamLng.ToString(System.Globalization.CultureInfo.InvariantCulture);
@@ -420,10 +423,10 @@
                         var popupContent = `
                             <div style="width: 220px; text-align: center;">
                                 ${imgTag}
-                                <h6 class="text-primary fw-bold mb-1">${p.gia} / tháng</h6>
+                                <h6 class="text-primary fw-bold mb-1">${p.gia} / ${txtThang}</h6>
                                 <div class="text-warning mb-2" style="font-size: 1.1rem">${saoHtml} <span class="text-muted" style="font-size: 0.8rem">(${p.sao.toFixed(1)})</span></div>
-                                <span class="badge bg-danger rounded-pill mb-3">📍 Cách: ${p.khoangCach} km</span>
-                                <a href="/PhongTro/Details/${p.id}" class="btn btn-sm btn-primary w-100 rounded-pill">Xem phòng</a>
+                                <span class="badge bg-danger rounded-pill mb-3">📍 ${txtCach} ${p.khoangCach} km</span>
+                                <a href="/PhongTro/Details/${p.id}" class="btn btn-sm btn-primary w-100 rounded-pill">${txtXemPhong}</a>
                             </div>`;
                         marker.bindPopup(popupContent);
                     }

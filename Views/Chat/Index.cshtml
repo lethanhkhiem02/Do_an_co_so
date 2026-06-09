@@ -1,10 +1,13 @@
 ﻿@model IEnumerable<Do_an_co_so.Models.AppUser>
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<Do_an_co_so.SharedResource> Localizer
+
 @{
-    ViewData["Title"] = "Hộp thư của bạn";
+    ViewData["Title"] = Localizer["YourInbox"];
 }
 
 <div class="container mt-4 mb-5">
-    <h2 class="text-primary fw-bold mb-4">💬 Hộp thư của bạn</h2>
+    <h2 class="text-primary fw-bold mb-4">💬 @Localizer["YourInbox"]</h2>
 
     <div class="row">
         <div class="col-md-8 mx-auto">
@@ -19,7 +22,7 @@
                             </div>
                             <div>
                                 <h5 class="mb-1 fw-bold">@(user.HoTen ?? user.Email)</h5>
-                                <small class="text-primary">Bấm vào để xem cuộc trò chuyện</small>
+                                <small class="text-primary">@Localizer["ClickToViewChat"]</small>
                             </div>
                         </a>
                     }
@@ -27,7 +30,7 @@
                 else
                 {
                     <div class="text-center p-5 bg-light rounded border">
-                        <h5 class="text-muted">Bạn chưa có cuộc trò chuyện nào.</h5>
+                        <h5 class="text-muted">@Localizer["NoConversations"]</h5>
                     </div>
                 }
             </div>

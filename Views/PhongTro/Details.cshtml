@@ -1,9 +1,11 @@
 ﻿@model Do_an_co_so.Models.PhongTro
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Localization
 @inject UserManager<AppUser> UserManager
+@inject IStringLocalizer<Do_an_co_so.SharedResource> Localizer
 
 @{
-    ViewData["Title"] = "Chi tiết phòng trọ";
+    ViewData["Title"] = Localizer["RoomDetails"];
 }
 
 <div class="container mt-4 mb-5">
@@ -50,50 +52,50 @@
 
         <div class="col-md-5">
             <div class="card card-custom p-4 h-100 shadow-sm border-0">
-                <h3 class="text-danger fw-bold">@Model.Gia.ToString("N0") VNĐ/Tháng</h3>
+                <h3 class="text-danger fw-bold">@Model.Gia.ToString("N0") @Localizer["VNDPerMonth"]</h3>
                 <hr />
 
                 <div class="d-flex flex-wrap gap-2 mb-3 mt-2">
                     @if (Model.ChieuDai.HasValue && Model.ChieuRong.HasValue)
                     {
                         <span class="badge bg-primary bg-opacity-10 text-primary border border-primary fs-6 fw-normal px-3 py-2 rounded-pill">
-                            <i class="bi bi-arrows-fullscreen me-1"></i> Diện tích: @(Model.ChieuDai* Model.ChieuRong)m² (@Model.ChieuDai x @Model.ChieuRong)
+                            <i class="bi bi-arrows-fullscreen me-1"></i> @Localizer["Area"]: @(Model.ChieuDai* Model.ChieuRong)m² (@Model.ChieuDai x @Model.ChieuRong)
                         </span>
                     }
                     @if (Model.CoNhaVeSinh)
                     {
                         <span class="badge bg-info bg-opacity-10 text-info border border-info fs-6 fw-normal px-3 py-2 rounded-pill">
-                            🚽 WC Riêng
+                            🚽 @Localizer["PrivateWC"]
                         </span>
                     }
                     @if (Model.CoBanCong)
                     {
                         <span class="badge bg-warning bg-opacity-10 text-warning border border-warning fs-6 fw-normal px-3 py-2 rounded-pill">
-                            🌅 Ban công
+                            🌅 @Localizer["Balcony"]
                         </span>
                     }
                 </div>
-                <p><strong>📍 Địa chỉ:</strong> @Model.DiaChi</p>
+                <p><strong>📍 @Localizer["Address"]:</strong> @Model.DiaChi</p>
 
                 <div class="mb-3 p-3 bg-light rounded border">
-                    <p class="mb-1 text-muted small text-uppercase fw-bold">Thông tin chủ trọ</p>
+                    <p class="mb-1 text-muted small text-uppercase fw-bold">@Localizer["LandlordInfo"]</p>
                     <div class="d-flex align-items-center gap-2">
                         <a asp-controller="User" asp-action="TrangCaNhan" asp-route-id="@Model.ChuTroId" class="text-decoration-none fw-bold text-dark fs-5">
-                            @(Model.ChuTro?.HoTen ?? "Đang cập nhật")
+                            @(Model.ChuTro?.HoTen ?? Localizer["Updating"].Value)
                         </a>
 
                         @if (Model.ChuTro?.TrangThaiXacThuc == "Đã duyệt")
                         {
-                            <span class="badge bg-warning text-dark px-2 py-1 shadow-sm d-flex align-items-center gap-1" title="Chủ trọ này đã được Admin xác minh danh tính bằng thẻ CCCD chính chủ.">
+                            <span class="badge bg-warning text-dark px-2 py-1 shadow-sm d-flex align-items-center gap-1" title="@Localizer["VerifiedTooltip"]">
                                 <i class="bi bi-shield-fill-check fs-6 text-success"></i>
-                                <span class="fw-bold" style="font-size: 0.75rem;">Đã Xác Thực CCCD</span>
+                                <span class="fw-bold" style="font-size: 0.75rem;">@Localizer["VerifiedID"]</span>
                             </span>
                         }
                     </div>
-                    <p class="mb-0 mt-1"><strong>📧 Liên hệ:</strong> @Model.ChuTro?.Email</p>
+                    <p class="mb-0 mt-1"><strong>📧 @Localizer["Contact"]:</strong> @Model.ChuTro?.Email</p>
                 </div>
 
-                <h5 class="mt-3 fw-bold">Mô tả chi tiết:</h5>
+                <h5 class="mt-3 fw-bold">@Localizer["DetailDescription"]:</h5>
                 <p style="white-space: pre-line;" class="text-muted">@Model.MoTa</p>
 
                 <div class="mt-4 mb-3 p-3 border rounded bg-light">
@@ -106,21 +108,21 @@
                     @if (Model.DaChoThue)
                     {
                         <div class="alert alert-danger fw-bold text-center mb-0 shadow-sm">
-                            ❌ PHÒNG ĐÃ CÓ NGƯỜI THUÊ / CỌC (KHÓA THANH TOÁN)
+                            @Localizer["RoomRentedOrDeposited"]
                         </div>
                     }
                     else if (isDepositedByOther)
                     {
                         <div class="alert alert-warning fw-bold text-center mb-0 shadow-sm">
-                            ⏳ PHÒNG ĐÃ CÓ NGƯỜI ĐẶT CỌC GIỮ CHỖ (Đến @Model.HanDatCoc?.ToString("dd/MM/yyyy HH:mm"))
+                            @Localizer["RoomDepositedUntil"] @Model.HanDatCoc?.ToString("dd/MM/yyyy HH:mm")
                         </div>
                     }
                     else if (isMyDeposit)
                     {
                         <div class="alert alert-info fw-bold text-center mb-3 shadow-sm">
-                            🎉 BẠN ĐÃ ĐẶT CỌC 500.000 VNĐ CHO PHÒNG NÀY
+                            @Localizer["YouDeposited"]
                             <br />
-                            <small class="text-danger">Vui lòng thanh toán phần còn lại trước @Model.HanDatCoc?.ToString("dd/MM/yyyy HH:mm")</small>
+                            <small class="text-danger">@Localizer["PayRemainingBefore"] @Model.HanDatCoc?.ToString("dd/MM/yyyy HH:mm")</small>
                         </div>
 
                         @if (User.IsInRole("SinhVien"))
@@ -128,15 +130,15 @@
                             decimal remaining = Model.Gia - (Model.TienCoc ?? 0);
                             <form asp-action="ThanhToanPhanConLai" asp-controller="PhongTro" asp-route-id="@Model.Id" method="post">
                                 <button type="submit" class="btn btn-primary btn-lg fw-bold w-100 shadow"
-                                        onclick="return confirm('Xác nhận thanh toán @remaining.ToString("N0") VNĐ phần còn lại?');">
-                                    💳 THANH TOÁN @remaining.ToString("N0") VNĐ
+                                        onclick="return confirm('@Localizer["ConfirmPayRemaining"]');">
+                                    @Localizer["PayRemaining"] @remaining.ToString("N0") VNĐ
                                 </button>
                             </form>
 
                             <form asp-action="HuyDatCoc" asp-controller="PhongTro" asp-route-id="@Model.Id" method="post" class="mt-2">
                                 <button type="submit" class="btn btn-outline-danger fw-bold w-100 shadow-sm"
-                                        onclick="return confirm('Xác nhận HỦY CỌC? Bạn sẽ được hoàn lại 500.000 VNĐ vào ví và mất quyền giữ phòng này.');">
-                                    🚫 HỦY CỌC & HOÀN TIỀN
+                                        onclick="return confirm('@Localizer["ConfirmCancelDeposit"]');">
+                                    @Localizer["CancelDepositRefund"]
                                 </button>
                             </form>
                         }
@@ -144,7 +146,7 @@
                     else
                     {
                         <div class="alert alert-success fw-bold text-center mb-3 shadow-sm">
-                            ✅ PHÒNG ĐANG TRỐNG - CÓ THỂ THUÊ NGAY
+                            @Localizer["RoomAvailable"]
                         </div>
 
                         @if (User.IsInRole("SinhVien"))
@@ -152,15 +154,15 @@
                             <div class="d-flex flex-column gap-2">
                                 <form asp-action="DatCocPhong" asp-controller="PhongTro" asp-route-id="@Model.Id" method="post">
                                     <button type="submit" class="btn btn-warning btn-lg fw-bold w-100 shadow"
-                                            onclick="return confirm('Xác nhận ĐẶT CỌC 500,000 VNĐ từ ví hệ thống để giữ phòng này?');">
-                                        ⏳ ĐẶT CỌC GIỮ CHỖ (500.000 VNĐ)
+                                            onclick="return confirm('@Localizer["ConfirmDeposit"]');">
+                                        @Localizer["DepositToHold"]
                                     </button>
                                 </form>
 
                                 <form asp-action="ThanhToanThuePhong" asp-controller="PhongTro" asp-route-id="@Model.Id" method="post">
                                     <button type="submit" class="btn btn-primary btn-lg fw-bold w-100 shadow"
-                                            onclick="return confirm('Xác nhận thanh toán @Model.Gia.ToString("N0") VNĐ từ ví hệ thống để thuê đứt phòng này?');">
-                                        💳 THANH TOÁN & THUÊ NGAY
+                                            onclick="return confirm('@Localizer["ConfirmPayAndRent"]');">
+                                        @Localizer["PayAndRentNow"]
                                     </button>
                                 </form>
                             </div>
@@ -168,7 +170,7 @@
                         else if (!User.Identity.IsAuthenticated)
                         {
                             <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-primary fw-bold w-100">
-                                Đăng nhập bằng tài khoản Sinh viên để thuê / đặt cọc
+                                @Localizer["LoginToRentDeposit"]
                             </a>
                         }
                     }
@@ -178,22 +180,22 @@
                     {
                         @if (UserManager.GetUserId(User) != Model.ChuTroId)
                         {
-                            <button type="button" onclick="openMiniChat()" class="btn btn-success btn-lg w-100 mb-2 shadow-sm">💬 Nhắn tin nhanh</button>
+                            <button type="button" onclick="openMiniChat()" class="btn btn-success btn-lg w-100 mb-2 shadow-sm">💬 @Localizer["QuickMessage"]</button>
                         }
                     }
                     else
                     {
-                        <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-success btn-lg w-100 mb-2 shadow-sm">💬 Đăng nhập để nhắn tin</a>
+                        <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-success btn-lg w-100 mb-2 shadow-sm">💬 @Localizer["LoginToMessage"]</a>
                     }
 
-                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary w-100 fw-bold mb-2">Trở lại trang chủ</a>
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary w-100 fw-bold mb-2">@Localizer["BackToHome"]</a>
 
                     @if (User.Identity.IsAuthenticated && UserManager.GetUserId(User) == Model.ChuTroId)
                     {
                         <form asp-controller="PhongTro" asp-action="Delete" asp-route-id="@Model.Id" method="post"
-                              onsubmit="return confirm('⚠️ CẢNH BÁO: Bạn có chắc chắn muốn xóa bài đăng này không?\n\n(Lưu ý: Nếu đây là tin VIP, bạn sẽ KHÔNG được hoàn lại tiền)');">
+                              onsubmit="return confirm('@Localizer["ConfirmDeletePost"]');">
                             <button type="submit" class="btn btn-danger w-100 fw-bold shadow-sm">
-                                🗑️ Xóa bài đăng này
+                                🗑️ @Localizer["DeleteThisPost"]
                             </button>
                         </form>
                     }
@@ -201,7 +203,7 @@
                     @if (User.Identity.IsAuthenticated && UserManager.GetUserId(User) != Model.ChuTroId)
                     {
                         <button type="button" class="btn btn-outline-danger w-100 fw-bold shadow-sm mt-2" data-bs-toggle="modal" data-bs-target="#reportModal">
-                            🚩 Báo cáo tin giả / lừa đảo
+                            🚩 @Localizer["ReportFakeNews"]
                         </button>
                     }
                 </div>
@@ -210,33 +212,46 @@
     </div>
 
     <hr class="my-5 text-muted" />
-    <h4 class="text-primary fw-bold mb-4">⭐ Đánh giá từ người thuê</h4>
+    <h4 class="text-primary fw-bold mb-4">⭐ @Localizer["ReviewsFromTenants"]</h4>
 
     <div class="row">
         <div class="col-md-5 mb-4">
             <div class="card card-custom p-4 shadow-sm border-0 bg-light h-100">
-                <h5 class="fw-bold mb-3">Viết đánh giá của bạn</h5>
-                <form asp-controller="PhongTro" asp-action="AddReview" method="post">
-                    <input type="hidden" name="phongTroId" value="@Model.Id" />
+                <h5 class="fw-bold mb-3">@Localizer["WriteYourReview"]</h5>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Chọn mức độ hài lòng:</label>
-                        <select name="sao" class="form-select border-warning text-warning fw-bold shadow-sm" required>
-                            <option value="5">⭐⭐⭐⭐⭐ (5 Sao - Tuyệt vời)</option>
-                            <option value="4">⭐⭐⭐⭐ (4 Sao - Rất tốt)</option>
-                            <option value="3">⭐⭐⭐ (3 Sao - Bình thường)</option>
-                            <option value="2">⭐⭐ (2 Sao - Kém)</option>
-                            <option value="1">⭐ (1 Sao - Tệ)</option>
-                        </select>
+                @if (ViewBag.CanReview == true)
+                {
+                    <form asp-controller="PhongTro" asp-action="AddReview" method="post">
+                        <input type="hidden" name="phongTroId" value="@Model.Id" />
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">@Localizer["ChooseSatisfaction"]</label>
+                            <select name="sao" class="form-select border-warning text-warning fw-bold shadow-sm" required>
+                                <option value="5">⭐⭐⭐⭐⭐ (@Localizer["5Star"])</option>
+                                <option value="4">⭐⭐⭐⭐ (@Localizer["4Star"])</option>
+                                <option value="3">⭐⭐⭐ (@Localizer["3Star"])</option>
+                                <option value="2">⭐⭐ (@Localizer["2Star"])</option>
+                                <option value="1">⭐ (@Localizer["1Star"])</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">@Localizer["DetailedComment"]</label>
+                            <textarea name="noiDung" class="form-control shadow-sm" rows="3" placeholder="@Localizer["ShareExperience"]" required></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-warning w-100 fw-bold shadow-sm">@Localizer["SubmitReview"]</button>
+                    </form>
+                }
+                else
+                {
+                    <div class="alert alert-info text-center border border-info shadow-sm h-100 d-flex flex-column justify-content-center align-items-center rounded-3">
+                        <i class="bi bi-shield-lock-fill text-info mb-2" style="font-size: 2.5rem;"></i>
+                        <h6 class="fw-bold text-dark mb-1">@Localizer["OnlyRenterCanReviewTitle"]</h6>
+                        <small class="text-muted">@Localizer["OnlyRenterCanReviewDesc"]</small>
                     </div>
+                }
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Bình luận chi tiết:</label>
-                        <textarea name="noiDung" class="form-control shadow-sm" rows="3" placeholder="Chia sẻ trải nghiệm chân thực của bạn..." required></textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-warning w-100 fw-bold shadow-sm">Gửi Đánh Giá 🚀</button>
-                </form>
             </div>
         </div>
 
@@ -254,7 +269,7 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <h6 class="fw-bold text-primary mb-0">
-                                        👤 @(dg.User?.HoTen ?? dg.User?.Email ?? "Sinh viên")
+                                        👤 @(dg.User?.HoTen ?? dg.User?.Email ?? "User")
                                     </h6>
                                     <small class="text-muted">@dg.NgayTao.ToString("dd/MM/yyyy HH:mm")</small>
                                 </div>
@@ -273,7 +288,7 @@
             else
             {
                 <div class="text-center p-5 bg-white rounded shadow-sm border-0">
-                    <h5 class="text-muted mb-0">Chưa có đánh giá nào. Hãy là người đầu tiên bóc tem phòng trọ này! 🎉</h5>
+                    <h5 class="text-muted mb-0">@Localizer["NoReviewsFirstToReview"]</h5>
                 </div>
             }
         </div>
@@ -284,34 +299,34 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title fw-bold" id="reportModalLabel">🚩 BÁO CÁO TIN GIAN LẬN</h5>
+                <h5 class="modal-title fw-bold" id="reportModalLabel">@Localizer["ReportFraudTitle"]</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form asp-controller="PhongTro" asp-action="SubmitReport" method="post">
                 <div class="modal-body">
                     <input type="hidden" name="phongTroId" value="@Model.Id" />
-                    <p class="text-muted small mb-3">Nếu bạn phát hiện tin đăng này có dấu hiệu lừa đảo, sai sự thật, hãy báo cáo ngay để Admin xử lý nhé!</p>
+                    <p class="text-muted small mb-3">@Localizer["ReportDesc"]</p>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Lý do báo cáo: <span class="text-danger">*</span></label>
+                        <label class="form-label fw-bold">@Localizer["ReportReason"] <span class="text-danger">*</span></label>
                         <select name="lyDo" class="form-select border-danger" required>
-                            <option value="">-- Chọn lý do --</option>
-                            <option value="Lừa đảo tiền cọc">Lừa đảo tiền cọc</option>
-                            <option value="Phòng trọ không giống ảnh">Phòng trọ không giống ảnh / sai sự thật</option>
-                            <option value="Chủ trọ có thái độ không tốt / đe dọa">Chủ trọ có thái độ không tốt / đe dọa</option>
-                            <option value="Địa chỉ giả mạo">Địa chỉ giả mạo / Không tồn tại</option>
-                            <option value="Khác">Lý do khác...</option>
+                            <option value="">@Localizer["SelectReason"]</option>
+                            <option value="Lừa đảo tiền cọc">@Localizer["Reason1"]</option>
+                            <option value="Phòng trọ không giống ảnh">@Localizer["Reason2"]</option>
+                            <option value="Chủ trọ có thái độ không tốt / đe dọa">@Localizer["Reason3"]</option>
+                            <option value="Địa chỉ giả mạo">@Localizer["Reason4"]</option>
+                            <option value="Khác">@Localizer["Reason5"]</option>
                         </select>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Chi tiết thêm (không bắt buộc):</label>
-                        <textarea name="chiTiet" class="form-control" rows="3" placeholder="Mô tả rõ hơn về tình huống bạn gặp phải để Admin dễ xử lý..."></textarea>
+                        <label class="form-label fw-bold">@Localizer["AdditionalDetails"]</label>
+                        <textarea name="chiTiet" class="form-control" rows="3" placeholder="@Localizer["ReportPlaceholder"]"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
-                    <button type="submit" class="btn btn-danger fw-bold">Gửi Báo Cáo 🚀</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@Localizer["Cancel"]</button>
+                    <button type="submit" class="btn btn-danger fw-bold">@Localizer["SubmitReportBtn"]</button>
                 </div>
             </form>
         </div>
@@ -322,21 +337,24 @@
 {
     <div id="miniChatBox" class="card shadow-lg d-none" style="position: fixed; bottom: 20px; right: 20px; width: 360px; z-index: 1050; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
         <div class="card-header bg-success text-white d-flex justify-content-between align-items-center p-3">
-            <h6 class="mb-0 fw-bold"><i class="bi bi-chat-dots-fill me-2"></i>Chat với @(Model.ChuTro?.HoTen ?? "Chủ trọ")</h6>
+            <h6 class="mb-0 fw-bold"><i class="bi bi-chat-dots-fill me-2"></i>@Localizer["ChatWith"] @(Model.ChuTro?.HoTen ?? "User")</h6>
             <button type="button" class="btn-close btn-close-white" onclick="closeMiniChat()" title="Đóng"></button>
         </div>
         <div id="miniChatBody" class="card-body p-3" style="height: 350px; overflow-y: auto; background-color: #f0f2f5;">
         </div>
         <div class="card-footer bg-white p-2 border-top">
             <div class="input-group">
-                <input type="text" id="miniChatMessage" class="form-control border-success shadow-none" placeholder="Nhập tin nhắn..." onkeypress="handleMiniChatEnter(event)">
+                <input type="text" id="miniChatMessage" class="form-control border-success shadow-none" placeholder="@Localizer["TypeMessage"]" onkeypress="handleMiniChatEnter(event)">
                 <button class="btn btn-success fw-bold" type="button" onclick="sendMiniChatMessage()">
-                    Gửi
+                    @Localizer["SendBtn"]
                 </button>
             </div>
         </div>
     </div>
 }
+
+<input type="hidden" id="langConnecting" value="@Localizer["ConnectingChat"]" />
+<input type="hidden" id="langCantSend" value="@Localizer["CantSendMessage"]" />
 
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
@@ -345,6 +363,9 @@
         const receiverId = '@Model.ChuTroId';
         const currentUserId = '@(User.Identity.IsAuthenticated? UserManager.GetUserId(User) : "")';
         let chatConnection = null;
+
+        var textConnecting = document.getElementById("langConnecting").value;
+        var textCantSend = document.getElementById("langCantSend").value;
 
         function openMiniChat() {
             document.getElementById('miniChatBox').classList.remove('d-none');
@@ -369,7 +390,7 @@
                     });
                     chatBody.scrollTop = chatBody.scrollHeight;
                 })
-                .catch(error => console.error("Lỗi khi tải lịch sử chat:", error));
+                .catch(error => console.error("Error:", error));
         }
 
         function startSignalR() {
@@ -381,9 +402,9 @@
                         appendMessage(isMine, message, time);
                     }
                 });
-                chatConnection.start().catch(err => console.error("Lỗi kết nối SignalR: ", err));
+                chatConnection.start().catch(err => console.error("Error: ", err));
             } catch (e) {
-                console.error("Thư viện SignalR chưa được tải: ", e);
+                console.error("SignalR not loaded: ", e);
             }
         }
 
@@ -409,7 +430,7 @@
             if (message === '') return;
 
             if (!chatConnection || chatConnection.state !== signalR.HubConnectionState.Connected) {
-                alert("⏳ Máy chủ Chat đang khởi động kết nối, vui lòng chờ 1 giây rồi bấm Gửi lại nhé!");
+                alert(textConnecting);
                 return;
             }
 
@@ -419,7 +440,7 @@
                 })
                 .catch(err => {
                     console.error(err.toString());
-                    alert("⚠️ Không thể gửi tin nhắn. Có thể tài khoản của bạn đang bị Admin khóa!");
+                    alert(textCantSend);
                 });
         }
 
