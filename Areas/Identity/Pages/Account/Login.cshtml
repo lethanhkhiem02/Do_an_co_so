@@ -1,8 +1,10 @@
 ﻿@page
 @model LoginModel
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<Do_an_co_so.SharedResource> Localizer
 
 @{
-    ViewData["Title"] = "Đăng nhập";
+    ViewData["Title"] = Localizer["Login"];
     Layout = "/Views/Shared/_Layout.cshtml";
 }
 
@@ -48,7 +50,7 @@
                     <div class="col-md-7">
                         <div class="card-body p-5">
                             <h3 class="card-title text-center text-primary fw-bold mb-4">
-                                <i class="bi bi-box-arrow-in-right me-2"></i> Chào mừng trở lại
+                                <i class="bi bi-box-arrow-in-right me-2"></i> @Localizer["WelcomeBack"]
                             </h3>
 
                             <form id="account" method="post">
@@ -56,13 +58,13 @@
 
                                 <div class="form-floating mb-3">
                                     <input asp-for="Input.Email" class="form-control rounded-pill px-4" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                                    <label asp-for="Input.Email" class="ms-3 text-muted">Email đăng nhập</label>
+                                    <label asp-for="Input.Email" class="ms-3 text-muted">@Localizer["LoginEmail"]</label>
                                     <span asp-validation-for="Input.Email" class="text-danger ps-3 small"></span>
                                 </div>
 
                                 <div class="form-floating mb-3">
                                     <input asp-for="Input.Password" class="form-control rounded-pill px-4" autocomplete="current-password" aria-required="true" placeholder="password" />
-                                    <label asp-for="Input.Password" class="ms-3 text-muted">Mật khẩu</label>
+                                    <label asp-for="Input.Password" class="ms-3 text-muted">@Localizer["Password"]</label>
                                     <span asp-validation-for="Input.Password" class="text-danger ps-3 small"></span>
                                 </div>
 
@@ -73,17 +75,17 @@
                                             @Html.DisplayNameFor(m => m.Input.RememberMe)
                                         </label>
                                     </div>
-                                    <a id="forgot-password" class="text-decoration-none small text-primary fw-bold" asp-page="./ForgotPassword">Quên mật khẩu?</a>
+                                    <a id="forgot-password" class="text-decoration-none small text-primary fw-bold" asp-page="./ForgotPassword">@Localizer["ForgotPassword"]</a>
                                 </div>
 
-                                <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary rounded-pill fw-bold py-3 shadow-sm">Đăng nhập</button>
+                                <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary rounded-pill fw-bold py-3 shadow-sm">@Localizer["Login"]</button>
                             </form>
 
                             <div class="text-center mt-4 pt-3 border-top">
-                                <p class="text-muted mb-2">Bạn là người mới?</p>
-                                <a class="btn btn-outline-primary rounded-pill fw-bold px-4" asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Tạo tài khoản mới</a>
+                                <p class="text-muted mb-2">@Localizer["NewUserPrompt"]</p>
+                                <a class="btn btn-outline-primary rounded-pill fw-bold px-4" asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">@Localizer["CreateNewAccount"]</a>
                                 <div class="mt-3">
-                                    <a id="resend-confirmation" class="text-decoration-none small text-muted" asp-page="./ResendEmailConfirmation">Gửi lại email xác nhận</a>
+                                    <a id="resend-confirmation" class="text-decoration-none small text-muted" asp-page="./ResendEmailConfirmation">@Localizer["ResendConfirmEmail"]</a>
                                 </div>
                             </div>
                         </div>
@@ -92,13 +94,13 @@
                     <div class="col-md-5 d-none d-md-flex auth-image-col text-center">
                         <div>
                             <i class="bi bi-person-badge-fill" style="font-size: 8rem; color: rgba(255, 255, 255, 0.9) !important;"></i>
-                            <h2 class="fw-bold mt-3 text-white">Xin chào!</h2>
-                            <p class="mt-3 px-3 text-white" style="opacity: 0.9;">Đăng nhập để quản lý tin đăng trọ hoặc tiếp tục cuộc trò chuyện của bạn với chủ nhà.</p>
+                            <h2 class="fw-bold mt-3 text-white">@Localizer["Hello"]</h2>
+                            <p class="mt-3 px-3 text-white" style="opacity: 0.9;">@Localizer["LoginDescription"]</p>
 
                             @if ((Model.ExternalLogins?.Count ?? 0) > 0)
                             {
                                 <hr class="border-light opacity-50 my-4 mx-4" />
-                                <p class="text-white small">Hoặc đăng nhập bằng</p>
+                                <p class="text-white small">@Localizer["OrLoginWith"]</p>
                                 <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post">
                                     @foreach (var provider in Model.ExternalLogins!)
                                     {

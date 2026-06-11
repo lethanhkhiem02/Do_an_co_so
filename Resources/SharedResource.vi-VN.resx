@@ -702,4 +702,70 @@
   <data name="OnlyRenterCanReviewDesc" xml:space="preserve">
     <value>Tính năng đánh giá chỉ được mở khóa sau khi bạn đã hoàn tất thanh toán và thuê phòng này.</value>
   </data>
+  <data name="Login" xml:space="preserve">
+    <value>Đăng nhập</value>
+  </data>
+  <data name="WelcomeBack" xml:space="preserve">
+    <value>Chào mừng trở lại</value>
+  </data>
+  <data name="LoginEmail" xml:space="preserve">
+    <value>Email đăng nhập</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Mật khẩu</value>
+  </data>
+  <data name="ForgotPassword" xml:space="preserve">
+    <value>Quên mật khẩu?</value>
+  </data>
+  <data name="NewUserPrompt" xml:space="preserve">
+    <value>Bạn là người mới?</value>
+  </data>
+  <data name="CreateNewAccount" xml:space="preserve">
+    <value>Tạo tài khoản mới</value>
+  </data>
+  <data name="ResendConfirmEmail" xml:space="preserve">
+    <value>Gửi lại email xác nhận</value>
+  </data>
+  <data name="Hello" xml:space="preserve">
+    <value>Xin chào!</value>
+  </data>
+  <data name="LoginDescription" xml:space="preserve">
+    <value>Đăng nhập để quản lý tin đăng trọ hoặc tiếp tục trò chuyện.</value>
+  </data>
+  <data name="OrLoginWith" xml:space="preserve">
+    <value>Hoặc đăng nhập bằng</value>
+  </data>
+  <data name="RegisterAccount" xml:space="preserve">
+    <value>Đăng ký tài khoản</value>
+  </data>
+  <data name="ConfirmPassword" xml:space="preserve">
+    <value>Xác nhận MK</value>
+  </data>
+  <data name="SelectAccountType" xml:space="preserve">
+    <value>-- Chọn loại tài khoản --</value>
+  </data>
+  <data name="StudentRole" xml:space="preserve">
+    <value>🎓 Sinh Viên (Tìm phòng)</value>
+  </data>
+  <data name="LandlordRole" xml:space="preserve">
+    <value>🔑 Chủ Trọ (Cho thuê phòng)</value>
+  </data>
+  <data name="WhoAreYou" xml:space="preserve">
+    <value>Bạn là ai?</value>
+  </data>
+  <data name="RegisterNow" xml:space="preserve">
+    <value>Đăng ký ngay</value>
+  </data>
+  <data name="AlreadyHaveAccount" xml:space="preserve">
+    <value>Đã có tài khoản?</value>
+  </data>
+  <data name="StartNow" xml:space="preserve">
+    <value>Bắt đầu ngay!</value>
+  </data>
+  <data name="RegisterDescription" xml:space="preserve">
+    <value>Tham gia nền tảng để tìm phòng hoặc cho thuê an toàn.</value>
+  </data>
+  <data name="OrContinueWith" xml:space="preserve">
+    <value>Hoặc tiếp tục với</value>
+  </data>
 </root>

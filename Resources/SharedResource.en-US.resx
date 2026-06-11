@@ -702,4 +702,70 @@
   <data name="OnlyRenterCanReviewDesc" xml:space="preserve">
     <value>Only students who have successfully paid and rented this room can leave a review.</value>
   </data>
+  <data name="Login" xml:space="preserve">
+    <value>Login</value>
+  </data>
+  <data name="WelcomeBack" xml:space="preserve">
+    <value>Welcome back</value>
+  </data>
+  <data name="LoginEmail" xml:space="preserve">
+    <value>Login Email</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="ForgotPassword" xml:space="preserve">
+    <value>Forgot password?</value>
+  </data>
+  <data name="NewUserPrompt" xml:space="preserve">
+    <value>Are you a new user?</value>
+  </data>
+  <data name="CreateNewAccount" xml:space="preserve">
+    <value>Create new account</value>
+  </data>
+  <data name="ResendConfirmEmail" xml:space="preserve">
+    <value>Resend confirmation email</value>
+  </data>
+  <data name="Hello" xml:space="preserve">
+    <value>Hello!</value>
+  </data>
+  <data name="LoginDescription" xml:space="preserve">
+    <value>Log in to manage your posts or continue chatting.</value>
+  </data>
+  <data name="OrLoginWith" xml:space="preserve">
+    <value>Or log in with</value>
+  </data>
+  <data name="RegisterAccount" xml:space="preserve">
+    <value>Register Account</value>
+  </data>
+  <data name="ConfirmPassword" xml:space="preserve">
+    <value>Confirm Password</value>
+  </data>
+  <data name="SelectAccountType" xml:space="preserve">
+    <value>-- Select account type --</value>
+  </data>
+  <data name="StudentRole" xml:space="preserve">
+    <value>🎓 Student (Find room)</value>
+  </data>
+  <data name="LandlordRole" xml:space="preserve">
+    <value>🔑 Landlord (Rent room)</value>
+  </data>
+  <data name="WhoAreYou" xml:space="preserve">
+    <value>Who are you?</value>
+  </data>
+  <data name="RegisterNow" xml:space="preserve">
+    <value>Register now</value>
+  </data>
+  <data name="AlreadyHaveAccount" xml:space="preserve">
+    <value>Already have an account?</value>
+  </data>
+  <data name="StartNow" xml:space="preserve">
+    <value>Start now!</value>
+  </data>
+  <data name="RegisterDescription" xml:space="preserve">
+    <value>Join the platform to find your ideal room or rent securely.</value>
+  </data>
+  <data name="OrContinueWith" xml:space="preserve">
+    <value>Or continue with</value>
+  </data>
 </root>

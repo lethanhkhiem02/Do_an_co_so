@@ -295,11 +295,11 @@
     <script>
         document.addEventListener("DOMContentLoaded", function () {
 
-            // Lấy ngôn ngữ từ C# truyền xuống JS
-            var txtTPThuDuc = '@Localizer["TPThuDuc"]';
-            var txtThang = '@Localizer["Month"]';
-            var txtCach = '@Localizer["DistanceLabel"]';
-            var txtXemPhong = '@Localizer["ViewRoom"]';
+            // 🔥 BẢN VÁ: Dùng Html.Raw() để ngăn Razor mã hóa ký tự tiếng Việt
+            var txtTPThuDuc = '@Html.Raw(Localizer["TPThuDuc"])';
+            var txtThang = '@Html.Raw(Localizer["Month"])';
+            var txtCach = '@Html.Raw(Localizer["DistanceLabel"])';
+            var txtXemPhong = '@Html.Raw(Localizer["ViewRoom"])';
 
             var cityFilter = document.getElementById("cityFilter");
             var districtFilter = document.getElementById("districtFilter");

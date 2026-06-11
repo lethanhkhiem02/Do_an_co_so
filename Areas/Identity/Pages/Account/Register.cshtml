@@ -1,7 +1,10 @@
 ﻿@page
 @model RegisterModel
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<Do_an_co_so.SharedResource> Localizer
+
 @{
-    ViewData["Title"] = "Đăng ký tài khoản";
+    ViewData["Title"] = Localizer["RegisterAccount"];
     Layout = "/Views/Shared/_Layout.cshtml";
 }
 
@@ -49,7 +52,7 @@
                     <div class="col-md-7">
                         <div class="card-body p-5">
                             <h3 class="card-title text-center text-primary fw-bold mb-4">
-                                <i class="bi bi-person-plus-fill me-2"></i> Tạo tài khoản mới
+                                <i class="bi bi-person-plus-fill me-2"></i> @Localizer["CreateNewAccount"]
                             </h3>
 
                             <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
@@ -57,13 +60,13 @@
 
                                 <div class="form-floating mb-3">
                                     <input asp-for="Input.HoTen" class="form-control rounded-pill px-4" aria-required="true" placeholder="Nguyễn Văn A" />
-                                    <label asp-for="Input.HoTen" class="ms-3 text-muted">Họ và Tên</label>
+                                    <label asp-for="Input.HoTen" class="ms-3 text-muted">@Localizer["FullName"]</label>
                                     <span asp-validation-for="Input.HoTen" class="text-danger ps-3 small"></span>
                                 </div>
 
                                 <div class="form-floating mb-3">
                                     <input asp-for="Input.Email" class="form-control rounded-pill px-4" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                                    <label asp-for="Input.Email" class="ms-3 text-muted">Email đăng nhập</label>
+                                    <label asp-for="Input.Email" class="ms-3 text-muted">@Localizer["LoginEmail"]</label>
                                     <span asp-validation-for="Input.Email" class="text-danger ps-3 small"></span>
                                 </div>
 
@@ -71,14 +74,14 @@
                                     <div class="col-md-6">
                                         <div class="form-floating mb-3">
                                             <input asp-for="Input.Password" class="form-control rounded-pill px-4" autocomplete="new-password" aria-required="true" placeholder="password" />
-                                            <label asp-for="Input.Password" class="ms-3 text-muted">Mật khẩu</label>
+                                            <label asp-for="Input.Password" class="ms-3 text-muted">@Localizer["Password"]</label>
                                             <span asp-validation-for="Input.Password" class="text-danger ps-3 small"></span>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-floating mb-3">
                                             <input asp-for="Input.ConfirmPassword" class="form-control rounded-pill px-4" autocomplete="new-password" aria-required="true" placeholder="password" />
-                                            <label asp-for="Input.ConfirmPassword" class="ms-3 text-muted">Xác nhận MK</label>
+                                            <label asp-for="Input.ConfirmPassword" class="ms-3 text-muted">@Localizer["ConfirmPassword"]</label>
                                             <span asp-validation-for="Input.ConfirmPassword" class="text-danger ps-3 small"></span>
                                         </div>
                                     </div>
@@ -86,19 +89,19 @@
 
                                 <div class="form-floating mb-4">
                                     <select asp-for="Input.Role" class="form-select rounded-pill px-4" aria-required="true">
-                                        <option value="">-- Chọn loại tài khoản --</option>
-                                        <option value="SinhVien">🎓 Sinh Viên (Tìm phòng)</option>
-                                        <option value="ChuTro">🔑 Chủ Trọ (Cho thuê phòng)</option>
+                                        <option value="">@Localizer["SelectAccountType"]</option>
+                                        <option value="SinhVien">@Localizer["StudentRole"]</option>
+                                        <option value="ChuTro">@Localizer["LandlordRole"]</option>
                                     </select>
-                                    <label asp-for="Input.Role" class="ms-3 text-muted">Bạn là ai?</label>
+                                    <label asp-for="Input.Role" class="ms-3 text-muted">@Localizer["WhoAreYou"]</label>
                                     <span asp-validation-for="Input.Role" class="text-danger ps-3 small"></span>
                                 </div>
 
-                                <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary rounded-pill fw-bold py-3 shadow-sm">Đăng ký ngay</button>
+                                <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary rounded-pill fw-bold py-3 shadow-sm">@Localizer["RegisterNow"]</button>
                             </form>
 
                             <div class="text-center mt-4">
-                                <p class="text-muted mb-0">Đã có tài khoản? <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl" class="text-primary fw-bold text-decoration-none">Đăng nhập</a></p>
+                                <p class="text-muted mb-0">@Localizer["AlreadyHaveAccount"] <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl" class="text-primary fw-bold text-decoration-none">@Localizer["Login"]</a></p>
                             </div>
                         </div>
                     </div>
@@ -106,13 +109,13 @@
                     <div class="col-md-5 d-none d-md-flex auth-image-col text-center">
                         <div>
                             <i class="bi bi-rocket-takeoff-fill" style="font-size: 8rem; color: rgba(255, 255, 255, 0.9) !important;"></i>
-                            <h2 class="fw-bold mt-3 text-white">Bắt đầu ngay!</h2>
-                            <p class="mt-3 px-3 text-white" style="opacity: 0.9;">Tham gia nền tảng để tìm kiếm phòng trọ ưng ý hoặc cho thuê phòng nhanh chóng an toàn.</p>
+                            <h2 class="fw-bold mt-3 text-white">@Localizer["StartNow"]</h2>
+                            <p class="mt-3 px-3 text-white" style="opacity: 0.9;">@Localizer["RegisterDescription"]</p>
 
                             @if ((Model.ExternalLogins?.Count ?? 0) > 0)
                             {
                                 <hr class="border-light opacity-50 my-4 mx-4" />
-                                <p class="text-white small">Hoặc tiếp tục với</p>
+                                <p class="text-white small">@Localizer["OrContinueWith"]</p>
                                 <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post">
                                     @foreach (var provider in Model.ExternalLogins!)
                                     {
